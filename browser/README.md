@@ -1,12 +1,23 @@
 <div align="center">
 
-  <h1><code>wasm-pack-template</code></h1>
+  <h1>PoW JavaScript library</h1>
 
-  <strong>A template for kick starting a Rust and WebAssembly project using <a href="https://github.com/rustwasm/wasm-pack">wasm-pack</a>.</strong>
+  <strong>JavaScript library to generate PoW for Shuttlecraft</strong>
 
-  <p>
-    <a href="https://travis-ci.org/rustwasm/wasm-pack-template"><img src="https://img.shields.io/travis/rustwasm/wasm-pack-template.svg?style=flat-square" alt="Build Status" /></a>
-  </p>
+</div>
+
+**NOTE:** wasm compilation currently requires `rustc` nightly and
+wasm optimization of this library will have to be done manually at the
+moment. Please refer to https://github.com/rustwasm/wasm-pack/issues/886
+for more information.
+
+### Optimization:
+```
+$ /path/to/wasm-opt pkg/pow_bg.wasm -o pkg/pow_bg.wasm -O --enable-mutable-globals
+```
+My /path/to/wasm-opt is `~/.cache/.wasm-pack/wasm-opt-4d7a65327e9363b7/wasm-opt`
+
+<h2>  Default documentation provided by Rust wasm: </h2>
 
   <h3>
     <a href="https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html">Tutorial</a>
