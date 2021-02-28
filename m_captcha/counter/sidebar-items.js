@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Counter",""],["CounterBuilder","Builder for `Counter`."],["Visitor","Add visitor message"]]});

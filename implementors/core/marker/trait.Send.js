@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["m_captcha"] = [{"text":"impl Send for Visitor","synthetic":true,"types":[]},{"text":"impl Send for Counter","synthetic":true,"types":[]},{"text":"impl Send for CounterBuilder","synthetic":true,"types":[]},{"text":"impl Send for CaptchaError","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

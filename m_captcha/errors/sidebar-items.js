@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["CaptchaError","Errors that can occur when interacting with the blockchain"]],"type":[["CaptchaResult","[Result] datatype for m_captcha"]]});
