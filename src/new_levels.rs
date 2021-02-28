@@ -177,10 +177,8 @@ impl Defense {
     /// tighten up defense. Increases defense level by a factor of one
     /// when defense is at max level, calling this method will have no effect
     pub fn tighten_up(&mut self) {
-        println!("{}", self.current_visitor_threshold);
         if self.current_visitor_threshold != self.levels.len() - 1 {
             self.current_visitor_threshold += 1;
-            println!("{}", self.current_visitor_threshold);
         }
     }
     /// loosen up defense. Decreases defense level by a factor of one

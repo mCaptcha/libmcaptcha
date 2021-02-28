@@ -1,4 +1,4 @@
 pub mod counter;
 pub mod errors;
 mod levels;
-mod new_levels;
+pub mod new_levels;
