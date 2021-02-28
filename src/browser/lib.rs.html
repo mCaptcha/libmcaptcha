@@ -20,9 +20,29 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">mod</span> <span class="ident">utils</span>;
-
 <span class="kw">use</span> <span class="ident">wasm_bindgen</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
 <span class="comment">// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global</span>
@@ -31,14 +51,38 @@
 <span class="attribute">#[<span class="ident">global_allocator</span>]</span>
 <span class="kw">static</span> <span class="ident">ALLOC</span>: <span class="ident">wee_alloc</span>::<span class="ident">WeeAlloc</span> <span class="op">=</span> <span class="ident">wee_alloc</span>::<span class="ident">WeeAlloc</span>::<span class="ident">INIT</span>;
 
-<span class="attribute">#[<span class="ident">wasm_bindgen</span>]</span>
-<span class="kw">extern</span> {
-    <span class="kw">fn</span> <span class="ident">alert</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>);
-}
+<span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">PoW</span>;
 
 <span class="attribute">#[<span class="ident">wasm_bindgen</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">greet</span>() {
-    <span class="ident">alert</span>(<span class="string">&quot;Hello, browser!&quot;</span>);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_pow</span>(<span class="ident">difficulty_factor</span>: <span class="ident">u32</span>, <span class="ident">secret</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">let</span> <span class="ident">difficulty</span> <span class="op">=</span> <span class="ident">u128</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="ident">u128</span>::<span class="ident">max_value</span>() <span class="op">/</span> <span class="ident">difficulty_factor</span> <span class="kw">as</span> <span class="ident">u128</span>;
+    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">PoW</span>::<span class="ident">prove_work</span>(<span class="kw-2">&amp;</span><span class="ident">secret</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(), <span class="ident">difficulty</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>).<span class="ident">unwrap</span>();
+    <span class="ident">payload</span>
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">it_works</span>() {
+        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">gen_pow</span>(<span class="number">500</span>, <span class="string">&quot;MFsqLMZId629Dh2hrtux2Qdn3gBzCaSt&quot;</span>.<span class="ident">into</span>());
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;{\&quot;nonce\&quot;:312,\&quot;result\&quot;:\&quot;340175381422106372296624206295814425082\&quot;,\&quot;_spook\&quot;:null}&quot;</span>,    <span class="kw-2">&amp;</span><span class="ident">payload</span> );
+
+        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">gen_pow</span>(<span class="number">1_000</span>, <span class="string">&quot;MFsqLMZId629Dh2hrtux2Qdn3gBzCaSt&quot;</span>.<span class="ident">into</span>());
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;{\&quot;nonce\&quot;:312,\&quot;result\&quot;:\&quot;340175381422106372296624206295814425082\&quot;,\&quot;_spook\&quot;:null}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">payload</span>);
+
+        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">gen_pow</span>(<span class="number">2_000</span>, <span class="string">&quot;MFsqLMZId629Dh2hrtux2Qdn3gBzCaSt&quot;</span>.<span class="ident">into</span>());
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">payload</span>, <span class="string">&quot;{\&quot;nonce\&quot;:312,\&quot;result\&quot;:\&quot;340175381422106372296624206295814425082\&quot;,\&quot;_spook\&quot;:null}&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">gen_pow</span>(<span class="number">100_000</span>, <span class="string">&quot;MFsqLMZId629Dh2hrtux2Qdn3gBzCaSt&quot;</span>.<span class="ident">into</span>());
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">payload</span>, <span class="string">&quot;{\&quot;nonce\&quot;:59930,\&quot;result\&quot;:\&quot;340281433562218714678373578791487113813\&quot;,\&quot;_spook\&quot;:null}&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">gen_pow</span>(<span class="number">1_000_000</span>, <span class="string">&quot;MFsqLMZId629Dh2hrtux2Qdn3gBzCaSt&quot;</span>.<span class="ident">into</span>());
+
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">payload</span>,<span class="string">&quot;{\&quot;nonce\&quot;:1902451,\&quot;result\&quot;:\&quot;340282308726676882310449308394036800665\&quot;,\&quot;_spook\&quot;:null}&quot;</span>);
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "browser";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
