@@ -4,7 +4,7 @@ use actix::prelude::*;
 use derive_builder::Builder;
 //use lazy_static::*;
 
-use crate::new_levels::Defense;
+use crate::levels::Defense;
 //use crate::new_levels::Levels;
 
 // TODO move this into config parameter
@@ -97,7 +97,7 @@ impl Handler<DeleteVisitor> for Counter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::new_levels::*;
+    use crate::levels::*;
 
     // constants foor testing
     // (visitor count, level)
