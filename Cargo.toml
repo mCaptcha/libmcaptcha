@@ -1,0 +1,21 @@
+[package]
+name = "m_captcha"
+version = "0.1.0"
+authors = ["realaravinth <realaravinth@batsense.net>"]
+description = "Convenient abstractions for all things credentials"
+keywords = ["credentials", "password"]
+homepage = "https://github.com/realaravinth/argon2-creds"
+repository = "https://github.com/realaravinth/argon2-creds"
+license = "MIT OR Apache-2.0"
+edition = "2018"
+readme = "README.md"
+
+[workspace]
+members = [ ".", "browser", "cli" ]
+
+
+[dependencies]
+actix = "0.10"
+derive_more = "0.99"
+serde = "1.0.114"
+serde_json = "1"
