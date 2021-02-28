@@ -16,6 +16,9 @@ members = [ ".", "browser", "cli" ]
 
 [dependencies]
 actix = "0.10"
-derive_more = "0.99"
 serde = "1.0.114"
 serde_json = "1"
+derive_builder = "0.9"
+derive_more = "0.99"
+lazy_static = "1.4"
+actix-rt = "1"
