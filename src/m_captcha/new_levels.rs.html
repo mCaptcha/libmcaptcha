@@ -423,8 +423,6 @@
 <span id="420">420</span>
 <span id="421">421</span>
 <span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// //! ```rust</span>
 <span class="comment">// //! DefenseBuilder::default()</span>
@@ -605,10 +603,8 @@
     <span class="doccomment">/// tighten up defense. Increases defense level by a factor of one</span>
     <span class="doccomment">/// when defense is at max level, calling this method will have no effect</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tighten_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">current_visitor_threshold</span>);
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
             <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">current_visitor_threshold</span>);
         }
     }
     <span class="doccomment">/// loosen up defense. Decreases defense level by a factor of one</span>

@@ -35,26 +35,32 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Error datatypes</span>
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>};
 
-<span class="doccomment">/// Errors that can occur when interacting with the blockchain</span>
+<span class="doccomment">/// Errors that can occur when using</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Display</span>, <span class="ident">Clone</span>, <span class="ident">Error</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">tarpaulin_include</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CaptchaError</span> {
-    <span class="doccomment">/// when configuring m_captcha, `DefenseBuilder` must be passed atleast</span>
+    <span class="doccomment">/// when configuring m_captcha, [DefenseBuilder][crate::new_levels::DefenseBuilder] must be passed atleast</span>
     <span class="doccomment">/// one `LevelConfig` if not this error will arise</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;LevelBuilder should have atleaset one level configured&quot;</span>)]</span>
     <span class="ident">LevelEmpty</span>,
+
     <span class="doccomment">/// Visitor count must be an integer</span>
-    <span class="doccomment">/// when configuring m_captcha, `LevelBuilder` difficulty_factor</span>
+    <span class="doccomment">/// when configuring m_captcha, [LevelBuilder][crate::new_levels::LevelBuilder] difficulty_factor</span>
     <span class="doccomment">/// must be set to greater than zero.</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;difficulty factor must be greater than zero&quot;</span>)]</span>
     <span class="ident">DifficultyFactorZero</span>,
+
     <span class="doccomment">/// Difficulty factor must be set</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Set difficulty factor&quot;</span>)]</span>
     <span class="ident">SetDifficultyFactor</span>,
+
     <span class="doccomment">/// Visitor count must be set</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Set visitor count&quot;</span>)]</span>
     <span class="ident">SetVisitorCount</span>,

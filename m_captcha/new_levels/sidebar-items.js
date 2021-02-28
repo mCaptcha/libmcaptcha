@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Defense",""],["DefenseBuilder",""],["Level","Level struct"],["LevelBuilder","set difficulty configuration"]]});
