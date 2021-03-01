@@ -6,7 +6,7 @@ description = "Convenient abstractions for all things credentials"
 keywords = ["credentials", "password"]
 homepage = "https://github.com/realaravinth/argon2-creds"
 repository = "https://github.com/realaravinth/argon2-creds"
-license = "MIT OR Apache-2.0"
+license = "AGPL-3.0"
 edition = "2018"
 readme = "README.md"
 
