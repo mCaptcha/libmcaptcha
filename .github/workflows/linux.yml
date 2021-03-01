@@ -65,14 +65,14 @@ jobs:
           file: cobertura.xml
 
       - name: generate documentation
-        if: matrix.version == 'stable' && (github.repository == 'realaravinth/mCaptcha')
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/mCaptcha')
         uses: actions-rs/cargo@v1
         with:
           command: doc
           args: --no-deps --workspace --all-features
 
       - name: Deploy to GitHub Pages
-        if: matrix.version == 'stable' && (github.repository == 'realaravinth/mCaptcha')
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/mCaptcha')
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
