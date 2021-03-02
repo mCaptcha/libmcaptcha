@@ -1,18 +1,36 @@
-//! Error datatypes
+/*
+ * mCaptcha - A proof of work based DoS protection system
+ * Copyright © 2021 Aravinth Manivannan <realravinth@batsense.net>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+//! Errors and Result module
 use derive_more::{Display, Error};
 
-/// Errors that can occur when using
+/// Error datatype
 #[derive(Debug, PartialEq, Display, Clone, Error)]
 #[cfg(not(tarpaulin_include))]
 pub enum CaptchaError {
-    /// when configuring m_captcha, [DefenseBuilder][crate::new_levels::DefenseBuilder] must be passed atleast
-    /// one `LevelConfig` if not this error will arise
+    /// When configuring m_captcha, [DefenseBuilder][crate::defense::DefenseBuilder]
+    /// must be passed atleast one `LevelConfig` if not this error will arise
     #[display(fmt = "LevelBuilder should have atleaset one level configured")]
     LevelEmpty,
 
-    /// Visitor count must be an integer
-    /// when configuring m_captcha, [LevelBuilder][crate::new_levels::LevelBuilder] difficulty_factor
-    /// must be set to greater than zero.
+    /// Visitor count must be a whole number(zero and above).
+    /// When configuring m_captcha, [LevelBuilder][crate::defense::LevelBuilder].
+    /// difficulty_factor must be set to greater than zero.
     #[display(fmt = "difficulty factor must be greater than zero")]
     DifficultyFactorZero,
 

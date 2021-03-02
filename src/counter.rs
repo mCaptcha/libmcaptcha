@@ -1,49 +1,108 @@
+/*
+ * mCaptcha - A proof of work based DoS protection system
+ * Copyright © 2021 Aravinth Manivannan <realravinth@batsense.net>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+//! MCaptcha actor module that manages defense levels
+//!
+//! ## Usage:
+//! ```rust
+//! use m_captcha::{message::Visitor,MCaptchaBuilder, LevelBuilder, DefenseBuilder};
+//! // traits from actix needs to be in scope for starting actor
+//! use actix::prelude::*;
+//!
+//! #[actix_rt::main]
+//! async fn main() -> std::io::Result<()> {
+//!     // configure defense
+//!     let defense = DefenseBuilder::default()
+//!         // add as many levels as you see fit
+//!         .add_level(
+//!             LevelBuilder::default()
+//!                 // visitor_threshold is the threshold/limit at which
+//!                 // mCaptcha will adjust difficulty levels
+//!                 // it is advisable to set small values for the first
+//!                 // levels visitor_threshold and difficulty_factor
+//!                 // as this will be the work that clients will be
+//!                 // computing when there's no load
+//!                 .visitor_threshold(50)
+//!                 .difficulty_factor(500)
+//!                 .unwrap()
+//!                 .build()
+//!                 .unwrap(),
+//!         )
+//!         .unwrap()
+//!         .add_level(
+//!             LevelBuilder::default()
+//!                 .visitor_threshold(5000)
+//!                 .difficulty_factor(50000)
+//!                 .unwrap()
+//!                 .build()
+//!                 .unwrap(),
+//!         )
+//!         .unwrap()
+//!         .build()
+//!         .unwrap();
+//!
+//!     // create and start MCaptcha actor
+//!     let mcaptcha = MCaptchaBuilder::default()
+//!         .defense(defense)
+//!         // leaky bucket algorithm's emission interval
+//!         .duration(30)
+//!         .build()
+//!         .unwrap()
+//!         .start();
+//!
+//!     // increment count when user visits protected routes
+//!     mcaptcha.send(Visitor).await.unwrap();
+//!
+//!     Ok(())
+//! }
+//! ```
+
 use std::time::Duration;
 
 use actix::prelude::*;
 use derive_builder::Builder;
-//use lazy_static::*;
 
-use crate::levels::Defense;
-//use crate::new_levels::Levels;
+use crate::defense::Defense;
 
-// TODO move this into config parameter
-// lazy_static! {
-//     pub static ref DURATION: Duration = Duration::new(POW_SESSION_DURATION, 0);
-// }
-
-/// Add visitor message
+/// Message to increment the visitor count
 #[derive(Message)]
 #[rtype(result = "u32")]
 pub struct Visitor;
 
+/// Message to decrement the visitor count
 #[derive(Message)]
 #[rtype(result = "()")]
 struct DeleteVisitor;
 
+/// This struct represents the mCaptcha state and is used
+/// to configure leaky-bucket lifetime and manage defense
 #[derive(Builder)]
-pub struct Counter {
+pub struct MCaptcha {
     #[builder(default = "0", setter(skip))]
-    visitor_count: u32,
+    visitor_threshold: u32,
     defense: Defense,
     duration: u64,
 }
 
-// impl Default for Counter {
-//     fn default() -> Self {
-//         Counter {
-//             visitor_count: 0,
-//             levels: Levels::default(),
-//             duration: 30,
-//         }
-//     }
-// }
-
-impl Counter {
+impl MCaptcha {
     /// incerment visiotr count by one
     pub fn add_visitor(&mut self) {
-        self.visitor_count += 1;
-        if self.visitor_count > self.defense.visitor_threshold() {
+        self.visitor_threshold += 1;
+        if self.visitor_threshold > self.defense.visitor_threshold() {
             self.defense.tighten_up();
         } else {
             self.defense.loosen_up();
@@ -52,8 +111,8 @@ impl Counter {
 
     /// deccerment visiotr count by one
     pub fn decrement_visiotr(&mut self) {
-        if self.visitor_count > 0 {
-            self.visitor_count -= 1;
+        if self.visitor_threshold > 0 {
+            self.visitor_threshold -= 1;
         }
     }
 
@@ -63,11 +122,11 @@ impl Counter {
     }
 }
 
-impl Actor for Counter {
+impl Actor for MCaptcha {
     type Context = Context<Self>;
 }
 
-impl Handler<Visitor> for Counter {
+impl Handler<Visitor> for MCaptcha {
     type Result = u32;
     fn handle(&mut self, _: Visitor, ctx: &mut Self::Context) -> Self::Result {
         use actix::clock::delay_for;
@@ -87,7 +146,7 @@ impl Handler<Visitor> for Counter {
     }
 }
 
-impl Handler<DeleteVisitor> for Counter {
+impl Handler<DeleteVisitor> for MCaptcha {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
         self.decrement_visiotr();
@@ -97,9 +156,9 @@ impl Handler<DeleteVisitor> for Counter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::levels::*;
+    use crate::defense::*;
 
-    // constants foor testing
+    // constants for testing
     // (visitor count, level)
     const LEVEL_1: (u32, u32) = (50, 50);
     const LEVEL_2: (u32, u32) = (500, 500);
@@ -109,7 +168,7 @@ mod tests {
         DefenseBuilder::default()
             .add_level(
                 LevelBuilder::default()
-                    .visitor_count(LEVEL_1.0)
+                    .visitor_threshold(LEVEL_1.0)
                     .difficulty_factor(LEVEL_1.1)
                     .unwrap()
                     .build()
@@ -118,7 +177,7 @@ mod tests {
             .unwrap()
             .add_level(
                 LevelBuilder::default()
-                    .visitor_count(LEVEL_2.0)
+                    .visitor_threshold(LEVEL_2.0)
                     .difficulty_factor(LEVEL_2.1)
                     .unwrap()
                     .build()
@@ -129,14 +188,14 @@ mod tests {
             .unwrap()
     }
 
-    async fn race(addr: Addr<Counter>, count: (u32, u32)) {
+    async fn race(addr: Addr<MCaptcha>, count: (u32, u32)) {
         for _ in 0..count.0 as usize - 1 {
             let _ = addr.send(Visitor).await.unwrap();
         }
     }
 
-    fn get_counter() -> Counter {
-        CounterBuilder::default()
+    fn get_counter() -> MCaptcha {
+        MCaptchaBuilder::default()
             .defense(get_defense())
             .duration(DURATION)
             .build()
