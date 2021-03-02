@@ -1,3 +1,16 @@
+//! mCaptcha is a proof of work based Denaial-of-Service attack protection system.
+//! This is is a WASM library that you can embed in your frontend code to protect your
+//! service.
+//!
+//! A commercial managed solution is in the works but I'd much rather prefer
+//! folks host their own instances as it will make the more decentralized and free.
+//!
+//! ## Workflow:
+//! mCaptcha workflow in the frontend is simple.
+//! 1. Call service to get a proof of work(PoW) configuration
+//! 2. Call into mCaptcha to get PoW
+//! 3. Send PoW to your service
+
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global

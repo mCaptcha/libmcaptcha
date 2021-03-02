@@ -12,17 +12,47 @@
 
 </div>
 
-## Features
-TODO
+### STATUS: ACTIVE DEVELOPMENT (fancy word for unusable)
+
+mCaptcha uses SHA256 based proof-of-work(PoW) to rate limit users. 
+
+**If someone wants to hammer your site, they will have to do more work to
+send requests than your server will have to do to respond to their
+request.**
+
+## Why use mCaptcha?
+- Free software, privacy focused
+- Seamless UX - No more annoying captchas!
+- IP address independent(sort of) - your users are behind a NAT? We got you covered!
+- Automatic bot throttling
+- Resistant to replay attacks - bye-bye captcha farms!
+
+## Demo
+
+I'll try to write a dedicated demo server but until then you can try
+[Shuttlecraft/identity](github.com/shuttlecraft/identity)'s sign up page
+available at https://accounts.shuttlecraft.io/signup. Feel free to
+provide bogus information while signing up(project under development,
+database frequently wiped).
+
+Be sure to open dev tools' network tab to witness the magic!
 
 ## Usage:
 
-Add this to your `Cargo.toml`:
+mCaptcha is made up of three components:
 
-```toml
-mCaptcha = { version = "0.1", git = "https://github.com/mcaptcha/mCaptcha" }
-```
+#### 1. Front-end library
+We have a WASM library now, Android and iOS libraries soon
 
-## Examples:
+#### 2. Back-end library
+We have Rust library, other languages will have support soon
 
-TODO
+#### 3. Rate limiting service
+Under development. 
+
+A paid, managed service will be made available soon but
+I([@realaravinth](https://batsense.net)) encourage you guys to
+self-host. Go decentralisation!
+
+## Contributing
+yes please!

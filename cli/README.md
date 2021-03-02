@@ -3,6 +3,7 @@
   <p>
     <strong>mCaptcha - PoW based DoS protection</strong>
   </p>
+</div>
 
 ## Usage
 

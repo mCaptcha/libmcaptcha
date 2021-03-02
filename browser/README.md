@@ -2,7 +2,7 @@
 
   <h1>PoW JavaScript library</h1>
 
-  <strong>JavaScript library to generate PoW for Shuttlecraft</strong>
+  <strong>JavaScript library to generate PoW for mCaptcha</strong>
 
 </div>
 
@@ -15,7 +15,10 @@ for more information.
 ```
 $ /path/to/wasm-opt pkg/pow_bg.wasm -o pkg/pow_bg.wasm -O --enable-mutable-globals
 ```
-My /path/to/wasm-opt is `~/.cache/.wasm-pack/wasm-opt-4d7a65327e9363b7/wasm-opt`
+My `/path/to/wasm-opt` is `~/.cache/.wasm-pack/wasm-opt-4d7a65327e9363b7/wasm-opt`
+
+
+----
 
 <h2>  Default documentation provided by Rust wasm: </h2>
 
