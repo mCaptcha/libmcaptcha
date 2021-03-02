@@ -102,7 +102,7 @@ impl LevelBuilder {
     /// build Level struct
     pub fn build(&mut self) -> CaptchaResult<Level> {
         if self.visitor_threshold.is_none() {
-            Err(CaptchaError::SetVisitorCount)
+            Err(CaptchaError::SetVisitorThreshold)
         } else if self.difficulty_factor.is_none() {
             Err(CaptchaError::SetDifficultyFactor)
         } else {
@@ -247,6 +247,18 @@ mod tests {
         assert_eq!(
             LevelBuilder::default().difficulty_factor(0),
             Err(CaptchaError::DifficultyFactorZero)
+        );
+
+        assert_eq!(
+            LevelBuilder::default()
+                .difficulty_factor(1)
+                .unwrap()
+                .build(),
+            Err(CaptchaError::SetVisitorThreshold)
+        );
+        assert_eq!(
+            LevelBuilder::default().visitor_threshold(10).build(),
+            Err(CaptchaError::SetDifficultyFactor)
         );
     }
 

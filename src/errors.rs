@@ -38,9 +38,9 @@ pub enum CaptchaError {
     #[display(fmt = "Set difficulty factor")]
     SetDifficultyFactor,
 
-    /// Visitor count must be set
-    #[display(fmt = "Set visitor count")]
-    SetVisitorCount,
+    /// Visitor threshold must be set
+    #[display(fmt = "Set visitor threshold")]
+    SetVisitorThreshold,
 
     /// Visitor count must be Unique
     #[display(fmt = "Duplicate visitor count")]
