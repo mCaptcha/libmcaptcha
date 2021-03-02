@@ -423,6 +423,18 @@
 <span id="420">420</span>
 <span id="421">421</span>
 <span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -528,7 +540,7 @@
     <span class="doccomment">/// build Level struct</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">visitor_threshold</span>.<span class="ident">is_none</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetVisitorCount</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetVisitorThreshold</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">difficulty_factor</span>.<span class="ident">is_none</span>() {
             <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetDifficultyFactor</span>)
         } <span class="kw">else</span> {
@@ -673,6 +685,18 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">LevelBuilder</span>::<span class="ident">default</span>().<span class="ident">difficulty_factor</span>(<span class="number">0</span>),
             <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">DifficultyFactorZero</span>)
+        );
+
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
+                .<span class="ident">difficulty_factor</span>(<span class="number">1</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">build</span>(),
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetVisitorThreshold</span>)
+        );
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">LevelBuilder</span>::<span class="ident">default</span>().<span class="ident">visitor_threshold</span>(<span class="number">10</span>).<span class="ident">build</span>(),
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetDifficultyFactor</span>)
         );
     }
 
