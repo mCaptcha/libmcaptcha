@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/levels.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>levels.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/defense.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>defense.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../m_captcha/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -424,59 +424,79 @@
 <span id="421">421</span>
 <span id="422">422</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="comment">// //! ```rust</span>
-<span class="comment">// //! DefenseBuilder::default()</span>
-<span class="comment">// //!        .add_level(</span>
-<span class="comment">// //!            LevelBuilder::default()</span>
-<span class="comment">// //!                .visitor_count(50)</span>
-<span class="comment">// //!                .difficulty_factor(50)</span>
-<span class="comment">// //!                .unwrap()</span>
-<span class="comment">// //!                .build()</span>
-<span class="comment">// //!                .unwrap(),</span>
-<span class="comment">// //!        )</span>
-<span class="comment">// //!        .unwrap()</span>
-<span class="comment">// //!        .add_level(</span>
-<span class="comment">// //!            LevelBuilder::default()</span>
-<span class="comment">// //!                .visitor_count(500)</span>
-<span class="comment">// //!                .difficulty_factor(500)</span>
-<span class="comment">// //!                .unwrap()</span>
-<span class="comment">// //!                .build()</span>
-<span class="comment">// //!                .unwrap(),</span>
-<span class="comment">// //!        )</span>
-<span class="comment">// //!        .unwrap()</span>
-<span class="comment">// //!        .build()</span>
-<span class="comment">// //!        .unwrap();</span>
-<span class="comment">// //! ```</span>
+<span class="comment">/*
+ * mCaptcha - A proof of work based DoS protection system
+ * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ */</span>
+
+<span class="doccomment">//! Defense datatypes</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! use m_captcha::{LevelBuilder, DefenseBuilder};</span>
+<span class="doccomment">//! DefenseBuilder::default()</span>
+<span class="doccomment">//!        .add_level(</span>
+<span class="doccomment">//!            LevelBuilder::default()</span>
+<span class="doccomment">//!                .visitor_threshold(50)</span>
+<span class="doccomment">//!                .difficulty_factor(50)</span>
+<span class="doccomment">//!                .unwrap()</span>
+<span class="doccomment">//!                .build()</span>
+<span class="doccomment">//!                .unwrap(),</span>
+<span class="doccomment">//!        )</span>
+<span class="doccomment">//!        .unwrap()</span>
+<span class="doccomment">//!        .add_level(</span>
+<span class="doccomment">//!            LevelBuilder::default()</span>
+<span class="doccomment">//!                .visitor_threshold(500)</span>
+<span class="doccomment">//!                .difficulty_factor(500)</span>
+<span class="doccomment">//!                .unwrap()</span>
+<span class="doccomment">//!                .build()</span>
+<span class="doccomment">//!                .unwrap(),</span>
+<span class="doccomment">//!        )</span>
+<span class="doccomment">//!        .unwrap()</span>
+<span class="doccomment">//!        .build()</span>
+<span class="doccomment">//!        .unwrap();</span>
+<span class="doccomment">//! ```</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Level struct</span>
+<span class="doccomment">/// Level struct that describes threshold-difficulty factor mapping</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Level</span> {
-    <span class="ident">visitor_count</span>: <span class="ident">u32</span>,
+    <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
     <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Level</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Level</span> {
-            <span class="ident">visitor_count</span>: <span class="number">0</span>,
+            <span class="ident">visitor_threshold</span>: <span class="number">0</span>,
             <span class="ident">difficulty_factor</span>: <span class="number">0</span>,
         }
     }
 }
 
-<span class="doccomment">/// set difficulty configuration</span>
+<span class="doccomment">/// Bulder struct for [Level] to describe threshold-difficulty factor mapping</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LevelBuilder</span> {
-    <span class="ident">visitor_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">visitor_threshold</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">difficulty_factor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LevelBuilder</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">LevelBuilder</span> {
-            <span class="ident">visitor_count</span>: <span class="prelude-val">None</span>,
+            <span class="ident">visitor_threshold</span>: <span class="prelude-val">None</span>,
             <span class="ident">difficulty_factor</span>: <span class="prelude-val">None</span>,
         }
     }
@@ -484,14 +504,13 @@
 
 <span class="kw">impl</span> <span class="ident">LevelBuilder</span> {
     <span class="doccomment">/// set visitor count for level</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visitor_count</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor_count</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">visitor_count</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">visitor_count</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visitor_threshold</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">visitor_threshold</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">visitor_threshold</span>);
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// set difficulty factor for level</span>
-    <span class="doccomment">/// difficulty_factor can&#39;t be zero because</span>
-    <span class="doccomment">/// Difficulty is calculated as</span>
+    <span class="doccomment">/// set difficulty factor for level. difficulty_factor can&#39;t be zero because</span>
+    <span class="doccomment">/// Difficulty is calculated as:</span>
     <span class="doccomment">/// ```no_run</span>
     <span class="doccomment">/// let difficulty_factor = 500;</span>
     <span class="doccomment">/// let difficulty = u128::max_value() - u128::max_value() / difficulty_factor;</span>
@@ -506,21 +525,22 @@
         }
     }
 
-    <span class="doccomment">/// build Level</span>
+    <span class="doccomment">/// build Level struct</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">visitor_count</span>.<span class="ident">is_none</span>() {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">visitor_threshold</span>.<span class="ident">is_none</span>() {
             <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetVisitorCount</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">difficulty_factor</span>.<span class="ident">is_none</span>() {
             <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">SetDifficultyFactor</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">Level</span> {
                 <span class="ident">difficulty_factor</span>: <span class="self">self</span>.<span class="ident">difficulty_factor</span>.<span class="ident">unwrap</span>(),
-                <span class="ident">visitor_count</span>: <span class="self">self</span>.<span class="ident">visitor_count</span>.<span class="ident">unwrap</span>(),
+                <span class="ident">visitor_threshold</span>: <span class="self">self</span>.<span class="ident">visitor_threshold</span>.<span class="ident">unwrap</span>(),
             })
         }
     }
 }
 
+<span class="doccomment">/// struct describes all the different [Level]s at which an mCaptcha system operates</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Defense</span> {
     <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span>,
@@ -528,6 +548,7 @@
     <span class="ident">current_visitor_threshold</span>: <span class="ident">usize</span>,
 }
 
+<span class="doccomment">/// Builder struct for [Defense]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DefenseBuilder</span> {
     <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span>,
@@ -540,9 +561,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DefenseBuilder</span> {
+    <span class="doccomment">/// add a level to [Defense]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_level</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">level</span>: <span class="ident">Level</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">i</span>.<span class="ident">visitor_count</span> <span class="op">=</span><span class="op">=</span> <span class="ident">level</span>.<span class="ident">visitor_count</span> {
+            <span class="kw">if</span> <span class="ident">i</span>.<span class="ident">visitor_threshold</span> <span class="op">=</span><span class="op">=</span> <span class="ident">level</span>.<span class="ident">visitor_threshold</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">DuplicateVisitorCount</span>);
             }
         }
@@ -550,12 +572,11 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
+    <span class="doccomment">/// Build [Defense]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">Defense</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">is_empty</span>() {
             <span class="comment">// sort levels to arrange in ascending order</span>
-            <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">visitor_count</span>);
-
-            <span class="comment">// as visitor count increases, difficulty_factor too should increse</span>
+            <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">visitor_threshold</span>);
 
             <span class="kw">for</span> <span class="ident">level</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">iter</span>() {
                 <span class="kw">if</span> <span class="ident">level</span>.<span class="ident">difficulty_factor</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
@@ -563,6 +584,8 @@
                 }
             }
 
+            <span class="comment">// as visitor count increases, difficulty_factor too should increse</span>
+            <span class="comment">// if it decreses, an error must be thrown</span>
             <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">levels</span>[<span class="ident">i</span>].<span class="ident">difficulty_factor</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">levels</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">difficulty_factor</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">DecreaseingDifficultyFactor</span>);
@@ -589,44 +612,45 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Defense</span> {
-    <span class="doccomment">///! Difficulty is calculated as</span>
+    <span class="doccomment">///! Difficulty is calculated as:</span>
     <span class="doccomment">///! ```rust</span>
     <span class="doccomment">///! let difficulty = u128::max_value() - u128::max_value() / difficulty_factor;</span>
     <span class="doccomment">///! ```</span>
-    <span class="doccomment">///! the higher the `difficulty_factor`, the higher the difficulty.</span>
+    <span class="doccomment">///! The higher the `difficulty_factor`, the higher the difficulty.</span>
 
-    <span class="doccomment">/// get difficulty factor of current level of defense</span>
+    <span class="doccomment">/// Get difficulty factor of current level of defense</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_difficulty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">levels</span>[<span class="self">self</span>.<span class="ident">current_visitor_threshold</span>].<span class="ident">difficulty_factor</span>
     }
 
-    <span class="doccomment">/// tighten up defense. Increases defense level by a factor of one</span>
-    <span class="doccomment">/// when defense is at max level, calling this method will have no effect</span>
+    <span class="doccomment">/// tighten up defense. Increases defense level by a factor of one.</span>
+    <span class="doccomment">/// When defense is at max level, calling this method will have no effect</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tighten_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
             <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
-    <span class="doccomment">/// loosen up defense. Decreases defense level by a factor of one</span>
-    <span class="doccomment">/// when defense is at the lowest level, calling this method will have no effect</span>
+    <span class="doccomment">/// Loosen up defense. Decreases defense level by a factor of one.</span>
+    <span class="doccomment">/// When defense is at the lowest level, calling this method will have no effect.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">loosen_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
 
-    <span class="doccomment">/// set defense to maximum level</span>
+    <span class="doccomment">/// Set defense to maximum level</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_defense</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// set defense to minimum level</span>
+    <span class="doccomment">/// Set defense to minimum level</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min_defense</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">=</span> <span class="number">0</span>;
     }
 
+    <span class="doccomment">/// Get current level&#39;s  visitor threshold</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visitor_threshold</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="ident">levels</span>[<span class="self">self</span>.<span class="ident">current_visitor_threshold</span>].<span class="ident">visitor_count</span>
+        <span class="self">self</span>.<span class="ident">levels</span>[<span class="self">self</span>.<span class="ident">current_visitor_threshold</span>].<span class="ident">visitor_threshold</span>
     }
 }
 
@@ -639,11 +663,11 @@
         <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
             .<span class="ident">difficulty_factor</span>(<span class="number">1</span>)
             .<span class="ident">unwrap</span>()
-            .<span class="ident">visitor_count</span>(<span class="number">0</span>)
+            .<span class="ident">visitor_threshold</span>(<span class="number">0</span>)
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>();
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">level</span>.<span class="ident">visitor_count</span>, <span class="number">0</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">level</span>.<span class="ident">visitor_threshold</span>, <span class="number">0</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">level</span>.<span class="ident">difficulty_factor</span>, <span class="number">1</span>);
 
         <span class="macro">assert_eq</span><span class="macro">!</span>(
@@ -653,12 +677,12 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">defense_builder_duplicate_visitor_count</span>() {
+    <span class="kw">fn</span> <span class="ident">defense_builder_duplicate_visitor_threshold</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">defense_builder</span> <span class="op">=</span> <span class="ident">DefenseBuilder</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">defense_builder</span>
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">50</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">50</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">50</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -667,7 +691,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">50</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">50</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">50</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -682,7 +706,7 @@
         <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">defense_builder</span>
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">50</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">50</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">50</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -691,7 +715,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">500</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">500</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">10</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -706,7 +730,7 @@
         <span class="ident">DefenseBuilder</span>::<span class="ident">default</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">50</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">50</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">50</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -715,7 +739,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">500</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">500</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">5000</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -724,7 +748,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">5000</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">5000</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">50000</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -733,7 +757,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">50000</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">50000</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">500000</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -742,7 +766,7 @@
             .<span class="ident">unwrap</span>()
             .<span class="ident">add_level</span>(
                 <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
-                    .<span class="ident">visitor_count</span>(<span class="number">500000</span>)
+                    .<span class="ident">visitor_threshold</span>(<span class="number">500000</span>)
                     .<span class="ident">difficulty_factor</span>(<span class="number">5000000</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">build</span>()
@@ -821,30 +845,6 @@
         <span class="ident">defense</span>.<span class="ident">loosen_up</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">defense</span>.<span class="ident">get_difficulty</span>(), <span class="number">50</span>);
     }
-
-    <span class="comment">//    #[test]</span>
-    <span class="comment">//    fn threshold_works() {</span>
-    <span class="comment">//        let mut level = Levels::default();</span>
-    <span class="comment">//</span>
-    <span class="comment">//        assert_eq!(level.threshold(), Levels::One as usize);</span>
-    <span class="comment">//        level.next();</span>
-    <span class="comment">//        assert_eq!(level.threshold(), Levels::Two as usize);</span>
-    <span class="comment">//        level.next();</span>
-    <span class="comment">//        assert_eq!(level.threshold(), Levels::Three as usize);</span>
-    <span class="comment">//    }</span>
-    <span class="comment">//</span>
-    <span class="comment">//    #[test]</span>
-    <span class="comment">//    fn difficulty_works() {</span>
-    <span class="comment">//        let mut level = Levels::default();</span>
-    <span class="comment">//</span>
-    <span class="comment">//        assert_eq!(level.get_difficulty(), Levels::One as u32);</span>
-    <span class="comment">//        level.next();</span>
-    <span class="comment">//        assert_eq!(level.get_difficulty(), Levels::Two as u32);</span>
-    <span class="comment">//        level.next();</span>
-    <span class="comment">//        assert_eq!(level.get_difficulty(), 100_000);</span>
-    <span class="comment">//        level.next();</span>
-    <span class="comment">//        assert_eq!(level.get_difficulty(), 1_000_000);</span>
-    <span class="comment">//    }</span>
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "m_captcha";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

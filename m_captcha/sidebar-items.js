@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["counter",""],["errors","Error datatypes"],["levels",""]]});
+initSidebarItems({"mod":[["counter","MCaptcha actor module that manages defense levels"],["defense","Defense datatypes"],["errors","Errors and Result module"],["message","message datatypes to interact with [MCaptcha] actor"]]});

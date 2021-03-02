@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["CaptchaError","Errors that can occur when using"]],"type":[["CaptchaResult","[Result] datatype for m_captcha"]]});
+initSidebarItems({"enum":[["CaptchaError","Error datatype"]],"type":[["CaptchaResult","[Result] datatype for m_captcha"]]});
