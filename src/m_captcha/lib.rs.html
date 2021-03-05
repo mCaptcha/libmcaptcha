@@ -104,6 +104,15 @@
 <span id="101">101</span>
 <span id="102">102</span>
 <span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -145,7 +154,7 @@
 <span class="doccomment">//! ## Example:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! use m_captcha::{LevelBuilder, DefenseBuilder, message::Visitor, MCaptchaBuilder};</span>
+<span class="doccomment">//! use m_captcha::{LevelBuilder, cache::HashCache, DefenseBuilder, message::Visitor, MCaptchaBuilder};</span>
 <span class="doccomment">//! // traits from actix needs to be in scope for starting actor</span>
 <span class="doccomment">//! use actix::prelude::*;</span>
 <span class="doccomment">//!</span>
@@ -181,11 +190,14 @@
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap();</span>
 <span class="doccomment">//!</span>
+<span class="doccomment">//!     let cache = HashCache::default().start();</span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!     // create and start MCaptcha actor</span>
 <span class="doccomment">//!     let mcaptcha = MCaptchaBuilder::default()</span>
 <span class="doccomment">//!         .defense(defense)</span>
 <span class="doccomment">//!         // leaky bucket algorithm&#39;s emission interval</span>
 <span class="doccomment">//!         .duration(30)</span>
+<span class="doccomment">//!         .cache(cache)</span>
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap()</span>
 <span class="doccomment">//!         .start();</span>
@@ -197,16 +209,22 @@
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">counter</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">config</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defense</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hashcache</span>;
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">message</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">counter</span>::<span class="ident">Visitor</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">Visitor</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">counter</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
+<span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">config</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">defense</span>::{<span class="ident">Defense</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">LevelBuilder</span>};
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "m_captcha";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

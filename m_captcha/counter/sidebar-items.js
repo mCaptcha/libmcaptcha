@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["MCaptcha","This struct represents the mCaptcha state and is used to configure leaky-bucket lifetime and manage defense"],["MCaptchaBuilder","Builder for `MCaptcha`."],["Visitor","Message to increment the visitor count"]]});
