@@ -49,6 +49,10 @@ pub enum CaptchaError {
     /// Difficulty factor should increase with level
     #[display(fmt = "Difficulty factor should increase with level")]
     DecreaseingDifficultyFactor,
+
+    /// Difficulty factor should increase with level
+    #[display(fmt = "Actor mailbox error")]
+    MailboxError,
 }
 
 /// [Result] datatype for m_captcha

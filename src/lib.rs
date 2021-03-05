@@ -38,7 +38,7 @@
 //! ## Example:
 //!
 //! ```rust
-//! use m_captcha::{LevelBuilder, DefenseBuilder, message::Visitor, MCaptchaBuilder};
+//! use m_captcha::{LevelBuilder, cache::HashCache, DefenseBuilder, message::Visitor, MCaptchaBuilder};
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!
@@ -74,11 +74,14 @@
 //!         .build()
 //!         .unwrap();
 //!
+//!     let cache = HashCache::default().start();
+//!
 //!     // create and start MCaptcha actor
 //!     let mcaptcha = MCaptchaBuilder::default()
 //!         .defense(defense)
 //!         // leaky bucket algorithm's emission interval
 //!         .duration(30)
+//!         .cache(cache)
 //!         .build()
 //!         .unwrap()
 //!         .start();
@@ -90,14 +93,20 @@
 //! }
 //! ```
 
-pub mod counter;
+pub mod config;
 pub mod defense;
 pub mod errors;
+pub mod hashcache;
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod message {
-    pub use crate::counter::Visitor;
+    pub use crate::config::Visitor;
 }
 
-pub use counter::{MCaptcha, MCaptchaBuilder};
+/// message datatypes to interact with [MCaptcha] actor
+pub mod cache {
+    pub use crate::hashcache::HashCache;
+}
+
+pub use config::{MCaptcha, MCaptchaBuilder};
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
