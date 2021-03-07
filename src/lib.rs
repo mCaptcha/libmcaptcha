@@ -74,14 +74,14 @@
 //!         .build()
 //!         .unwrap();
 //!
-//!     let cache = HashCache::default().start();
+//!     //let cache = HashCache::default().start();
 //!
 //!     // create and start MCaptcha actor
 //!     let mcaptcha = MCaptchaBuilder::default()
 //!         .defense(defense)
 //!         // leaky bucket algorithm's emission interval
 //!         .duration(30)
-//!         .cache(cache)
+//!      //   .cache(cache)
 //!         .build()
 //!         .unwrap()
 //!         .start();
@@ -95,6 +95,7 @@
 
 pub mod defense;
 pub mod errors;
+pub mod master;
 pub mod mcaptcha;
 
 /// message datatypes to interact with [MCaptcha] actor

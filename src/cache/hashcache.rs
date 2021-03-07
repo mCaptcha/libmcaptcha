@@ -11,14 +11,13 @@ use crate::errors::*;
 pub struct HashCache(HashMap<String, u32>);
 
 impl HashCache {
-    fn save(&mut self, config: Arc<PoWConfig>) -> CaptchaResult<()> {
-        self.0
-            .insert(config.string.clone(), config.difficulty_factor);
+    fn save(&mut self, config: PoWConfig) -> CaptchaResult<()> {
+        self.0.insert(config.string, config.difficulty_factor);
         Ok(())
     }
 
-    fn retrive(&mut self, string: Arc<String>) -> CaptchaResult<Option<u32>> {
-        if let Some(difficulty_factor) = self.0.get(&*string) {
+    fn retrive(&mut self, string: String) -> CaptchaResult<Option<u32>> {
+        if let Some(difficulty_factor) = self.0.get(&string) {
             Ok(Some(difficulty_factor.to_owned()))
         } else {
             Ok(None)
@@ -35,11 +34,6 @@ impl Actor for HashCache {
 impl Handler<Cache> for HashCache {
     type Result = MessageResult<Cache>;
     fn handle(&mut self, msg: Cache, _ctx: &mut Self::Context) -> Self::Result {
-        //        if let Err(e) = self.save(msg.0.clone()) {
-        //            MessageResult(Err(e))
-        //        } else {
-        //            MessageResult(Ok(msg.0))
-        //        }
         MessageResult(self.save(msg.0))
     }
 }
@@ -47,7 +41,7 @@ impl Handler<Cache> for HashCache {
 impl Handler<Retrive> for HashCache {
     type Result = MessageResult<Retrive>;
     fn handle(&mut self, msg: Retrive, _ctx: &mut Self::Context) -> Self::Result {
-        MessageResult(self.retrive(msg.0.clone()))
+        MessageResult(self.retrive(msg.0))
     }
 }
 
@@ -56,10 +50,13 @@ mod tests {
     use super::*;
 
     #[actix_rt::test]
-    async fn counter_defense_tightenup_works() {
+    async fn hashcache_works() {
         let addr = HashCache::default().start();
-        let p = Arc::new("ewerw".to_string());
-        addr.send(Retrive(p)).await.unwrap().unwrap();
+        let cache: PoWConfig = PoWConfig::new(54);
+        let string = cache.string.clone();
+        addr.send(Cache(cache)).await.unwrap().unwrap();
+        let difficulty_factor = addr.send(Retrive(string)).await.unwrap().unwrap();
+        assert_eq!(difficulty_factor.unwrap(), 54);
     }
     //
     //    #[actix_rt::test]

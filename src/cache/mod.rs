@@ -9,22 +9,19 @@ pub mod messages {
     use std::sync::Arc;
 
     use actix::dev::*;
-    use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use serde::Serialize;
 
-    use super::Save;
     use crate::errors::*;
-    use crate::mcaptcha::MCaptcha;
 
     /// Message to decrement the visitor count
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
-    pub struct Cache(pub Arc<PoWConfig>);
+    pub struct Cache(pub PoWConfig);
 
     /// Message to decrement the visitor count
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<Option<u32>>")]
-    pub struct Retrive(pub Arc<String>);
+    pub struct Retrive(pub String);
 
     /// PoW Config that will be sent to clients for generating PoW
     #[derive(Clone, Serialize, Debug)]
@@ -34,14 +31,22 @@ pub mod messages {
     }
 
     impl PoWConfig {
-        pub fn new<T>(m: &MCaptcha<T>) -> Self
-        where
-            T: Save,
-            <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-        {
+        pub fn new(m: u32) -> Self {
+            use std::iter;
+
+            use rand::{distributions::Alphanumeric, rngs::ThreadRng, thread_rng, Rng};
+
+            let mut rng: ThreadRng = thread_rng();
+
+            let string = iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric))
+                .map(char::from)
+                .take(32)
+                .collect::<String>();
+
             PoWConfig {
-                string: thread_rng().sample_iter(&Alphanumeric).take(32).collect(),
-                difficulty_factor: m.get_difficulty(),
+                string,
+                difficulty_factor: m,
             }
         }
     }

@@ -56,12 +56,11 @@
 //!         .unwrap();
 //!
 //!     // create and start MCaptcha actor
-//!     let cache = HashCache::default().start();
+//!     //let cache = HashCache::default().start();
 //!     let mcaptcha = MCaptchaBuilder::default()
 //!         .defense(defense)
 //!         // leaky bucket algorithm's emission interval
 //!         .duration(30)
-//!         .cache(cache)
 //!         .build()
 //!         .unwrap()
 //!         .start();
@@ -73,37 +72,26 @@
 //! }
 //! ```
 
-use std::sync::Arc;
 use std::time::Duration;
 
 use actix::dev::*;
 use derive_builder::Builder;
 use pow_sha256::PoW as ShaPoW;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use crate::cache::{messages::*, HashCache, Save};
 use crate::defense::Defense;
-use crate::errors::*;
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
 #[derive(Clone, Builder)]
-pub struct MCaptcha<T>
-where
-    T: Save,
-{
+pub struct MCaptcha {
     #[builder(default = "0", setter(skip))]
     visitor_threshold: u32,
     defense: Defense,
     duration: u64,
-    cache: Addr<T>,
 }
 
-impl<T> MCaptcha<T>
-where
-    T: Save,
-{
+impl MCaptcha {
     /// incerment visiotr count by one
     pub fn add_visitor(&mut self) {
         self.visitor_threshold += 1;
@@ -126,10 +114,7 @@ where
         self.defense.get_difficulty()
     }
 }
-impl<T> Actor for MCaptcha<T>
-where
-    T: Save,
-{
+impl Actor for MCaptcha {
     type Context = Context<Self>;
 }
 
@@ -138,11 +123,7 @@ where
 #[rtype(result = "()")]
 struct DeleteVisitor;
 
-impl<T> Handler<DeleteVisitor> for MCaptcha<T>
-where
-    T: Save,
-    // <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-{
+impl Handler<DeleteVisitor> for MCaptcha {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
         self.decrement_visiotr();
@@ -151,19 +132,14 @@ where
 
 /// Message to increment the visitor count
 #[derive(Message)]
-#[rtype(result = "CaptchaResult<PoWConfig>")]
+#[rtype(result = "u32")]
 pub struct Visitor;
 
-impl<T> Handler<Visitor> for MCaptcha<T>
-where
-    T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-{
-    type Result = ResponseActFuture<Self, CaptchaResult<PoWConfig>>;
+impl Handler<Visitor> for MCaptcha {
+    type Result = u32;
 
     fn handle(&mut self, _: Visitor, ctx: &mut Self::Context) -> Self::Result {
         use actix::clock::delay_for;
-        use actix::fut::wrap_future;
 
         let addr = ctx.address();
 
@@ -176,16 +152,7 @@ where
         ctx.spawn(wait_for);
 
         self.add_visitor();
-        let res = Arc::new(PoWConfig::new(&self));
-
-        let act_fut = wrap_future::<_, Self>(self.cache.send(Cache(res.clone()))).map(
-            |result, _actor, _ctx| match result {
-                Ok(Ok(())) => Ok(Arc::try_unwrap(res).unwrap()),
-                Ok(Err(e)) => Err(e),
-                Err(_) => Err(CaptchaError::MailboxError), //TODO do typecasting from mailbox error to captcha error
-            },
-        );
-        Box::pin(act_fut)
+        self.get_difficulty()
     }
 }
 
@@ -197,13 +164,9 @@ pub struct VerifyPoW {
     id: String,
 }
 
-impl<T> Handler<VerifyPoW> for MCaptcha<T>
-where
-    T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-{
+impl Handler<VerifyPoW> for MCaptcha {
     type Result = ();
-    fn handle(&mut self, msg: VerifyPoW, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _: VerifyPoW, _ctx: &mut Self::Context) -> Self::Result {
         self.decrement_visiotr();
     }
 }
@@ -219,8 +182,7 @@ mod tests {
     const LEVEL_2: (u32, u32) = (500, 500);
     const DURATION: u64 = 10;
 
-    type MyActor = Addr<MCaptcha<HashCache>>;
-    type CacheAddr = Addr<HashCache>;
+    type MyActor = Addr<MCaptcha>;
 
     fn get_defense() -> Defense {
         DefenseBuilder::default()
@@ -246,23 +208,15 @@ mod tests {
             .unwrap()
     }
 
-    async fn race<T>(addr: Addr<MCaptcha<T>>, count: (u32, u32))
-    where
-        //     Actor + Handler<Cache>,
-        T: Save,
-        <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-    {
+    async fn race(addr: Addr<MCaptcha>, count: (u32, u32)) {
         for _ in 0..count.0 as usize - 1 {
             let _ = addr.send(Visitor).await.unwrap();
         }
     }
 
-    fn get_counter() -> MCaptcha<crate::cache::HashCache> {
-        use actix::prelude::*;
-        let cache: CacheAddr = HashCache::default().start();
+    fn get_counter() -> MCaptcha {
         MCaptchaBuilder::default()
             .defense(get_defense())
-            .cache(cache)
             .duration(DURATION)
             .build()
             .unwrap()
@@ -272,12 +226,12 @@ mod tests {
     async fn counter_defense_tightenup_works() {
         let addr: MyActor = get_counter().start();
 
-        let mut difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_1.0);
+        let mut difficulty_factor = addr.send(Visitor).await.unwrap();
+        assert_eq!(difficulty_factor, LEVEL_1.0);
 
         race(addr.clone(), LEVEL_2).await;
-        difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_2.1);
+        difficulty_factor = addr.send(Visitor).await.unwrap();
+        assert_eq!(difficulty_factor, LEVEL_2.1);
     }
 
     #[actix_rt::test]
@@ -287,13 +241,13 @@ mod tests {
 
         race(addr.clone(), LEVEL_2).await;
         race(addr.clone(), LEVEL_2).await;
-        let mut difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_2.1);
+        let mut difficulty_factor = addr.send(Visitor).await.unwrap();
+        assert_eq!(difficulty_factor, LEVEL_2.1);
 
         let duration = Duration::new(DURATION, 0);
         delay_for(duration).await;
 
-        difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_1.1);
+        difficulty_factor = addr.send(Visitor).await.unwrap();
+        assert_eq!(difficulty_factor, LEVEL_1.1);
     }
 }
