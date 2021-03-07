@@ -5,10 +5,10 @@
   </p>
 
 [![Documentation](https://img.shields.io/badge/docs-master-blue)](https://mcaptcha.github.io/mCaptcha/m_captcha/index.html)
-![CI (Linux)](<https://github.com/mcaptcha/mCaptcha/workflows/CI%20(Linux)/badge.svg>)
-[![dependency status](https://deps.rs/repo/github/mcaptcha/mCaptcha/status.svg)](https://deps.rs/repo/github/mcaptcha/mCaptcha)
+![CI (Linux)](<https://github.com/mCaptcha/mCaptcha/workflows/CI%20(Linux)/badge.svg>)
+[![dependency status](https://deps.rs/repo/github/mCaptcha/mCaptcha/status.svg)](https://deps.rs/repo/github/mCaptcha/mCaptcha)
 <br />
-[![codecov](https://codecov.io/gh/mcaptcha/mCaptcha/branch/master/graph/badge.svg)](https://codecov.io/gh/mcaptcha/mCaptcha) 
+[![codecov](https://codecov.io/gh/mCaptcha/mCaptcha/branch/master/graph/badge.svg)](https://codecov.io/gh/mCaptcha/mCaptcha) 
 
 </div>
 
