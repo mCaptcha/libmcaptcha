@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AddSite","Message to increment the visitor count"],["AddSiteBuilder","Builder for `AddSite`."],["GetSite","Message to increment the visitor count"],["Master","This struct represents the mCaptcha state and is used to configure leaky-bucket lifetime and manage defense"]]});

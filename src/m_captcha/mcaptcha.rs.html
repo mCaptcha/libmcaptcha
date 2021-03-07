@@ -254,52 +254,6 @@
 <span id="251">251</span>
 <span id="252">252</span>
 <span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -359,12 +313,11 @@
 <span class="doccomment">//!         .unwrap();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // create and start MCaptcha actor</span>
-<span class="doccomment">//!     let cache = HashCache::default().start();</span>
+<span class="doccomment">//!     //let cache = HashCache::default().start();</span>
 <span class="doccomment">//!     let mcaptcha = MCaptchaBuilder::default()</span>
 <span class="doccomment">//!         .defense(defense)</span>
 <span class="doccomment">//!         // leaky bucket algorithm&#39;s emission interval</span>
 <span class="doccomment">//!         .duration(30)</span>
-<span class="doccomment">//!         .cache(cache)</span>
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap()</span>
 <span class="doccomment">//!         .start();</span>
@@ -376,37 +329,26 @@
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
 <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">PoW</span> <span class="kw">as</span> <span class="ident">ShaPoW</span>;
-<span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">distributions</span>::<span class="ident">Alphanumeric</span>, <span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::{<span class="ident">messages</span>::<span class="kw-2">*</span>, <span class="ident">HashCache</span>, <span class="ident">Save</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::<span class="ident">Defense</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// This struct represents the mCaptcha state and is used</span>
 <span class="doccomment">/// to configure leaky-bucket lifetime and manage defense</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Builder</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-{
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptcha</span> {
     <span class="attribute">#[<span class="ident">builder</span>(<span class="ident">default</span> <span class="op">=</span> <span class="string">&quot;0&quot;</span>, <span class="ident">setter</span>(<span class="ident">skip</span>))]</span>
     <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
     <span class="ident">defense</span>: <span class="ident">Defense</span>,
     <span class="ident">duration</span>: <span class="ident">u64</span>,
-    <span class="ident">cache</span>: <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-{
+<span class="kw">impl</span> <span class="ident">MCaptcha</span> {
     <span class="doccomment">/// incerment visiotr count by one</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">visitor_threshold</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -429,10 +371,7 @@
         <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">get_difficulty</span>()
     }
 }
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Actor</span> <span class="kw">for</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-{
+<span class="kw">impl</span> <span class="ident">Actor</span> <span class="kw">for</span> <span class="ident">MCaptcha</span> {
     <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 }
 
@@ -441,11 +380,7 @@
 <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;()&quot;</span>)]</span>
 <span class="kw">struct</span> <span class="ident">DeleteVisitor</span>;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">DeleteVisitor</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-    <span class="comment">// &lt;T as Actor&gt;::Context: ToEnvelope&lt;T, Retrive&gt; + ToEnvelope&lt;T, Cache&gt;,</span>
-{
+<span class="kw">impl</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">DeleteVisitor</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span> {
     <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> ();
     <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_msg</span>: <span class="ident">DeleteVisitor</span>, <span class="ident">_ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
         <span class="self">self</span>.<span class="ident">decrement_visiotr</span>();
@@ -454,19 +389,14 @@
 
 <span class="doccomment">/// Message to increment the visitor count</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
-<span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;PoWConfig&gt;&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;u32&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Visitor</span>;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Visitor</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Actor</span><span class="op">&gt;</span>::<span class="ident">Context</span>: <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Retrive</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Cache</span><span class="op">&gt;</span>,
-{
-    <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">ResponseActFuture</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">PoWConfig</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">impl</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Visitor</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span> {
+    <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">u32</span>;
 
     <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">Visitor</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">clock</span>::<span class="ident">delay_for</span>;
-        <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">fut</span>::<span class="ident">wrap_future</span>;
 
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">address</span>();
 
@@ -479,16 +409,7 @@
         <span class="ident">ctx</span>.<span class="ident">spawn</span>(<span class="ident">wait_for</span>);
 
         <span class="self">self</span>.<span class="ident">add_visitor</span>();
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>));
-
-        <span class="kw">let</span> <span class="ident">act_fut</span> <span class="op">=</span> <span class="ident">wrap_future</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="self">Self</span><span class="op">&gt;</span>(<span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">Cache</span>(<span class="ident">res</span>.<span class="ident">clone</span>()))).<span class="ident">map</span>(
-            <span class="op">|</span><span class="ident">result</span>, <span class="ident">_actor</span>, <span class="ident">_ctx</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">result</span> {
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Arc</span>::<span class="ident">try_unwrap</span>(<span class="ident">res</span>).<span class="ident">unwrap</span>()),
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(<span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">MailboxError</span>), <span class="comment">//TODO do typecasting from mailbox error to captcha error</span>
-            },
-        );
-        <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="ident">act_fut</span>)
+        <span class="self">self</span>.<span class="ident">get_difficulty</span>()
     }
 }
 
@@ -500,13 +421,9 @@
     <span class="ident">id</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">VerifyPoW</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Save</span>,
-    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Actor</span><span class="op">&gt;</span>::<span class="ident">Context</span>: <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Retrive</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Cache</span><span class="op">&gt;</span>,
-{
+<span class="kw">impl</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">VerifyPoW</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MCaptcha</span> {
     <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> ();
-    <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">VerifyPoW</span>, <span class="ident">_ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">VerifyPoW</span>, <span class="ident">_ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
         <span class="self">self</span>.<span class="ident">decrement_visiotr</span>();
     }
 }
@@ -522,8 +439,7 @@
     <span class="kw">const</span> <span class="ident">LEVEL_2</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>) <span class="op">=</span> (<span class="number">500</span>, <span class="number">500</span>);
     <span class="kw">const</span> <span class="ident">DURATION</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">10</span>;
 
-    <span class="kw">type</span> <span class="ident">MyActor</span> <span class="op">=</span> <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">HashCache</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">CacheAddr</span> <span class="op">=</span> <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">HashCache</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">MyActor</span> <span class="op">=</span> <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">get_defense</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Defense</span> {
         <span class="ident">DefenseBuilder</span>::<span class="ident">default</span>()
@@ -549,23 +465,15 @@
             .<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">race</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">addr</span>: <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">count</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>))
-    <span class="kw">where</span>
-        <span class="comment">//     Actor + Handler&lt;Cache&gt;,</span>
-        <span class="ident">T</span>: <span class="ident">Save</span>,
-        <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">Actor</span><span class="op">&gt;</span>::<span class="ident">Context</span>: <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Retrive</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Cache</span><span class="op">&gt;</span>,
-    {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">race</span>(<span class="ident">addr</span>: <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&gt;</span>, <span class="ident">count</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>)) {
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="number">1</span> {
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_counter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MCaptcha</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">HashCache</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-        <span class="kw">let</span> <span class="ident">cache</span>: <span class="ident">CacheAddr</span> <span class="op">=</span> <span class="ident">HashCache</span>::<span class="ident">default</span>().<span class="ident">start</span>();
+    <span class="kw">fn</span> <span class="ident">get_counter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MCaptcha</span> {
         <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>()
             .<span class="ident">defense</span>(<span class="ident">get_defense</span>())
-            .<span class="ident">cache</span>(<span class="ident">cache</span>)
             .<span class="ident">duration</span>(<span class="ident">DURATION</span>)
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>()
@@ -575,12 +483,12 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">counter_defense_tightenup_works</span>() {
         <span class="kw">let</span> <span class="ident">addr</span>: <span class="ident">MyActor</span> <span class="op">=</span> <span class="ident">get_counter</span>().<span class="ident">start</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>.<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_1</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_1</span>.<span class="number">0</span>);
 
         <span class="ident">race</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">LEVEL_2</span>).<span class="kw">await</span>;
-        <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>.<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_2</span>.<span class="number">1</span>);
+        <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_2</span>.<span class="number">1</span>);
     }
 
     <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
@@ -590,14 +498,14 @@
 
         <span class="ident">race</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">LEVEL_2</span>).<span class="kw">await</span>;
         <span class="ident">race</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">LEVEL_2</span>).<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>.<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_2</span>.<span class="number">1</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_2</span>.<span class="number">1</span>);
 
         <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">new</span>(<span class="ident">DURATION</span>, <span class="number">0</span>);
         <span class="ident">delay_for</span>(<span class="ident">duration</span>).<span class="kw">await</span>;
 
-        <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>.<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_1</span>.<span class="number">1</span>);
+        <span class="ident">difficulty_factor</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_1</span>.<span class="number">1</span>);
     }
 }
 </pre></div>

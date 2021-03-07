@@ -112,6 +112,7 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -189,14 +190,14 @@
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap();</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//!     let cache = HashCache::default().start();</span>
+<span class="doccomment">//!     //let cache = HashCache::default().start();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // create and start MCaptcha actor</span>
 <span class="doccomment">//!     let mcaptcha = MCaptchaBuilder::default()</span>
 <span class="doccomment">//!         .defense(defense)</span>
 <span class="doccomment">//!         // leaky bucket algorithm&#39;s emission interval</span>
 <span class="doccomment">//!         .duration(30)</span>
-<span class="doccomment">//!         .cache(cache)</span>
+<span class="doccomment">//!      //   .cache(cache)</span>
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap()</span>
 <span class="doccomment">//!         .start();</span>
@@ -210,6 +211,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defense</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcaptcha</span>;
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>

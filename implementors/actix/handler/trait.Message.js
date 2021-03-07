@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["m_captcha"] = [{"text":"impl Message for Visitor","synthetic":false,"types":[]},{"text":"impl Message for VerifyPoW","synthetic":false,"types":[]},{"text":"impl Message for Cache","synthetic":false,"types":[]},{"text":"impl Message for Retrive","synthetic":false,"types":[]}];
+implementors["m_captcha"] = [{"text":"impl&lt;'a&gt; Message for GetSite&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl Message for AddSite","synthetic":false,"types":[]},{"text":"impl Message for Visitor","synthetic":false,"types":[]},{"text":"impl Message for VerifyPoW","synthetic":false,"types":[]},{"text":"impl Message for Cache","synthetic":false,"types":[]},{"text":"impl Message for Retrive","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
