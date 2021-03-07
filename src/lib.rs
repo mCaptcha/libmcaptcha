@@ -93,20 +93,19 @@
 //! }
 //! ```
 
-pub mod config;
 pub mod defense;
 pub mod errors;
-pub mod hashcache;
+pub mod mcaptcha;
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod message {
-    pub use crate::config::Visitor;
+    pub use crate::mcaptcha::Visitor;
 }
 
 /// message datatypes to interact with [MCaptcha] actor
-pub mod cache {
-    pub use crate::hashcache::HashCache;
-}
+pub mod cache;
 
-pub use config::{MCaptcha, MCaptchaBuilder};
+pub use crate::cache::hashcache::HashCache;
+
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
+pub use mcaptcha::{MCaptcha, MCaptchaBuilder};

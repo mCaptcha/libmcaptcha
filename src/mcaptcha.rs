@@ -73,39 +73,25 @@
 //! }
 //! ```
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
 use actix::dev::*;
-use actix::prelude::*;
-use async_trait::async_trait;
 use derive_builder::Builder;
 use pow_sha256::PoW as ShaPoW;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
+use crate::cache::{messages::*, HashCache, Save};
 use crate::defense::Defense;
 use crate::errors::*;
-use crate::hashcache::*;
-
-//#[async_trait]
-//pub trait PersistPow {
-//    async fn save(&mut self, config: Arc<PoWConfig>) -> CaptchaResult<()>;
-//    async fn retrive(&mut self, string: &str) -> CaptchaResult<Option<u32>>;
-//}
-
-pub trait Save: actix::Actor + actix::Handler<Retrive> + actix::Handler<Cache> {}
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
 #[derive(Clone, Builder)]
 pub struct MCaptcha<T>
 where
-    //     Actor + Handler<Cache>,
     T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-    //    <T as Actor>::Context: ToEnvelope<T, Cache>,
 {
     #[builder(default = "0", setter(skip))]
     visitor_threshold: u32,
@@ -114,26 +100,9 @@ where
     cache: Addr<T>,
 }
 
-//#[async_trait]
-//impl PersistPow for HashCache {
-//    async fn save(&mut self, config: Arc<PoWConfig>) -> CaptchaResult<()> {
-//        self.insert(config.string.clone(), config.difficulty_factor);
-//        Ok(())
-//    }
-//
-//    async fn retrive(&mut self, string: &str) -> CaptchaResult<Option<u32>> {
-//        if let Some(difficulty_factor) = self.get(string) {
-//            Ok(Some(difficulty_factor.to_owned()))
-//        } else {
-//            Ok(None)
-//        }
-//    }
-//}
-
 impl<T> MCaptcha<T>
 where
     T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
 {
     /// incerment visiotr count by one
     pub fn add_visitor(&mut self) {
@@ -156,23 +125,10 @@ where
     pub fn get_difficulty(&self) -> u32 {
         self.defense.get_difficulty()
     }
-
-    //    /// cache PoW configuration: difficulty and string
-    //    pub async fn cache_pow(&mut self, pow: Arc<PoWConfig>) -> CaptchaResult<()> {
-    //        unimplemented!();
-    //        Ok(self.cache.save(pow).await?)
-    //    }
-    //
-    //    /// retrivee PoW configuration: difficulty and string
-    //    pub async fn retrive_pow(&mut self, pow: &PoWConfig) -> CaptchaResult<Option<u32>> {
-    //        unimplemented!();
-    //        Ok(self.cache.retrive(&pow.string).await?)
-    //    }
 }
 impl<T> Actor for MCaptcha<T>
 where
     T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
 {
     type Context = Context<Self>;
 }
@@ -185,7 +141,7 @@ struct DeleteVisitor;
 impl<T> Handler<DeleteVisitor> for MCaptcha<T>
 where
     T: Save,
-    <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
+    // <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
 {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
@@ -193,30 +149,9 @@ where
     }
 }
 
-/// PoW Config that will be sent to clients for generating PoW
-#[derive(Clone, Serialize, Debug)]
-pub struct PoWConfig {
-    pub string: String,
-    pub difficulty_factor: u32,
-}
-
-impl PoWConfig {
-    pub fn new<T>(m: &MCaptcha<T>) -> Self
-    where
-        T: Save,
-        <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
-    {
-        PoWConfig {
-            string: thread_rng().sample_iter(&Alphanumeric).take(32).collect(),
-            difficulty_factor: m.get_difficulty(),
-        }
-    }
-}
-
 /// Message to increment the visitor count
 #[derive(Message)]
 #[rtype(result = "CaptchaResult<PoWConfig>")]
-//#[rtype(result = "()")]
 pub struct Visitor;
 
 impl<T> Handler<Visitor> for MCaptcha<T>
@@ -225,8 +160,8 @@ where
     <T as Actor>::Context: ToEnvelope<T, Retrive> + ToEnvelope<T, Cache>,
 {
     type Result = ResponseActFuture<Self, CaptchaResult<PoWConfig>>;
+
     fn handle(&mut self, _: Visitor, ctx: &mut Self::Context) -> Self::Result {
-        use crate::hashcache::Cache;
         use actix::clock::delay_for;
         use actix::fut::wrap_future;
 

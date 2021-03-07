@@ -2,10 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use actix::prelude::*;
-use async_trait::async_trait;
 
-use crate::config::PoWConfig;
-use crate::config::Save;
+use super::messages::*;
+use super::Save;
 use crate::errors::*;
 
 #[derive(Clone, Default)]
@@ -33,11 +32,6 @@ impl Actor for HashCache {
     type Context = Context<Self>;
 }
 
-/// Message to decrement the visitor count
-#[derive(Message)]
-#[rtype(result = "CaptchaResult<()>")]
-pub struct Cache(pub Arc<PoWConfig>);
-
 impl Handler<Cache> for HashCache {
     type Result = MessageResult<Cache>;
     fn handle(&mut self, msg: Cache, _ctx: &mut Self::Context) -> Self::Result {
@@ -49,11 +43,6 @@ impl Handler<Cache> for HashCache {
         MessageResult(self.save(msg.0))
     }
 }
-
-/// Message to decrement the visitor count
-#[derive(Message)]
-#[rtype(result = "CaptchaResult<Option<u32>>")]
-pub struct Retrive(pub Arc<String>);
 
 impl Handler<Retrive> for HashCache {
     type Result = MessageResult<Retrive>;
@@ -70,7 +59,7 @@ mod tests {
     async fn counter_defense_tightenup_works() {
         let addr = HashCache::default().start();
         let p = Arc::new("ewerw".to_string());
-        addr.send(Retrive(p)).await.unwrap();
+        addr.send(Retrive(p)).await.unwrap().unwrap();
     }
     //
     //    #[actix_rt::test]

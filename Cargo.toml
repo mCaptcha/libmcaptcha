@@ -27,6 +27,6 @@ derive_more = "0.99"
 lazy_static = "1.4"
 
 rand = "0.7"
-pow_sha256 = "0.2.1"
+pow_sha256 = { version = "0.1", git = "https://github.com/mcaptcha/pow_sha256" }
 
 async-trait = "0.1.44"
