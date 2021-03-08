@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Actors",""],["ActorsBuilder","Builder for `Actors`."],["PoWConfig","PoW Config that will be sent to clients for generating PoW"]]});
+initSidebarItems({"struct":[["Actors",""],["ActorsBuilder","Builder for `Actors`."],["PoWConfig","PoW Config that will be sent to clients for generating PoW"],["Work",""]]});
