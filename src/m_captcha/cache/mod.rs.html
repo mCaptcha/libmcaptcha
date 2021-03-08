@@ -42,19 +42,25 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
-<span id="52">52</span>
-<span id="53">53</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="comment">/*
+ * mCaptcha - A proof of work based DoS protection system
+ * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ */</span>
+
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
 <span class="kw">use</span> <span class="ident">messages</span>::<span class="kw-2">*</span>;
 
@@ -63,10 +69,8 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Save</span>: <span class="ident">actix</span>::<span class="ident">Actor</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Retrive</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Cache</span><span class="op">&gt;</span> {}
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span> {
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pow</span>::<span class="ident">PoWConfig</span>;
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
 
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 
@@ -79,34 +83,6 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;Option&lt;u32&gt;&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Retrive</span>(<span class="kw">pub</span> <span class="ident">String</span>);
-
-    <span class="doccomment">/// PoW Config that will be sent to clients for generating PoW</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Debug</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PoWConfig</span> {
-        <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
-    }
-
-    <span class="kw">impl</span> <span class="ident">PoWConfig</span> {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">m</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
-
-            <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">distributions</span>::<span class="ident">Alphanumeric</span>, <span class="ident">rngs</span>::<span class="ident">ThreadRng</span>, <span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-
-            <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">iter</span>::<span class="ident">repeat</span>(())
-                .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">rng</span>.<span class="ident">sample</span>(<span class="ident">Alphanumeric</span>))
-                .<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>)
-                .<span class="ident">take</span>(<span class="number">32</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>();
-
-            <span class="ident">PoWConfig</span> {
-                <span class="ident">string</span>,
-                <span class="ident">difficulty_factor</span>: <span class="ident">m</span>,
-            }
-        }
-    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "m_captcha";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
