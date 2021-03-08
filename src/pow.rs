@@ -75,7 +75,6 @@ where
 
     pub async fn verify_pow(&self, work: Work) -> CaptchaResult<bool> {
         use crate::cache::messages::Retrive;
-        use crate::utils::get_difficulty;
 
         let string = work.string.clone();
         let msg = Retrive(string.clone());
@@ -83,10 +82,7 @@ where
         let pow: PoW<String> = work.into();
         match difficulty {
             Ok(Some(difficulty)) => {
-                if self
-                    .pow
-                    .is_sufficient_difficulty(&pow, get_difficulty(difficulty))
-                {
+                if self.pow.is_sufficient_difficulty(&pow, difficulty) {
                     Ok(self.pow.is_valid_proof(&pow, &string))
                 } else {
                     Err(CaptchaError::InsuffiencientDifficulty)
@@ -122,9 +118,9 @@ mod tests {
     use pow_sha256::ConfigBuilder;
 
     use super::*;
+    use crate::cache::HashCache;
     use crate::master::*;
     use crate::mcaptcha::tests::*;
-    use crate::{cache::HashCache, utils::get_difficulty};
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 
@@ -170,11 +166,11 @@ mod tests {
         let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
         let config = get_config();
 
-        let difficulty = get_difficulty(work_req.difficulty_factor);
-        let work = config.prove_work(&work_req.string, difficulty).unwrap();
+        let work = config
+            .prove_work(&work_req.string, work_req.difficulty_factor)
+            .unwrap();
 
-        let difficulty = 1;
-        let insufficient_work = config.prove_work(&work_req.string, difficulty).unwrap();
+        let insufficient_work = config.prove_work(&work_req.string, 1).unwrap();
         let insufficient_work_payload = Work {
             string: work_req.string.clone(),
             result: insufficient_work.result,

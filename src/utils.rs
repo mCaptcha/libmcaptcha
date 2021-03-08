@@ -1,3 +1,5 @@
+// utility function to get a randomly generated string
+// of size len
 pub fn get_random(len: usize) -> String {
     use std::iter;
 
@@ -10,8 +12,4 @@ pub fn get_random(len: usize) -> String {
         .map(char::from)
         .take(len)
         .collect::<String>()
-}
-
-pub fn get_difficulty(difficulty_factor: u32) -> u128 {
-    u128::max_value() - u128::max_value() / difficulty_factor as u128
 }

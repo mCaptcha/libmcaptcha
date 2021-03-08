@@ -102,9 +102,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.46"
+version = "0.1.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4968268c4b1be4c2ee4a619dba411ec2db09acde6c26da368cb01a330b60f06c"
+checksum = "7e098e9c493fdf92832223594d9a164f96bdf17ba81a42aff86f85c76768726a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -729,7 +729,7 @@ dependencies = [
  "actix-rt",
  "derive_builder",
  "derive_more",
- "pow_sha256 0.1.0",
+ "pow_sha256 0.2.0",
  "rand 0.8.3",
  "serde",
  "serde_json",
@@ -983,8 +983,8 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pow_sha256"
-version = "0.1.0"
-source = "git+https://github.com/mcaptcha/pow_sha256#0bfbce0185f111b2eb8c14ff74d95dde5af22388"
+version = "0.2.0"
+source = "git+https://github.com/mcaptcha/pow_sha256#d0889fc9008e63795b024b57432ed0034a703d0b"
 dependencies = [
  "bincode",
  "derive_builder",
