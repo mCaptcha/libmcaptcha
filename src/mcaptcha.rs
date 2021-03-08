@@ -76,8 +76,6 @@ use std::time::Duration;
 
 use actix::dev::*;
 use derive_builder::Builder;
-use pow_sha256::PoW as ShaPoW;
-use serde::Deserialize;
 
 use crate::defense::Defense;
 
@@ -153,21 +151,6 @@ impl Handler<Visitor> for MCaptcha {
 
         self.add_visitor();
         self.get_difficulty()
-    }
-}
-
-/// Message to decrement the visitor count
-#[derive(Message, Deserialize)]
-#[rtype(result = "()")]
-pub struct VerifyPoW {
-    pow: ShaPoW<Vec<u8>>,
-    id: String,
-}
-
-impl Handler<VerifyPoW> for MCaptcha {
-    type Result = ();
-    fn handle(&mut self, _: VerifyPoW, _ctx: &mut Self::Context) -> Self::Result {
-        self.decrement_visiotr();
     }
 }
 

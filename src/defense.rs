@@ -51,15 +51,6 @@ pub struct Level {
     difficulty_factor: u32,
 }
 
-impl Default for Level {
-    fn default() -> Self {
-        Level {
-            visitor_threshold: 0,
-            difficulty_factor: 0,
-        }
-    }
-}
-
 /// Bulder struct for [Level] to describe threshold-difficulty factor mapping
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LevelBuilder {
@@ -172,15 +163,6 @@ impl DefenseBuilder {
             })
         } else {
             Err(CaptchaError::LevelEmpty)
-        }
-    }
-}
-
-impl Default for Defense {
-    fn default() -> Self {
-        Defense {
-            levels: vec![Level::default()],
-            current_visitor_threshold: 0,
         }
     }
 }
