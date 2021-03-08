@@ -53,6 +53,21 @@ pub enum CaptchaError {
     /// Difficulty factor should increase with level
     #[display(fmt = "Actor mailbox error")]
     MailboxError,
+
+    /// Happens when submitted work doesn't satisfy the required
+    /// difficulty factor
+    #[display(fmt = "Insuffiencient Difficulty")]
+    InsuffiencientDifficulty,
+
+    /// Happens when submitted work is computed over string that
+    /// isn't in cache
+    #[display(fmt = "String now found")]
+    StringNotFound,
+
+    /// Catcha all default error
+    /// used for development, must remove before production
+    #[display(fmt = "TODO remove before prod")]
+    Default,
 }
 
 /// [Result] datatype for m_captcha

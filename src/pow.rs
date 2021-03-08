@@ -17,10 +17,12 @@
  */
 use actix::dev::*;
 use derive_builder::Builder;
+use pow_sha256::{Config, PoW};
 use serde::Serialize;
 
 use crate::cache::messages;
 use crate::cache::Save;
+use crate::errors::*;
 use crate::master::Master;
 
 /// PoW Config that will be sent to clients for generating PoW
@@ -31,20 +33,10 @@ pub struct PoWConfig {
 }
 impl PoWConfig {
     pub fn new(m: u32) -> Self {
-        use std::iter;
-
-        use rand::{distributions::Alphanumeric, rngs::ThreadRng, thread_rng, Rng};
-
-        let mut rng: ThreadRng = thread_rng();
-
-        let string = iter::repeat(())
-            .map(|()| rng.sample(Alphanumeric))
-            .map(char::from)
-            .take(32)
-            .collect::<String>();
+        use crate::utils::get_random;
 
         PoWConfig {
-            string,
+            string: get_random(32),
             difficulty_factor: m,
         }
     }
@@ -54,12 +46,13 @@ impl PoWConfig {
 pub struct Actors<T: Save> {
     master: Addr<Master<'static>>,
     cache: Addr<T>,
+    pow: Config,
 }
 
 impl<T> Actors<T>
 where
     T: Save,
-    <T as actix::Actor>::Context: ToEnvelope<T, messages::Cache>,
+    <T as actix::Actor>::Context: ToEnvelope<T, messages::Cache> + ToEnvelope<T, messages::Retrive>,
 {
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
         use crate::cache::messages::Cache;
@@ -79,38 +72,130 @@ where
             .unwrap();
         Some(pow_config)
     }
+
+    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<bool> {
+        use crate::cache::messages::Retrive;
+        use crate::utils::get_difficulty;
+
+        let string = work.string.clone();
+        let msg = Retrive(string.clone());
+        let difficulty = self.cache.send(msg).await.unwrap();
+        let pow: PoW<String> = work.into();
+        match difficulty {
+            Ok(Some(difficulty)) => {
+                if self
+                    .pow
+                    .is_sufficient_difficulty(&pow, get_difficulty(difficulty))
+                {
+                    Ok(self.pow.is_valid_proof(&pow, &string))
+                } else {
+                    Err(CaptchaError::InsuffiencientDifficulty)
+                }
+            }
+            Ok(None) => Err(CaptchaError::StringNotFound),
+            Err(_) => Err(CaptchaError::Default),
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Debug)]
+pub struct Work {
+    pub string: String,
+    pub result: String,
+    pub nonce: u64,
+}
+
+impl From<Work> for PoW<String> {
+    fn from(w: Work) -> Self {
+        use pow_sha256::PoWBuilder;
+        PoWBuilder::default()
+            .result(w.result)
+            .nonce(w.nonce)
+            .build()
+            .unwrap()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+
+    use pow_sha256::ConfigBuilder;
+
     use super::*;
-    use crate::cache::HashCache;
     use crate::master::*;
     use crate::mcaptcha::tests::*;
+    use crate::{cache::HashCache, utils::get_difficulty};
 
-    #[actix_rt::test]
-    async fn get_pow_works() {
+    const MCAPTCHA_NAME: &str = "batsense.net";
+
+    async fn boostrap_system() -> Actors<HashCache> {
         let master = Master::new().start();
         let mcaptcha = get_counter().start();
-        let mcaptcha_name = "batsense.net";
+        let pow = get_config();
 
         let cache = HashCache::default().start();
         let msg = AddSiteBuilder::default()
-            .id(mcaptcha_name.into())
+            .id(MCAPTCHA_NAME.into())
             .addr(mcaptcha.clone())
             .build()
             .unwrap();
 
         master.send(msg).await.unwrap();
 
-        let actors = ActorsBuilder::default()
+        ActorsBuilder::default()
             .master(master)
             .cache(cache)
+            .pow(pow)
             .build()
-            .unwrap();
+            .unwrap()
+    }
 
-        let pow = actors.get_pow(mcaptcha_name.into()).await.unwrap();
+    fn get_config() -> Config {
+        ConfigBuilder::default()
+            .salt("myrandomsaltisnotlongenoug".into())
+            .build()
+            .unwrap()
+    }
 
+    #[actix_rt::test]
+    async fn get_pow_works() {
+        let actors = boostrap_system().await;
+        let pow = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
         assert_eq!(pow.difficulty_factor, LEVEL_1.0);
+    }
+
+    #[actix_rt::test]
+    async fn verify_pow_works() {
+        let actors = boostrap_system().await;
+        let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let config = get_config();
+
+        let difficulty = get_difficulty(work_req.difficulty_factor);
+        let work = config.prove_work(&work_req.string, difficulty).unwrap();
+
+        let difficulty = 1;
+        let insufficient_work = config.prove_work(&work_req.string, difficulty).unwrap();
+        let insufficient_work_payload = Work {
+            string: work_req.string.clone(),
+            result: insufficient_work.result,
+            nonce: insufficient_work.nonce,
+        };
+
+        let mut payload = Work {
+            string: work_req.string,
+            result: work.result,
+            nonce: work.nonce,
+        };
+
+        let res = actors.verify_pow(payload.clone()).await.unwrap();
+        assert!(res);
+
+        payload.string = "wrongstring".into();
+        let res = actors.verify_pow(payload.clone()).await;
+        assert_eq!(res, Err(CaptchaError::StringNotFound));
+
+        let res = actors.verify_pow(insufficient_work_payload.clone()).await;
+
+        assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
     }
 }

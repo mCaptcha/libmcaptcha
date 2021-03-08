@@ -1,3 +1,21 @@
+/*
+ * mCaptcha - A proof of work based DoS protection system
+ * Copyright © 2021 Aravinth Manivannan <realravinth@batsense.net>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 use std::collections::HashMap;
 
 use actix::prelude::*;
@@ -25,12 +43,21 @@ impl HashCache {
     }
 }
 
+/* TODO cache of pow configs need to have lifetimes to prevent replay attacks
+ * where lifetime = site's cool down period so that people can't generate pow
+ * configs when the site is cool and  use them later with rainbow tables
+ * when it's under attack.
+ *
+ * This comment stays until this feature is implemented.
+ */
+
 impl Save for HashCache {}
 
 impl Actor for HashCache {
     type Context = Context<Self>;
 }
 
+/// cache a PoWConfig
 impl Handler<Cache> for HashCache {
     type Result = MessageResult<Cache>;
     fn handle(&mut self, msg: Cache, _ctx: &mut Self::Context) -> Self::Result {
@@ -38,6 +65,7 @@ impl Handler<Cache> for HashCache {
     }
 }
 
+/// Retrive PoW difficulty_factor for a PoW string
 impl Handler<Retrive> for HashCache {
     type Result = MessageResult<Retrive>;
     fn handle(&mut self, msg: Retrive, _ctx: &mut Self::Context) -> Self::Result {
