@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+//! [Master] actor module that manages [MCaptcha] actors
 use std::collections::BTreeMap;
 
 use actix::dev::*;
@@ -22,24 +23,29 @@ use derive_builder::Builder;
 
 use crate::mcaptcha::MCaptcha;
 
-/// This struct represents the mCaptcha state and is used
-/// to configure leaky-bucket lifetime and manage defense
+/// This Actor manages the [MCaptcha] actors.
+/// A service can have several [MCaptcha] actors with
+/// varying [Defense][crate::defense::Defense] configurations
+/// so a "master" actor is needed to manage them all
 #[derive(Clone)]
 pub struct Master<'a> {
     sites: BTreeMap<&'a str, Addr<MCaptcha>>,
 }
 
 impl Master<'static> {
+    /// add [MCaptcha] actor to [Master]
     pub fn add_site(&mut self, details: AddSite) {
         self.sites.insert(details.id, details.addr.to_owned());
     }
 
+    /// create new master
     pub fn new() -> Self {
         Master {
             sites: BTreeMap::new(),
         }
     }
 
+    /// get [MCaptcha] actor from [Master]
     pub fn get_site<'a, 'b>(&'a self, id: &'b str) -> Option<&'a Addr<MCaptcha>> {
         self.sites.get(id)
     }
@@ -49,7 +55,7 @@ impl Actor for Master<'static> {
     type Context = Context<Self>;
 }
 
-/// Message to increment the visitor count
+/// Message to get an [MCaptcha] actor from master
 #[derive(Message)]
 #[rtype(result = "Option<Addr<MCaptcha>>")]
 pub struct GetSite(pub String);
@@ -67,7 +73,7 @@ impl Handler<GetSite> for Master<'static> {
     }
 }
 
-/// Message to increment the visitor count
+/// Message to add an [MCaptcha] actor to [Master]
 #[derive(Message, Builder)]
 #[rtype(result = "()")]
 pub struct AddSite {
@@ -83,98 +89,28 @@ impl Handler<AddSite> for Master<'static> {
     }
 }
 
-///// Message to decrement the visitor count
-//#[derive(Message, Deserialize)]
-//#[rtype(result = "()")]
-//pub struct VerifyPoW {
-//    pow: ShaPoW<Vec<u8>>,
-//    id: String,
-//}
-//
-//impl Handler<VerifyPoW> for MCaptcha {
-//    type Result = ();
-//    fn handle(&mut self, msg: VerifyPoW, _ctx: &mut Self::Context) -> Self::Result {
-//        self.decrement_visiotr();
-//    }
-//}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::defense::*;
-
-    //    use crate::cache::HashCache;
-    //
-    //    // constants for testing
-    //    // (visitor count, level)
-    const LEVEL_1: (u32, u32) = (50, 50);
-    const LEVEL_2: (u32, u32) = (500, 500);
-    const DURATION: u64 = 10;
-
-    type MyActor = Addr<MCaptcha>;
-
-    fn get_defense() -> Defense {
-        DefenseBuilder::default()
-            .add_level(
-                LevelBuilder::default()
-                    .visitor_threshold(LEVEL_1.0)
-                    .difficulty_factor(LEVEL_1.1)
-                    .unwrap()
-                    .build()
-                    .unwrap(),
-            )
-            .unwrap()
-            .add_level(
-                LevelBuilder::default()
-                    .visitor_threshold(LEVEL_2.0)
-                    .difficulty_factor(LEVEL_2.1)
-                    .unwrap()
-                    .build()
-                    .unwrap(),
-            )
-            .unwrap()
-            .build()
-            .unwrap()
-    }
-
-    fn get_counter() -> MCaptcha {
-        use crate::MCaptchaBuilder;
-
-        MCaptchaBuilder::default()
-            .defense(get_defense())
-            .duration(DURATION)
-            .build()
-            .unwrap()
-    }
+    use crate::mcaptcha::tests::*;
 
     #[actix_rt::test]
-    async fn master() {
+    async fn master_actor_works() {
         let addr = Master::new().start();
 
         let id = "yo";
         let mcaptcha = get_counter().start();
         let msg = AddSiteBuilder::default()
             .id(id)
-            .addr(mcaptcha)
+            .addr(mcaptcha.clone())
             .build()
             .unwrap();
         addr.send(msg).await.unwrap();
+
+        let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        assert_eq!(mcaptcha_addr, Some(mcaptcha));
+
+        let addr_doesnt_exist = addr.send(GetSite("a".into())).await.unwrap();
+        assert!(addr_doesnt_exist.is_none());
     }
-    //
-    //    #[actix_rt::test]
-    //    async fn counter_defense_loosenup_works() {
-    //        use actix::clock::delay_for;
-    //        let addr: MyActor = get_counter().start();
-    //
-    //        race(addr.clone(), LEVEL_2).await;
-    //        race(addr.clone(), LEVEL_2).await;
-    //        let mut difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-    //        assert_eq!(difficulty_factor, LEVEL_2.1);
-    //
-    //        let duration = Duration::new(DURATION, 0);
-    //        delay_for(duration).await;
-    //
-    //        difficulty_factor = addr.send(Visitor).await.unwrap().unwrap();
-    //        assert_eq!(difficulty_factor, LEVEL_1.1);
-    //    }
 }

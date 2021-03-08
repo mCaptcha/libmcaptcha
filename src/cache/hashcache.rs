@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+//! In-memory cache implementation that uses [HashMap]
 use std::collections::HashMap;
 
 use actix::prelude::*;
@@ -26,6 +26,7 @@ use crate::errors::*;
 use crate::pow::PoWConfig;
 
 #[derive(Clone, Default)]
+/// cache datastructure implementing [Save]
 pub struct HashCache(HashMap<String, u32>);
 
 impl HashCache {
@@ -86,21 +87,4 @@ mod tests {
         let difficulty_factor = addr.send(Retrive(string)).await.unwrap().unwrap();
         assert_eq!(difficulty_factor.unwrap(), 54);
     }
-    //
-    //    #[actix_rt::test]
-    //    async fn counter_defense_loosenup_works() {
-    //        use actix::clock::delay_for;
-    //        let addr: MyActor = get_counter().start();
-    //
-    //        race(addr.clone(), LEVEL_2).await;
-    //        race(addr.clone(), LEVEL_2).await;
-    //        let mut difficulty_factor = addr.send(Visitor).await.unwrap();
-    //        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_2.1);
-    //
-    //        let duration = Duration::new(DURATION, 0);
-    //        delay_for(duration).await;
-    //
-    //        difficulty_factor = addr.send(Visitor).await.unwrap();
-    //        assert_eq!(difficulty_factor.difficulty_factor, LEVEL_1.1);
-    //    }
 }

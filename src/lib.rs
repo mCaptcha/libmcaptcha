@@ -105,6 +105,7 @@ pub mod message {
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;
+pub mod data;
 pub mod pow;
 mod utils;
 

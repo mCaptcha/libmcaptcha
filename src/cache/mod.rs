@@ -15,15 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+//! Cache is used to save proofof work details and nonces to prevent replay attacks
+//! and rainbow/dictionary attacks
 pub use hashcache::HashCache;
 use messages::*;
 
 pub mod hashcache;
 
+/// Describes actor handler trait impls that are required by a cache implementation
 pub trait Save: actix::Actor + actix::Handler<Retrive> + actix::Handler<Cache> {}
 
 pub mod messages {
+    //! Messages that can be sent to cache data structures implementing [Save][super::Save]
     use crate::pow::PoWConfig;
     use actix::dev::*;
 

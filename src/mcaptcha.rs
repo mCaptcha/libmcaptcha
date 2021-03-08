@@ -83,7 +83,7 @@ use crate::defense::Defense;
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
-#[derive(Clone, Builder)]
+#[derive(Clone, Debug, Builder)]
 pub struct MCaptcha {
     #[builder(default = "0", setter(skip))]
     visitor_threshold: u32,
