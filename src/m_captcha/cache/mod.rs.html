@@ -42,6 +42,9 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -60,15 +63,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
-
+<span class="doccomment">//! Cache is used to save proofof work details and nonces to prevent replay attacks</span>
+<span class="doccomment">//! and rainbow/dictionary attacks</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
 <span class="kw">use</span> <span class="ident">messages</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hashcache</span>;
 
+<span class="doccomment">/// Describes actor handler trait impls that are required by a cache implementation</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Save</span>: <span class="ident">actix</span>::<span class="ident">Actor</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Retrive</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Cache</span><span class="op">&gt;</span> {}
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span> {
+    <span class="doccomment">//! Messages that can be sent to cache data structures implementing [Save][super::Save]</span>
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pow</span>::<span class="ident">PoWConfig</span>;
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
 

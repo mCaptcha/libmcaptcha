@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Data","struct describing various bits of data required for an mCaptcha system"],["DataBuilder","Builder for `Data`."]]});

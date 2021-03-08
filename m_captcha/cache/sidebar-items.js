@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["hashcache",""],["messages",""]],"trait":[["Save",""]]});
+initSidebarItems({"mod":[["hashcache","In-memory cache implementation that uses [HashMap]"],["messages","Messages that can be sent to cache data structures implementing [Save][super::Save]"]],"trait":[["Save","Describes actor handler trait impls that are required by a cache implementation"]]});

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["HashCache",""]]});
+initSidebarItems({"struct":[["HashCache","cache datastructure implementing [Save]"]]});
