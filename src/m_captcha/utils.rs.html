@@ -16,9 +16,9 @@
 <span id="13">13</span>
 <span id="14">14</span>
 <span id="15">15</span>
-<span id="16">16</span>
-<span id="17">17</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="comment">// utility function to get a randomly generated string</span>
+<span class="comment">// of size len</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_random</span>(<span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
 
@@ -31,10 +31,6 @@
         .<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>)
         .<span class="ident">take</span>(<span class="ident">len</span>)
         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_difficulty</span>(<span class="ident">difficulty_factor</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u128</span> {
-    <span class="ident">u128</span>::<span class="ident">max_value</span>() <span class="op">-</span> <span class="ident">u128</span>::<span class="ident">max_value</span>() <span class="op">/</span> <span class="ident">difficulty_factor</span> <span class="kw">as</span> <span class="ident">u128</span>
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "m_captcha";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
