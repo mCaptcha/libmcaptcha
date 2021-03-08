@@ -52,13 +52,13 @@ impl Actor for Master<'static> {
 /// Message to increment the visitor count
 #[derive(Message)]
 #[rtype(result = "Option<Addr<MCaptcha>>")]
-pub struct GetSite<'a>(pub &'a str);
+pub struct GetSite(pub String);
 
-impl<'b> Handler<GetSite<'b>> for Master<'static> {
-    type Result = MessageResult<GetSite<'b>>;
+impl Handler<GetSite> for Master<'static> {
+    type Result = MessageResult<GetSite>;
 
     fn handle(&mut self, m: GetSite, _ctx: &mut Self::Context) -> Self::Result {
-        let addr = self.get_site(m.0);
+        let addr = self.get_site(&m.0);
         if addr.is_none() {
             return MessageResult(None);
         } else {

@@ -172,19 +172,19 @@ impl Handler<VerifyPoW> for MCaptcha {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::defense::*;
 
     // constants for testing
     // (visitor count, level)
-    const LEVEL_1: (u32, u32) = (50, 50);
-    const LEVEL_2: (u32, u32) = (500, 500);
-    const DURATION: u64 = 10;
+    pub const LEVEL_1: (u32, u32) = (50, 50);
+    pub const LEVEL_2: (u32, u32) = (500, 500);
+    pub const DURATION: u64 = 10;
 
     type MyActor = Addr<MCaptcha>;
 
-    fn get_defense() -> Defense {
+    pub fn get_defense() -> Defense {
         DefenseBuilder::default()
             .add_level(
                 LevelBuilder::default()
@@ -214,7 +214,7 @@ mod tests {
         }
     }
 
-    fn get_counter() -> MCaptcha {
+    pub fn get_counter() -> MCaptcha {
         MCaptchaBuilder::default()
             .defense(get_defense())
             .duration(DURATION)

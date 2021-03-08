@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use actix::prelude::*;
 
 use super::messages::*;
 use super::Save;
 use crate::errors::*;
+use crate::pow::PoWConfig;
 
 #[derive(Clone, Default)]
 pub struct HashCache(HashMap<String, u32>);
