@@ -1,3 +1,4 @@
 (function() {var implementors = {};
+implementors["guard"] = [{"text":"impl PartialEq&lt;ServiceError&gt; for ServiceError","synthetic":false,"types":[]}];
 implementors["m_captcha"] = [{"text":"impl PartialEq&lt;Level&gt; for Level","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;LevelBuilder&gt; for LevelBuilder","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;Defense&gt; for Defense","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;DefenseBuilder&gt; for DefenseBuilder","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;CaptchaError&gt; for CaptchaError","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
