@@ -23,22 +23,48 @@ use messages::*;
 pub mod hashcache;
 
 /// Describes actor handler trait impls that are required by a cache implementation
-pub trait Save: actix::Actor + actix::Handler<Retrive> + actix::Handler<Cache> {}
-
+pub trait Save:
+    actix::Actor + actix::Handler<Retrive> + actix::Handler<Cache> + actix::Handler<DeleteString>
+{
+}
 pub mod messages {
     //! Messages that can be sent to cache data structures implementing [Save][super::Save]
-    use crate::pow::PoWConfig;
     use actix::dev::*;
+    use derive_builder::Builder;
 
     use crate::errors::*;
+    use crate::mcaptcha::VisitorResult;
+    use crate::pow::PoWConfig;
 
-    /// Message to decrement the visitor count
-    #[derive(Message)]
+    /// Message to cache PoW difficulty factor and string
+    #[derive(Message, Builder)]
     #[rtype(result = "CaptchaResult<()>")]
-    pub struct Cache(pub PoWConfig);
+    pub struct Cache {
+        pub string: String,
+        pub difficulty_factor: u32,
+        pub duration: u64,
+    }
 
-    /// Message to decrement the visitor count
+    impl Cache {
+        pub fn new(p: &PoWConfig, v: &VisitorResult) -> Self {
+            CacheBuilder::default()
+                .string(p.string.clone())
+                .difficulty_factor(v.difficulty_factor)
+                .duration(v.duration)
+                .build()
+                .unwrap()
+        }
+    }
+
+    /// Message to retrive the the difficulty factor for the specified
+    /// string from the cache
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<Option<u32>>")]
     pub struct Retrive(pub String);
+
+    /// Message to delete cached PoW difficulty factor and string
+    /// when they expire
+    #[derive(Message)]
+    #[rtype(result = "CaptchaResult<()>")]
+    pub struct DeleteString(pub String);
 }

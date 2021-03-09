@@ -49,13 +49,11 @@ where
         if site_addr.is_none() {
             return None;
         }
-        let difficulty_factor = site_addr.unwrap().send(Visitor).await.unwrap();
-        let pow_config = PoWConfig::new(difficulty_factor);
-        self.cache
-            .send(Cache(pow_config.clone()))
-            .await
-            .unwrap()
-            .unwrap();
+        let mcaptcha = site_addr.unwrap().send(Visitor).await.unwrap();
+        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
+
+        let cache_msg = Cache::new(&pow_config, &mcaptcha);
+        self.cache.send(cache_msg).await.unwrap().unwrap();
         Some(pow_config)
     }
 
@@ -138,14 +136,6 @@ mod tests {
         let work = config
             .prove_work(&work_req.string, work_req.difficulty_factor)
             .unwrap();
-
-        let insufficient_work = config.prove_work(&work_req.string, 1).unwrap();
-        let insufficient_work_payload = Work {
-            string: work_req.string.clone(),
-            result: insufficient_work.result,
-            nonce: insufficient_work.nonce,
-        };
-
         let mut payload = Work {
             string: work_req.string,
             result: work.result,
@@ -159,8 +149,14 @@ mod tests {
         let res = actors.verify_pow(payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::StringNotFound));
 
+        let insufficient_work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let insufficient_work = config.prove_work(&insufficient_work_req.string, 1).unwrap();
+        let insufficient_work_payload = Work {
+            string: insufficient_work_req.string,
+            result: insufficient_work.result,
+            nonce: insufficient_work.nonce,
+        };
         let res = actors.verify_pow(insufficient_work_payload.clone()).await;
-
         assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
     }
 }

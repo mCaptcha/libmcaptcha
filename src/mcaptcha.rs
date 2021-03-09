@@ -111,6 +111,11 @@ impl MCaptcha {
     pub fn get_difficulty(&self) -> u32 {
         self.defense.get_difficulty()
     }
+
+    /// get [MCaptcha]'s lifetime
+    pub fn get_duration(&self) -> u64 {
+        self.duration
+    }
 }
 impl Actor for MCaptcha {
     type Context = Context<Self>;
@@ -129,12 +134,30 @@ impl Handler<DeleteVisitor> for MCaptcha {
 }
 
 /// Message to increment the visitor count
+/// returns difficulty factor and lifetime
 #[derive(Message)]
-#[rtype(result = "u32")]
+#[rtype(result = "VisitorResult")]
 pub struct Visitor;
 
+/// Struct representing the return datatime of
+/// [Visitor] message. Contains MCaptcha lifetime
+/// and difficulty factor
+pub struct VisitorResult {
+    pub duration: u64,
+    pub difficulty_factor: u32,
+}
+
+impl VisitorResult {
+    fn new(m: &MCaptcha) -> Self {
+        VisitorResult {
+            duration: m.get_duration(),
+            difficulty_factor: m.get_difficulty(),
+        }
+    }
+}
+
 impl Handler<Visitor> for MCaptcha {
-    type Result = u32;
+    type Result = MessageResult<Visitor>;
 
     fn handle(&mut self, _: Visitor, ctx: &mut Self::Context) -> Self::Result {
         use actix::clock::delay_for;
@@ -150,7 +173,7 @@ impl Handler<Visitor> for MCaptcha {
         ctx.spawn(wait_for);
 
         self.add_visitor();
-        self.get_difficulty()
+        MessageResult(VisitorResult::new(&self))
     }
 }
 
@@ -209,12 +232,12 @@ pub mod tests {
     async fn counter_defense_tightenup_works() {
         let addr: MyActor = get_counter().start();
 
-        let mut difficulty_factor = addr.send(Visitor).await.unwrap();
-        assert_eq!(difficulty_factor, LEVEL_1.0);
+        let mut mcaptcha = addr.send(Visitor).await.unwrap();
+        assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.0);
 
         race(addr.clone(), LEVEL_2).await;
-        difficulty_factor = addr.send(Visitor).await.unwrap();
-        assert_eq!(difficulty_factor, LEVEL_2.1);
+        mcaptcha = addr.send(Visitor).await.unwrap();
+        assert_eq!(mcaptcha.difficulty_factor, LEVEL_2.1);
     }
 
     #[actix_rt::test]
@@ -224,13 +247,13 @@ pub mod tests {
 
         race(addr.clone(), LEVEL_2).await;
         race(addr.clone(), LEVEL_2).await;
-        let mut difficulty_factor = addr.send(Visitor).await.unwrap();
-        assert_eq!(difficulty_factor, LEVEL_2.1);
+        let mut mcaptcha = addr.send(Visitor).await.unwrap();
+        assert_eq!(mcaptcha.difficulty_factor, LEVEL_2.1);
 
         let duration = Duration::new(DURATION, 0);
         delay_for(duration).await;
 
-        difficulty_factor = addr.send(Visitor).await.unwrap();
-        assert_eq!(difficulty_factor, LEVEL_1.1);
+        mcaptcha = addr.send(Visitor).await.unwrap();
+        assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.1);
     }
 }
