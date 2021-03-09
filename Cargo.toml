@@ -10,10 +10,6 @@ license = "AGPL-3.0"
 edition = "2018"
 readme = "README.md"
 
-[workspace]
-members = [ ".", "browser", "cli", "guard" ]
-
-
 [dependencies]
 actix = "0.10"
 
