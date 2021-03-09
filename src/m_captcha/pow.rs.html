@@ -59,6 +59,8 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -81,6 +83,8 @@
 <span class="doccomment">//! PoW datatypes used in client-server interaction</span>
 <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">PoW</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">ConfigBuilder</span>;
 
 <span class="doccomment">/// PoW requirement datatype that is be sent to clients for generating PoW</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Debug</span>)]</span>

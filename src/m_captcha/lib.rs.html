@@ -116,6 +116,69 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -150,20 +213,59 @@
 <span class="doccomment">//! - Difficulty(Factor): Minimum ammount of work that a client must do to make a valid</span>
 <span class="doccomment">//! request.</span>
 <span class="doccomment">//! - [Defense]: A datatype that various visitor-difficulty mappigns</span>
-<span class="doccomment">//! - [Visitor][crate::message::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier</span>
+<span class="doccomment">//! - [Visitor][crate::mcaptcha::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier</span>
 <span class="doccomment">//! your service is. Determines mCaptcha defense defense</span>
 <span class="doccomment">//! - Visitor threshold: The threshold at which [MCaptcha] will adjust defense defense</span>
+<span class="doccomment">//! - [Cache][crate::cache] : A datatype that implements [Save][crate::cache::Save]. Used to store</span>
+<span class="doccomment">//! PoW requirements to defend against replay attacks and dictionary attacks.</span>
+<span class="doccomment">//! - [Master][crate::master::Master]: A datatype that manages [MCaptcha][crate::mcaptcha::MCaptcha] actors. Works like a DNS for [Visitor][crate::mcaptcha::Visitor] messages.</span>
+<span class="doccomment">//! - [System][crate::system::System]: mCaptcha system that manages cache, master and provides</span>
+<span class="doccomment">//! useful abstractions. An mCaptcha system/instance can have only a single</span>
+<span class="doccomment">//! [System][crate::system::System]</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Example:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! use m_captcha::{LevelBuilder, cache::HashCache, DefenseBuilder, message::Visitor, MCaptchaBuilder};</span>
+<span class="doccomment">//! use m_captcha::{</span>
+<span class="doccomment">//!     cache::HashCache,</span>
+<span class="doccomment">//!     master::{AddSiteBuilder, Master},</span>
+<span class="doccomment">//!     pow::{ConfigBuilder, Work},</span>
+<span class="doccomment">//!     system::SystemBuilder,</span>
+<span class="doccomment">//!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,</span>
+<span class="doccomment">//! };</span>
 <span class="doccomment">//! // traits from actix needs to be in scope for starting actor</span>
 <span class="doccomment">//! use actix::prelude::*;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! #[actix_rt::main]</span>
 <span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">//!     // configure defense</span>
+<span class="doccomment">//!     // start cahce actor</span>
+<span class="doccomment">//!     // cache is used to store PoW requirements that are sent to clients</span>
+<span class="doccomment">//!     // This way, it can be verified that the client computed work over a config</span>
+<span class="doccomment">//!     // that _we_ sent. Offers protection against rainbow tables powered dictionary attacks</span>
+<span class="doccomment">//!     let cache = HashCache::default().start();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // create PoW config with unique salt. Salt has to be safely guarded.</span>
+<span class="doccomment">//!     // salts protect us from replay attacks</span>
+<span class="doccomment">//!     let pow = ConfigBuilder::default()</span>
+<span class="doccomment">//!         .salt(&quot;myrandomsaltisnotlongenoug&quot;.into())</span>
+<span class="doccomment">//!         .build()</span>
+<span class="doccomment">//!         .unwrap();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // start master actor. Master actor is responsible for managing MCaptcha actors</span>
+<span class="doccomment">//!     // each mCaptcha system should have only one master</span>
+<span class="doccomment">//!     let master = Master::new().start();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Create system. System encapsulates master and cache and provides useful abstraction</span>
+<span class="doccomment">//!     // each mCaptcha system should have only one system</span>
+<span class="doccomment">//!     let system = SystemBuilder::default()</span>
+<span class="doccomment">//!         .master(master)</span>
+<span class="doccomment">//!         .cache(cache)</span>
+<span class="doccomment">//!         .pow(pow.clone())</span>
+<span class="doccomment">//!         .build()</span>
+<span class="doccomment">//!         .unwrap();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // configure defense. This is a per site configuration. A site can have several levels</span>
+<span class="doccomment">//!     // of defenses configured</span>
 <span class="doccomment">//!     let defense = DefenseBuilder::default()</span>
 <span class="doccomment">//!         // add as many defense as you see fit</span>
 <span class="doccomment">//!         .add_level(</span>
@@ -193,20 +295,49 @@
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap();</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//!     //let cache = HashCache::default().start();</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     // create and start MCaptcha actor</span>
+<span class="doccomment">//!     // create and start MCaptcha actor that uses the above defense configuration</span>
+<span class="doccomment">//!     // This is what manages the difficulty factor of sites that an mCaptcha protects</span>
 <span class="doccomment">//!     let mcaptcha = MCaptchaBuilder::default()</span>
 <span class="doccomment">//!         .defense(defense)</span>
 <span class="doccomment">//!         // leaky bucket algorithm&#39;s emission interval</span>
 <span class="doccomment">//!         .duration(30)</span>
-<span class="doccomment">//!      //   .cache(cache)</span>
+<span class="doccomment">//!         //   .cache(cache)</span>
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap()</span>
 <span class="doccomment">//!         .start();</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//!     // increment count when user visits protected routes</span>
-<span class="doccomment">//!     mcaptcha.send(Visitor).await.unwrap();</span>
+<span class="doccomment">//!     // unique value identifying an MCaptcha actor</span>
+<span class="doccomment">//!     let mcaptcha_name = &quot;batsense.net&quot;;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // add MCaptcha to Master</span>
+<span class="doccomment">//!     let msg = AddSiteBuilder::default()</span>
+<span class="doccomment">//!         .id(mcaptcha_name.into())</span>
+<span class="doccomment">//!         .addr(mcaptcha.clone())</span>
+<span class="doccomment">//!         .build()</span>
+<span class="doccomment">//!         .unwrap();</span>
+<span class="doccomment">//!     system.master.send(msg).await.unwrap();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Get PoW config. Should be called everytime there&#39;s a visitor for a</span>
+<span class="doccomment">//!     // managed site(here mcaptcha_name)</span>
+<span class="doccomment">//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // the following computation should be done on the client but for the purpose</span>
+<span class="doccomment">//!     // of this illustration, we are going to do it on the server it self</span>
+<span class="doccomment">//!     let work = pow</span>
+<span class="doccomment">//!         .prove_work(&amp;work_req.string, work_req.difficulty_factor)</span>
+<span class="doccomment">//!         .unwrap();</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // the payload that the client sends to the server</span>
+<span class="doccomment">//!     let payload = Work {</span>
+<span class="doccomment">//!         string: work_req.string,</span>
+<span class="doccomment">//!         result: work.result,</span>
+<span class="doccomment">//!         nonce: work.nonce,</span>
+<span class="doccomment">//!     };</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     // Server evaluates client&#39;s work. Returns true if everything</span>
+<span class="doccomment">//!     // checksout and Err() if something fishy is happening</span>
+<span class="doccomment">//!     let res = system.verify_pow(payload.clone()).await.unwrap();</span>
+<span class="doccomment">//!     assert!(res);</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     Ok(())</span>
 <span class="doccomment">//! }</span>
@@ -216,11 +347,6 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcaptcha</span>;
-
-<span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">message</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">Visitor</span>;
-}
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span>;
