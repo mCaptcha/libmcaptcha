@@ -11,7 +11,7 @@ edition = "2018"
 readme = "README.md"
 
 [workspace]
-members = [ ".", "browser", "cli" ]
+members = [ ".", "browser", "cli", "guard" ]
 
 
 [dependencies]
