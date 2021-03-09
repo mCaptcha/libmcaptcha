@@ -105,8 +105,8 @@ pub mod message {
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;
-pub mod data;
 pub mod pow;
+pub mod system;
 mod utils;
 
 pub use crate::cache::hashcache::HashCache;

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//! module describing various bits of data required for an mCaptcha system
+//! module describing mCaptcha system
 use actix::dev::*;
 use derive_builder::Builder;
 use pow_sha256::{Config, PoW};
@@ -24,17 +24,19 @@ use crate::cache::messages;
 use crate::cache::Save;
 use crate::errors::*;
 use crate::master::Master;
+//use crate::models::*;
 use crate::pow::*;
 
 /// struct describing various bits of data required for an mCaptcha system
 #[derive(Clone, Builder)]
-pub struct Data<T: Save> {
-    master: Addr<Master<'static>>,
+pub struct System<T: Save> {
+    pub master: Addr<Master>,
     cache: Addr<T>,
     pow: Config,
+    //    db: PgPool,
 }
 
-impl<T> Data<T>
+impl<T> System<T>
 where
     T: Save,
     <T as actix::Actor>::Context: ToEnvelope<T, messages::Cache> + ToEnvelope<T, messages::Retrive>,
@@ -77,6 +79,48 @@ where
             Err(_) => Err(CaptchaError::Default),
         }
     }
+
+    //    pub async fn register(&self, u: &Users) {
+    //        sqlx::query!("INSERT INTO mcaptcha_users (name) VALUES ($1)", u.name)
+    //            .execute(&self.db)
+    //            .await
+    //            .unwrap();
+    //    }
+    //
+    //    pub async fn levels(&self, l: &Levels) {
+    //        sqlx::query!(
+    //            "INSERT INTO mcaptcha_levels (id, difficulty_factor, visitor_threshold) VALUES ($1, $2, $3)",
+    //            l.id,
+    //            l.difficulty_factor,
+    //            l.visitor_threshold
+    //        )
+    //        .execute(&self.db)
+    //        .await
+    //        .unwrap();
+    //    }
+    //
+    //    pub async fn add_mcaptcha(&self, m: &MCaptchaSystem) {
+    //        sqlx::query!(
+    //            "INSERT INTO mcaptcha_config (id, name, duration) VALUES ($1, $2, $3)",
+    //            m.id,
+    //            m.name,
+    //            m.duration
+    //        )
+    //        .execute(&self.db)
+    //        .await
+    //        .unwrap();
+    //    }
+    //
+    //    async fn init_mcaptcha(&self, m: &MCaptchaSystem) {
+    //        let id = sqlx::query_as!(
+    //            Duration,
+    //            "SELECT duration FROM mcaptcha_config WHERE id = ($1)",
+    //            m.id,
+    //        )
+    //        .fetch_one(&self.db)
+    //        .await
+    //        .unwrap();
+    //    }
 }
 
 #[cfg(test)]
@@ -84,6 +128,7 @@ mod tests {
 
     use pow_sha256::ConfigBuilder;
 
+    use super::System;
     use super::*;
     use crate::cache::HashCache;
     use crate::master::*;
@@ -91,7 +136,7 @@ mod tests {
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 
-    async fn boostrap_system() -> Data<HashCache> {
+    async fn boostrap_system() -> System<HashCache> {
         let master = Master::new().start();
         let mcaptcha = get_counter().start();
         let pow = get_config();
@@ -105,7 +150,7 @@ mod tests {
 
         master.send(msg).await.unwrap();
 
-        DataBuilder::default()
+        SystemBuilder::default()
             .master(master)
             .cache(cache)
             .pow(pow)

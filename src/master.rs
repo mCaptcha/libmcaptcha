@@ -28,11 +28,11 @@ use crate::mcaptcha::MCaptcha;
 /// varying [Defense][crate::defense::Defense] configurations
 /// so a "master" actor is needed to manage them all
 #[derive(Clone)]
-pub struct Master<'a> {
-    sites: BTreeMap<&'a str, Addr<MCaptcha>>,
+pub struct Master {
+    sites: BTreeMap<String, Addr<MCaptcha>>,
 }
 
-impl Master<'static> {
+impl Master {
     /// add [MCaptcha] actor to [Master]
     pub fn add_site(&mut self, details: AddSite) {
         self.sites.insert(details.id, details.addr.to_owned());
@@ -51,7 +51,7 @@ impl Master<'static> {
     }
 }
 
-impl Actor for Master<'static> {
+impl Actor for Master {
     type Context = Context<Self>;
 }
 
@@ -60,7 +60,7 @@ impl Actor for Master<'static> {
 #[rtype(result = "Option<Addr<MCaptcha>>")]
 pub struct GetSite(pub String);
 
-impl Handler<GetSite> for Master<'static> {
+impl Handler<GetSite> for Master {
     type Result = MessageResult<GetSite>;
 
     fn handle(&mut self, m: GetSite, _ctx: &mut Self::Context) -> Self::Result {
@@ -77,11 +77,11 @@ impl Handler<GetSite> for Master<'static> {
 #[derive(Message, Builder)]
 #[rtype(result = "()")]
 pub struct AddSite {
-    pub id: &'static str,
+    pub id: String,
     pub addr: Addr<MCaptcha>,
 }
 
-impl Handler<AddSite> for Master<'static> {
+impl Handler<AddSite> for Master {
     type Result = ();
 
     fn handle(&mut self, m: AddSite, _ctx: &mut Self::Context) -> Self::Result {
@@ -101,7 +101,7 @@ mod tests {
         let id = "yo";
         let mcaptcha = get_counter().start();
         let msg = AddSiteBuilder::default()
-            .id(id)
+            .id(id.into())
             .addr(mcaptcha.clone())
             .build()
             .unwrap();
