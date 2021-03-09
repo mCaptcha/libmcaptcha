@@ -1,6 +1,3 @@
 var N = null;var sourcesIndex = {};
-sourcesIndex["guard"] = {"name":"","files":["data.rs","errors.rs","main.rs","settings.rs"]};
-sourcesIndex["mCaptcha_browser"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["m_captcha"] = {"name":"","dirs":[{"name":"cache","files":["hashcache.rs","mod.rs"]}],"files":["defense.rs","errors.rs","lib.rs","master.rs","mcaptcha.rs","pow.rs","system.rs","utils.rs"]};
-sourcesIndex["mcaptcha_cli"] = {"name":"","files":["main.rs"]};
 createSourceSidebar();

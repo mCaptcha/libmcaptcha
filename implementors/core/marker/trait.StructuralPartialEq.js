@@ -1,4 +1,3 @@
 (function() {var implementors = {};
-implementors["guard"] = [{"text":"impl StructuralPartialEq for ServiceError","synthetic":false,"types":[]}];
 implementors["m_captcha"] = [{"text":"impl StructuralPartialEq for Level","synthetic":false,"types":[]},{"text":"impl StructuralPartialEq for LevelBuilder","synthetic":false,"types":[]},{"text":"impl StructuralPartialEq for Defense","synthetic":false,"types":[]},{"text":"impl StructuralPartialEq for DefenseBuilder","synthetic":false,"types":[]},{"text":"impl StructuralPartialEq for CaptchaError","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
