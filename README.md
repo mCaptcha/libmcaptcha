@@ -7,18 +7,25 @@
 [![Documentation](https://img.shields.io/badge/docs-master-blue)](https://mcaptcha.github.io/mCaptcha/m_captcha/index.html)
 ![CI (Linux)](<https://github.com/mCaptcha/mCaptcha/workflows/CI%20(Linux)/badge.svg>)
 [![dependency status](https://deps.rs/repo/github/mCaptcha/mCaptcha/status.svg)](https://deps.rs/repo/github/mCaptcha/mCaptcha)
+[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 <br />
 [![codecov](https://codecov.io/gh/mCaptcha/mCaptcha/branch/master/graph/badge.svg)](https://codecov.io/gh/mCaptcha/mCaptcha) 
+[![Documentation](https://img.shields.io/badge/matrix-community-purple)](https://matrix.to/#/+mcaptcha:matrix.batsense.net)
 
 </div>
 
-### STATUS: ACTIVE DEVELOPMENT (fancy word for unusable)
+
 
 mCaptcha uses SHA256 based proof-of-work(PoW) to rate limit users. 
 
-**If someone wants to hammer your site, they will have to do more work to
+If someone wants to hammer your site, they will have to do more work to
 send requests than your server will have to do to respond to their
-request.**
+request.
+
+>**NOTE:** `0.1` is out, expect breaking changes as ergonomics and
+performance is improved. Checkout [changelog](./CHANGELOG.md) for
+changes and migration pointers.
+
 
 ## Why use mCaptcha?
 - Free software, privacy focused

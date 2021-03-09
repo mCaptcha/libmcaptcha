@@ -19,7 +19,7 @@
 //!
 //! ## Usage:
 //! ```rust
-//! use m_captcha::{message::Visitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
+//! use m_captcha::{mcaptcha::Visitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!

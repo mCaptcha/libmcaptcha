@@ -20,6 +20,8 @@
 use pow_sha256::PoW;
 use serde::Serialize;
 
+pub use pow_sha256::ConfigBuilder;
+
 /// PoW requirement datatype that is be sent to clients for generating PoW
 #[derive(Clone, Serialize, Debug)]
 pub struct PoWConfig {

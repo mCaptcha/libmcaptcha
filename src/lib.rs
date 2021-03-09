@@ -31,20 +31,59 @@
 //! - Difficulty(Factor): Minimum ammount of work that a client must do to make a valid
 //! request.
 //! - [Defense]: A datatype that various visitor-difficulty mappigns
-//! - [Visitor][crate::message::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier
+//! - [Visitor][crate::mcaptcha::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier
 //! your service is. Determines mCaptcha defense defense
 //! - Visitor threshold: The threshold at which [MCaptcha] will adjust defense defense
+//! - [Cache][crate::cache] : A datatype that implements [Save][crate::cache::Save]. Used to store
+//! PoW requirements to defend against replay attacks and dictionary attacks.
+//! - [Master][crate::master::Master]: A datatype that manages [MCaptcha][crate::mcaptcha::MCaptcha] actors. Works like a DNS for [Visitor][crate::mcaptcha::Visitor] messages.
+//! - [System][crate::system::System]: mCaptcha system that manages cache, master and provides
+//! useful abstractions. An mCaptcha system/instance can have only a single
+//! [System][crate::system::System]
 //!
 //! ## Example:
 //!
 //! ```rust
-//! use m_captcha::{LevelBuilder, cache::HashCache, DefenseBuilder, message::Visitor, MCaptchaBuilder};
+//! use m_captcha::{
+//!     cache::HashCache,
+//!     master::{AddSiteBuilder, Master},
+//!     pow::{ConfigBuilder, Work},
+//!     system::SystemBuilder,
+//!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,
+//! };
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!
 //! #[actix_rt::main]
 //! async fn main() -> std::io::Result<()> {
-//!     // configure defense
+//!     // start cahce actor
+//!     // cache is used to store PoW requirements that are sent to clients
+//!     // This way, it can be verified that the client computed work over a config
+//!     // that _we_ sent. Offers protection against rainbow tables powered dictionary attacks
+//!     let cache = HashCache::default().start();
+//!
+//!     // create PoW config with unique salt. Salt has to be safely guarded.
+//!     // salts protect us from replay attacks
+//!     let pow = ConfigBuilder::default()
+//!         .salt("myrandomsaltisnotlongenoug".into())
+//!         .build()
+//!         .unwrap();
+//!
+//!     // start master actor. Master actor is responsible for managing MCaptcha actors
+//!     // each mCaptcha system should have only one master
+//!     let master = Master::new().start();
+//!
+//!     // Create system. System encapsulates master and cache and provides useful abstraction
+//!     // each mCaptcha system should have only one system
+//!     let system = SystemBuilder::default()
+//!         .master(master)
+//!         .cache(cache)
+//!         .pow(pow.clone())
+//!         .build()
+//!         .unwrap();
+//!
+//!     // configure defense. This is a per site configuration. A site can have several levels
+//!     // of defenses configured
 //!     let defense = DefenseBuilder::default()
 //!         // add as many defense as you see fit
 //!         .add_level(
@@ -74,20 +113,49 @@
 //!         .build()
 //!         .unwrap();
 //!
-//!     //let cache = HashCache::default().start();
-//!
-//!     // create and start MCaptcha actor
+//!     // create and start MCaptcha actor that uses the above defense configuration
+//!     // This is what manages the difficulty factor of sites that an mCaptcha protects
 //!     let mcaptcha = MCaptchaBuilder::default()
 //!         .defense(defense)
 //!         // leaky bucket algorithm's emission interval
 //!         .duration(30)
-//!      //   .cache(cache)
+//!         //   .cache(cache)
 //!         .build()
 //!         .unwrap()
 //!         .start();
 //!
-//!     // increment count when user visits protected routes
-//!     mcaptcha.send(Visitor).await.unwrap();
+//!     // unique value identifying an MCaptcha actor
+//!     let mcaptcha_name = "batsense.net";
+//!
+//!     // add MCaptcha to Master
+//!     let msg = AddSiteBuilder::default()
+//!         .id(mcaptcha_name.into())
+//!         .addr(mcaptcha.clone())
+//!         .build()
+//!         .unwrap();
+//!     system.master.send(msg).await.unwrap();
+//!
+//!     // Get PoW config. Should be called everytime there's a visitor for a
+//!     // managed site(here mcaptcha_name)
+//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap();
+//!
+//!     // the following computation should be done on the client but for the purpose
+//!     // of this illustration, we are going to do it on the server it self
+//!     let work = pow
+//!         .prove_work(&work_req.string, work_req.difficulty_factor)
+//!         .unwrap();
+//!
+//!     // the payload that the client sends to the server
+//!     let payload = Work {
+//!         string: work_req.string,
+//!         result: work.result,
+//!         nonce: work.nonce,
+//!     };
+//!
+//!     // Server evaluates client's work. Returns true if everything
+//!     // checksout and Err() if something fishy is happening
+//!     let res = system.verify_pow(payload.clone()).await.unwrap();
+//!     assert!(res);
 //!
 //!     Ok(())
 //! }
@@ -97,11 +165,6 @@ pub mod defense;
 pub mod errors;
 pub mod master;
 pub mod mcaptcha;
-
-/// message datatypes to interact with [MCaptcha] actor
-pub mod message {
-    pub use crate::mcaptcha::Visitor;
-}
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;

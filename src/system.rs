@@ -24,7 +24,6 @@ use crate::cache::messages;
 use crate::cache::Save;
 use crate::errors::*;
 use crate::master::Master;
-//use crate::models::*;
 use crate::pow::*;
 
 /// struct describing various bits of data required for an mCaptcha system
@@ -33,7 +32,6 @@ pub struct System<T: Save> {
     pub master: Addr<Master>,
     cache: Addr<T>,
     pow: Config,
-    //    db: PgPool,
 }
 
 impl<T> System<T>
@@ -65,62 +63,20 @@ where
 
         let string = work.string.clone();
         let msg = Retrive(string.clone());
-        let difficulty = self.cache.send(msg).await.unwrap();
         let pow: PoW<String> = work.into();
+
+        let difficulty = self.cache.send(msg).await.unwrap()?;
         match difficulty {
-            Ok(Some(difficulty)) => {
+            Some(difficulty) => {
                 if self.pow.is_sufficient_difficulty(&pow, difficulty) {
                     Ok(self.pow.is_valid_proof(&pow, &string))
                 } else {
                     Err(CaptchaError::InsuffiencientDifficulty)
                 }
             }
-            Ok(None) => Err(CaptchaError::StringNotFound),
-            Err(_) => Err(CaptchaError::Default),
+            None => Err(CaptchaError::StringNotFound),
         }
     }
-
-    //    pub async fn register(&self, u: &Users) {
-    //        sqlx::query!("INSERT INTO mcaptcha_users (name) VALUES ($1)", u.name)
-    //            .execute(&self.db)
-    //            .await
-    //            .unwrap();
-    //    }
-    //
-    //    pub async fn levels(&self, l: &Levels) {
-    //        sqlx::query!(
-    //            "INSERT INTO mcaptcha_levels (id, difficulty_factor, visitor_threshold) VALUES ($1, $2, $3)",
-    //            l.id,
-    //            l.difficulty_factor,
-    //            l.visitor_threshold
-    //        )
-    //        .execute(&self.db)
-    //        .await
-    //        .unwrap();
-    //    }
-    //
-    //    pub async fn add_mcaptcha(&self, m: &MCaptchaSystem) {
-    //        sqlx::query!(
-    //            "INSERT INTO mcaptcha_config (id, name, duration) VALUES ($1, $2, $3)",
-    //            m.id,
-    //            m.name,
-    //            m.duration
-    //        )
-    //        .execute(&self.db)
-    //        .await
-    //        .unwrap();
-    //    }
-    //
-    //    async fn init_mcaptcha(&self, m: &MCaptchaSystem) {
-    //        let id = sqlx::query_as!(
-    //            Duration,
-    //            "SELECT duration FROM mcaptcha_config WHERE id = ($1)",
-    //            m.id,
-    //        )
-    //        .fetch_one(&self.db)
-    //        .await
-    //        .unwrap();
-    //    }
 }
 
 #[cfg(test)]

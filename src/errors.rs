@@ -63,11 +63,6 @@ pub enum CaptchaError {
     /// isn't in cache
     #[display(fmt = "String now found")]
     StringNotFound,
-
-    /// Catcha all default error
-    /// used for development, must remove before production
-    #[display(fmt = "TODO remove before prod")]
-    Default,
 }
 
 /// [Result] datatype for m_captcha
