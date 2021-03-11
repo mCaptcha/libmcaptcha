@@ -14,19 +14,19 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-x86_64-unknown-linux-gnu
+          toolchain: stable-x86_64-unknown-linux-gnu
           profile: minimal
           override: true
 
       - name: generate documentation
-        if: matrix.version == 'stable' && (github.repository == 'mCaptcha/mCaptcha')
+        if: github.repository == 'mCaptcha/mCaptcha'
         uses: actions-rs/cargo@v1
         with:
           command: doc
           args: --no-deps --workspace --all-features
 
       - name: Deploy to GitHub Pages
-        if: matrix.version == 'stable' && (github.repository == 'mCaptcha/mCaptcha')
+        if: github.repository == 'mCaptcha/mCaptcha'
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
