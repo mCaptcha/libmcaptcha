@@ -90,7 +90,7 @@ pub struct MCaptcha {
 }
 
 impl MCaptcha {
-    /// incerment visiotr count by one
+    /// increments the visitor count by one
     pub fn add_visitor(&mut self) {
         self.visitor_threshold += 1;
         if self.visitor_threshold > self.defense.visitor_threshold() {
@@ -100,8 +100,8 @@ impl MCaptcha {
         }
     }
 
-    /// deccerment visiotr count by one
-    pub fn decrement_visiotr(&mut self) {
+    /// decrements the visitor count by one
+    pub fn decrement_visitor(&mut self) {
         if self.visitor_threshold > 0 {
             self.visitor_threshold -= 1;
         }
@@ -129,7 +129,7 @@ struct DeleteVisitor;
 impl Handler<DeleteVisitor> for MCaptcha {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
-        self.decrement_visiotr();
+        self.decrement_visitor();
     }
 }
 
