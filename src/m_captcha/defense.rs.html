@@ -469,8 +469,8 @@
 <span class="doccomment">/// Level struct that describes threshold-difficulty factor mapping</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Level</span> {
-    <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
-    <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
 }
 
 <span class="doccomment">/// Bulder struct for [Level] to describe threshold-difficulty factor mapping</span>
