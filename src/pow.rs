@@ -18,12 +18,12 @@
 
 //! PoW datatypes used in client-server interaction
 use pow_sha256::PoW;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub use pow_sha256::ConfigBuilder;
 
 /// PoW requirement datatype that is be sent to clients for generating PoW
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct PoWConfig {
     pub string: String,
     pub difficulty_factor: u32,
@@ -41,7 +41,7 @@ impl PoWConfig {
 }
 
 /// PoW datatype that clients send to server
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Work {
     pub string: String,
     pub result: String,

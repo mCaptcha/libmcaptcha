@@ -31,13 +31,14 @@ pub mod messages {
     //! Messages that can be sent to cache data structures implementing [Save][super::Save]
     use actix::dev::*;
     use derive_builder::Builder;
+    use serde::{Deserialize, Serialize};
 
     use crate::errors::*;
     use crate::mcaptcha::VisitorResult;
     use crate::pow::PoWConfig;
 
     /// Message to cache PoW difficulty factor and string
-    #[derive(Message, Builder)]
+    #[derive(Message, Serialize, Deserialize, Builder)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct Cache {
         pub string: String,

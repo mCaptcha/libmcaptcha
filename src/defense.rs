@@ -43,9 +43,10 @@
 //! ```
 
 use crate::errors::*;
+use serde::{Deserialize, Serialize};
 
 /// Level struct that describes threshold-difficulty factor mapping
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Copy, Clone, PartialEq)]
 pub struct Level {
     visitor_threshold: u32,
     difficulty_factor: u32,
@@ -106,7 +107,7 @@ impl LevelBuilder {
 }
 
 /// struct describes all the different [Level]s at which an mCaptcha system operates
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Defense {
     levels: Vec<Level>,
     // index of current visitor threshold
