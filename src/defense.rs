@@ -48,8 +48,8 @@ use serde::{Deserialize, Serialize};
 /// Level struct that describes threshold-difficulty factor mapping
 #[derive(Debug, Deserialize, Serialize, Copy, Clone, PartialEq)]
 pub struct Level {
-    visitor_threshold: u32,
-    difficulty_factor: u32,
+    pub visitor_threshold: u32,
+    pub difficulty_factor: u32,
 }
 
 /// Bulder struct for [Level] to describe threshold-difficulty factor mapping
