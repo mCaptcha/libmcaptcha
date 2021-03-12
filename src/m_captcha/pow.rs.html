@@ -82,12 +82,12 @@
 
 <span class="doccomment">//! PoW datatypes used in client-server interaction</span>
 <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">PoW</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">ConfigBuilder</span>;
 
 <span class="doccomment">/// PoW requirement datatype that is be sent to clients for generating PoW</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PoWConfig</span> {
     <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
@@ -105,7 +105,7 @@
 }
 
 <span class="doccomment">/// PoW datatype that clients send to server</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Work</span> {
     <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,

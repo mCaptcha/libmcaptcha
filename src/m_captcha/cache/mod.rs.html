@@ -71,6 +71,7 @@
 <span id="68">68</span>
 <span id="69">69</span>
 <span id="70">70</span>
+<span id="71">71</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -105,13 +106,14 @@
     <span class="doccomment">//! Messages that can be sent to cache data structures implementing [Save][super::Save]</span>
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
+    <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">VisitorResult</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pow</span>::<span class="ident">PoWConfig</span>;
 
     <span class="doccomment">/// Message to cache PoW difficulty factor and string</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Builder</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cache</span> {
         <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,

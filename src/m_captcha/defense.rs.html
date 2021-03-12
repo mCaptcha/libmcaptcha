@@ -417,6 +417,7 @@
 <span id="414">414</span>
 <span id="415">415</span>
 <span id="416">416</span>
+<span id="417">417</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -463,9 +464,10 @@
 <span class="doccomment">//! ```</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="doccomment">/// Level struct that describes threshold-difficulty factor mapping</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Level</span> {
     <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
     <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
@@ -526,7 +528,7 @@
 }
 
 <span class="doccomment">/// struct describes all the different [Level]s at which an mCaptcha system operates</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Defense</span> {
     <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span>,
     <span class="comment">// index of current visitor threshold</span>
