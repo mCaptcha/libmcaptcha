@@ -75,18 +75,70 @@
 use std::time::Duration;
 
 use actix::dev::*;
-use derive_builder::Builder;
+use serde::{Deserialize, Serialize};
 
-use crate::defense::Defense;
+use crate::{
+    defense::Defense,
+    errors::{CaptchaError, CaptchaResult},
+};
+
+/// Builder for [MCaptcha]
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct MCaptchaBuilder {
+    visitor_threshold: u32,
+    defense: Option<Defense>,
+    duration: Option<u64>,
+}
+
+impl Default for MCaptchaBuilder {
+    fn default() -> Self {
+        MCaptchaBuilder {
+            visitor_threshold: 0,
+            defense: None,
+            duration: None,
+        }
+    }
+}
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
-#[derive(Clone, Debug, Builder)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct MCaptcha {
-    #[builder(default = "0", setter(skip))]
     visitor_threshold: u32,
     defense: Defense,
     duration: u64,
+}
+
+impl MCaptchaBuilder {
+    /// set defense
+    pub fn defense(&mut self, d: Defense) -> &mut Self {
+        self.defense = Some(d);
+        self
+    }
+
+    /// set duration
+    pub fn duration(&mut self, d: u64) -> &mut Self {
+        self.duration = Some(d);
+        self
+    }
+
+    /// Builds new [MCaptcha]
+    pub fn build(&mut self) -> CaptchaResult<MCaptcha> {
+        if self.duration.is_none() {
+            Err(CaptchaError::PleaseSetValue("duration".into()))
+        } else if self.defense.is_none() {
+            Err(CaptchaError::PleaseSetValue("defense".into()))
+        } else if self.duration <= Some(0) {
+            Err(CaptchaError::CaptchaDurationZero)
+        } else {
+            let m = MCaptcha {
+                duration: self.duration.unwrap(),
+                defense: self.defense.clone().unwrap(),
+                visitor_threshold: self.visitor_threshold,
+            };
+            Ok(m)
+        }
+    }
 }
 
 impl MCaptcha {
@@ -255,5 +307,28 @@ pub mod tests {
 
         mcaptcha = addr.send(Visitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.1);
+    }
+
+    #[test]
+    fn test_mcatcptha_builder() {
+        let defense = get_defense();
+        let m = MCaptchaBuilder::default()
+            .duration(0)
+            .defense(defense.clone())
+            .build();
+
+        assert_eq!(m.err(), Some(CaptchaError::CaptchaDurationZero));
+
+        let m = MCaptchaBuilder::default().duration(30).build();
+        assert_eq!(
+            m.err(),
+            Some(CaptchaError::PleaseSetValue("defense".into()))
+        );
+
+        let m = MCaptchaBuilder::default().defense(defense.clone()).build();
+        assert_eq!(
+            m.err(),
+            Some(CaptchaError::PleaseSetValue("duration".into()))
+        );
     }
 }

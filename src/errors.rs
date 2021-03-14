@@ -34,6 +34,10 @@ pub enum CaptchaError {
     #[display(fmt = "difficulty factor must be greater than zero")]
     DifficultyFactorZero,
 
+    /// captcha cooldown duration must be greater than 0
+    #[display(fmt = "difficulty factor must be greater than zero")]
+    CaptchaDurationZero,
+
     /// Difficulty factor must be set
     #[display(fmt = "Set difficulty factor")]
     SetDifficultyFactor,
@@ -63,6 +67,10 @@ pub enum CaptchaError {
     /// isn't in cache
     #[display(fmt = "String now found")]
     StringNotFound,
+
+    /// Used in builder structs when a value is not set
+    #[display(fmt = "Please set value: {}", _0)]
+    PleaseSetValue(#[error(not(source))] String),
 }
 
 /// [Result] datatype for m_captcha
