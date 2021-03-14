@@ -260,6 +260,81 @@
 <span id="257">257</span>
 <span id="258">258</span>
 <span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -338,18 +413,70 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
 <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::<span class="ident">Defense</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">defense</span>::<span class="ident">Defense</span>,
+    <span class="ident">errors</span>::{<span class="ident">CaptchaError</span>, <span class="ident">CaptchaResult</span>},
+};
+
+<span class="doccomment">/// Builder for [MCaptcha]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptchaBuilder</span> {
+    <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
+    <span class="ident">defense</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Defense</span><span class="op">&gt;</span>,
+    <span class="ident">duration</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">MCaptchaBuilder</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">MCaptchaBuilder</span> {
+            <span class="ident">visitor_threshold</span>: <span class="number">0</span>,
+            <span class="ident">defense</span>: <span class="prelude-val">None</span>,
+            <span class="ident">duration</span>: <span class="prelude-val">None</span>,
+        }
+    }
+}
 
 <span class="doccomment">/// This struct represents the mCaptcha state and is used</span>
 <span class="doccomment">/// to configure leaky-bucket lifetime and manage defense</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Builder</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptcha</span> {
-    <span class="attribute">#[<span class="ident">builder</span>(<span class="ident">default</span> <span class="op">=</span> <span class="string">&quot;0&quot;</span>, <span class="ident">setter</span>(<span class="ident">skip</span>))]</span>
     <span class="ident">visitor_threshold</span>: <span class="ident">u32</span>,
     <span class="ident">defense</span>: <span class="ident">Defense</span>,
     <span class="ident">duration</span>: <span class="ident">u64</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">MCaptchaBuilder</span> {
+    <span class="doccomment">/// set defense</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">defense</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">d</span>: <span class="ident">Defense</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">defense</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">d</span>);
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// set duration</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">duration</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">d</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">duration</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">d</span>);
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Builds new [MCaptcha]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">duration</span>.<span class="ident">is_none</span>() {
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;duration&quot;</span>.<span class="ident">into</span>()))
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">is_none</span>() {
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;defense&quot;</span>.<span class="ident">into</span>()))
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">duration</span> <span class="op">&lt;</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="number">0</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">CaptchaDurationZero</span>)
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptcha</span> {
+                <span class="ident">duration</span>: <span class="self">self</span>.<span class="ident">duration</span>.<span class="ident">unwrap</span>(),
+                <span class="ident">defense</span>: <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">visitor_threshold</span>: <span class="self">self</span>.<span class="ident">visitor_threshold</span>,
+            };
+            <span class="prelude-val">Ok</span>(<span class="ident">m</span>)
+        }
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">MCaptcha</span> {
@@ -518,6 +645,29 @@
 
         <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Visitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>, <span class="ident">LEVEL_1</span>.<span class="number">1</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_mcatcptha_builder</span>() {
+        <span class="kw">let</span> <span class="ident">defense</span> <span class="op">=</span> <span class="ident">get_defense</span>();
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>()
+            .<span class="ident">duration</span>(<span class="number">0</span>)
+            .<span class="ident">defense</span>(<span class="ident">defense</span>.<span class="ident">clone</span>())
+            .<span class="ident">build</span>();
+
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">m</span>.<span class="ident">err</span>(), <span class="prelude-val">Some</span>(<span class="ident">CaptchaError</span>::<span class="ident">CaptchaDurationZero</span>));
+
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>().<span class="ident">duration</span>(<span class="number">30</span>).<span class="ident">build</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">m</span>.<span class="ident">err</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;defense&quot;</span>.<span class="ident">into</span>()))
+        );
+
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>().<span class="ident">defense</span>(<span class="ident">defense</span>.<span class="ident">clone</span>()).<span class="ident">build</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">m</span>.<span class="ident">err</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;duration&quot;</span>.<span class="ident">into</span>()))
+        );
     }
 }
 </pre></div>

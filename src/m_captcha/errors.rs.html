@@ -70,6 +70,14 @@
 <span id="67">67</span>
 <span id="68">68</span>
 <span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -107,6 +115,10 @@
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;difficulty factor must be greater than zero&quot;</span>)]</span>
     <span class="ident">DifficultyFactorZero</span>,
 
+    <span class="doccomment">/// captcha cooldown duration must be greater than 0</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;difficulty factor must be greater than zero&quot;</span>)]</span>
+    <span class="ident">CaptchaDurationZero</span>,
+
     <span class="doccomment">/// Difficulty factor must be set</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Set difficulty factor&quot;</span>)]</span>
     <span class="ident">SetDifficultyFactor</span>,
@@ -136,6 +148,10 @@
     <span class="doccomment">/// isn&#39;t in cache</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;String now found&quot;</span>)]</span>
     <span class="ident">StringNotFound</span>,
+
+    <span class="doccomment">/// Used in builder structs when a value is not set</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Please set value: {}&quot;</span>, <span class="ident">_0</span>)]</span>
+    <span class="ident">PleaseSetValue</span>(<span class="attribute">#[<span class="ident">error</span>(<span class="ident">not</span>(<span class="ident">source</span>))]</span> <span class="ident">String</span>),
 }
 
 <span class="doccomment">/// [Result] datatype for m_captcha</span>
