@@ -213,8 +213,8 @@
 <span class="doccomment">//! - Difficulty(Factor): Minimum ammount of work that a client must do to make a valid</span>
 <span class="doccomment">//! request.</span>
 <span class="doccomment">//! - [Defense]: A datatype that various visitor-difficulty mappigns</span>
-<span class="doccomment">//! - [Visitor][crate::mcaptcha::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier</span>
-<span class="doccomment">//! your service is. Determines mCaptcha defense defense</span>
+<span class="doccomment">//! - [Visitor][crate::mcaptcha::AddVisitor]: Smallest unit of traffic, usually a single request.</span>
+<span class="doccomment">//! The more you have, the busier your service is. Determines mCaptcha defense defense</span>
 <span class="doccomment">//! - Visitor threshold: The threshold at which [MCaptcha] will adjust defense defense</span>
 <span class="doccomment">//! - [Cache][crate::cache] : A datatype that implements [Save][crate::cache::Save]. Used to store</span>
 <span class="doccomment">//! PoW requirements to defend against replay attacks and dictionary attacks.</span>
@@ -342,7 +342,7 @@
 <span class="doccomment">//!     Ok(())</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
-
+<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defense</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
