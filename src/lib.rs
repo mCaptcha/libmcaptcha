@@ -31,12 +31,14 @@
 //! - Difficulty(Factor): Minimum ammount of work that a client must do to make a valid
 //! request.
 //! - [Defense]: A datatype that various visitor-difficulty mappigns
-//! - [Visitor][crate::mcaptcha::AddVisitor]: Smallest unit of traffic, usually a single request.
-//! The more you have, the busier your service is. Determines mCaptcha defense defense
+//! - Visitor: Smallest unit of traffic, usually a single request. The more you have, the busier
+//! your service is. Determines mCaptcha defense defense
 //! - Visitor threshold: The threshold at which [MCaptcha] will adjust defense defense
 //! - [Cache][crate::cache] : A datatype that implements [Save][crate::cache::Save]. Used to store
 //! PoW requirements to defend against replay attacks and dictionary attacks.
-//! - [Master][crate::master::Master]: A datatype that manages [MCaptcha][crate::mcaptcha::MCaptcha] actors. Works like a DNS for [Visitor][crate::mcaptcha::Visitor] messages.
+//! - [Master][crate::master::Master]: A datatype that manages
+//! [MCaptcha][crate::mcaptcha::MCaptcha] actors. Works like a DNS for
+//! [AddVisitor][crate::mcaptcha::AddVisitor] messages.
 //! - [System][crate::system::System]: mCaptcha system that manages cache, master and provides
 //! useful abstractions. An mCaptcha system/instance can have only a single
 //! [System][crate::system::System]
