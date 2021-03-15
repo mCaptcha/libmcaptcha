@@ -92,8 +92,8 @@ mod tests {
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 
-    async fn boostrap_system() -> System<HashCache> {
-        let master = Master::new().start();
+    async fn boostrap_system(gc: u64) -> System<HashCache> {
+        let master = Master::new(gc).start();
         let mcaptcha = get_counter().start();
         let pow = get_config();
 
@@ -123,14 +123,14 @@ mod tests {
 
     #[actix_rt::test]
     async fn get_pow_works() {
-        let actors = boostrap_system().await;
+        let actors = boostrap_system(10).await;
         let pow = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
         assert_eq!(pow.difficulty_factor, LEVEL_1.0);
     }
 
     #[actix_rt::test]
     async fn verify_pow_works() {
-        let actors = boostrap_system().await;
+        let actors = boostrap_system(10).await;
         let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
         let config = get_config();
 

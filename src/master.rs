@@ -17,7 +17,9 @@
  */
 //! [Master] actor module that manages [MCaptcha] actors
 use std::collections::BTreeMap;
+use std::time::Duration;
 
+use actix::clock::delay_for;
 use actix::dev::*;
 use derive_builder::Builder;
 
@@ -29,30 +31,53 @@ use crate::mcaptcha::MCaptcha;
 /// so a "master" actor is needed to manage them all
 #[derive(Clone)]
 pub struct Master {
-    sites: BTreeMap<String, Addr<MCaptcha>>,
+    sites: BTreeMap<String, (Option<()>, Addr<MCaptcha>)>,
+    gc: u64,
 }
 
 impl Master {
     /// add [MCaptcha] actor to [Master]
     pub fn add_site(&mut self, details: AddSite) {
-        self.sites.insert(details.id, details.addr.to_owned());
+        self.sites
+            .insert(details.id, (None, details.addr.to_owned()));
     }
 
     /// create new master
-    pub fn new() -> Self {
+    /// accepts a `u64` to configure garbage collection period
+    pub fn new(gc: u64) -> Self {
         Master {
             sites: BTreeMap::new(),
+            gc,
         }
     }
 
     /// get [MCaptcha] actor from [Master]
-    pub fn get_site<'a, 'b>(&'a self, id: &'b str) -> Option<&'a Addr<MCaptcha>> {
-        self.sites.get(id)
+    pub fn get_site<'a, 'b>(&'a mut self, id: &'b str) -> Option<Addr<MCaptcha>> {
+        let mut r = None;
+        if let Some((read_val, addr)) = self.sites.get_mut(id) {
+            r = Some(addr.clone());
+            *read_val = Some(());
+        };
+        r
+    }
+
+    /// remvoes [MCaptcha] actor from [Master]
+    pub fn rm_site(&mut self, id: &str) {
+        self.sites.remove(id);
     }
 }
 
 impl Actor for Master {
     type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        let addr = ctx.address();
+        let task = async move {
+            addr.send(CleanUp).await.unwrap();
+        }
+        .into_actor(self);
+        ctx.spawn(task);
+    }
 }
 
 /// Message to get an [MCaptcha] actor from master
@@ -70,6 +95,53 @@ impl Handler<GetSite> for Master {
         } else {
             return MessageResult(Some(addr.unwrap().clone()));
         }
+    }
+}
+
+/// Message to clean up master of [MCaptcha] actors with zero visitor count
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct CleanUp;
+
+impl Handler<CleanUp> for Master {
+    type Result = ();
+
+    fn handle(&mut self, _: CleanUp, ctx: &mut Self::Context) -> Self::Result {
+        let sites = self.sites.clone();
+        let gc = self.gc;
+        let master = ctx.address();
+        println!("init cleanup up");
+        let task = async move {
+            for (id, (new, addr)) in sites.iter() {
+                use crate::mcaptcha::{GetCurrentVisitorCount, Stop};
+                let visitor_count = addr.send(GetCurrentVisitorCount).await.unwrap();
+                println!("{}", visitor_count);
+                if visitor_count == 0 && new.is_some() {
+                    addr.send(Stop).await.unwrap();
+                    master.send(RemoveSite(id.to_owned())).await.unwrap();
+                    println!("cleaned up");
+                }
+            }
+
+            let duration = Duration::new(gc, 0);
+            delay_for(duration).await;
+            master.send(CleanUp).await.unwrap();
+        }
+        .into_actor(self);
+        ctx.spawn(task);
+    }
+}
+
+/// Message to delete [MCaptcha] actor
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct RemoveSite(pub String);
+
+impl Handler<RemoveSite> for Master {
+    type Result = ();
+
+    fn handle(&mut self, m: RemoveSite, _ctx: &mut Self::Context) -> Self::Result {
+        self.rm_site(&m.0);
     }
 }
 
@@ -96,7 +168,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn master_actor_works() {
-        let addr = Master::new().start();
+        let addr = Master::new(1).start();
 
         let id = "yo";
         let mcaptcha = get_counter().start();
@@ -105,6 +177,7 @@ mod tests {
             .addr(mcaptcha.clone())
             .build()
             .unwrap();
+
         addr.send(msg).await.unwrap();
 
         let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
@@ -112,5 +185,12 @@ mod tests {
 
         let addr_doesnt_exist = addr.send(GetSite("a".into())).await.unwrap();
         assert!(addr_doesnt_exist.is_none());
+
+        let timer_expire = Duration::new(DURATION, 0);
+        delay_for(timer_expire).await;
+        delay_for(timer_expire).await;
+
+        let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        assert_eq!(mcaptcha_addr, None);
     }
 }

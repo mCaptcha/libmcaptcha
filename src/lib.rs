@@ -71,7 +71,7 @@
 //!
 //!     // start master actor. Master actor is responsible for managing MCaptcha actors
 //!     // each mCaptcha system should have only one master
-//!     let master = Master::new().start();
+//!     let master = Master::new(5).start();
 //!
 //!     // Create system. System encapsulates master and cache and provides useful abstraction
 //!     // each mCaptcha system should have only one system

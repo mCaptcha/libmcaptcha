@@ -74,6 +74,7 @@
 
 use std::time::Duration;
 
+use actix::clock::delay_for;
 use actix::dev::*;
 use serde::{Deserialize, Serialize};
 
@@ -194,6 +195,7 @@ pub struct AddVisitor;
 /// Struct representing the return datatime of
 /// [AddVisitor] message. Contains MCaptcha lifetime
 /// and difficulty factor
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AddVisitorResult {
     pub duration: u64,
     pub difficulty_factor: u32,
@@ -212,8 +214,6 @@ impl Handler<AddVisitor> for MCaptcha {
     type Result = MessageResult<AddVisitor>;
 
     fn handle(&mut self, _: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
-        use actix::clock::delay_for;
-
         let addr = ctx.address();
 
         let duration: Duration = Duration::new(self.duration.clone(), 0);
@@ -242,6 +242,19 @@ impl Handler<GetCurrentVisitorCount> for MCaptcha {
     }
 }
 
+/// Message to stop [MCaptcha]
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Stop;
+
+impl Handler<Stop> for MCaptcha {
+    type Result = ();
+
+    fn handle(&mut self, _: Stop, ctx: &mut Self::Context) -> Self::Result {
+        ctx.stop()
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -251,7 +264,7 @@ pub mod tests {
     // (visitor count, level)
     pub const LEVEL_1: (u32, u32) = (50, 50);
     pub const LEVEL_2: (u32, u32) = (500, 500);
-    pub const DURATION: u64 = 10;
+    pub const DURATION: u64 = 5;
 
     type MyActor = Addr<MCaptcha>;
 
@@ -356,5 +369,13 @@ pub mod tests {
         let count = addr.send(GetCurrentVisitorCount).await.unwrap();
 
         assert_eq!(count, 4);
+    }
+
+    #[actix_rt::test]
+    #[should_panic]
+    async fn stop_works() {
+        let addr: MyActor = get_counter().start();
+        addr.send(Stop).await.unwrap();
+        addr.send(AddVisitor).await.unwrap();
     }
 }
