@@ -229,6 +229,19 @@ impl Handler<AddVisitor> for MCaptcha {
     }
 }
 
+/// Message to get the visitor count
+#[derive(Message)]
+#[rtype(result = "u32")]
+pub struct GetCurrentVisitorCount;
+
+impl Handler<GetCurrentVisitorCount> for MCaptcha {
+    type Result = MessageResult<GetCurrentVisitorCount>;
+
+    fn handle(&mut self, _: GetCurrentVisitorCount, _ctx: &mut Self::Context) -> Self::Result {
+        MessageResult(self.visitor_threshold)
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -330,5 +343,18 @@ pub mod tests {
             m.err(),
             Some(CaptchaError::PleaseSetValue("duration".into()))
         );
+    }
+
+    #[actix_rt::test]
+    async fn get_current_visitor_count_works() {
+        let addr: MyActor = get_counter().start();
+
+        addr.send(AddVisitor).await.unwrap();
+        addr.send(AddVisitor).await.unwrap();
+        addr.send(AddVisitor).await.unwrap();
+        addr.send(AddVisitor).await.unwrap();
+        let count = addr.send(GetCurrentVisitorCount).await.unwrap();
+
+        assert_eq!(count, 4);
     }
 }

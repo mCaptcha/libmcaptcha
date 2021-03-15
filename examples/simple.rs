@@ -67,8 +67,6 @@ async fn main() -> std::io::Result<()> {
         .build()
         .unwrap();
 
-    p
-
     // create and start MCaptcha actor that uses the above defense configuration
     // This is what manages the difficulty factor of sites that an mCaptcha protects
     let mcaptcha = MCaptchaBuilder::default()
