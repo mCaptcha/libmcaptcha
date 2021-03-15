@@ -19,7 +19,7 @@
 //!
 //! ## Usage:
 //! ```rust
-//! use m_captcha::{mcaptcha::Visitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
+//! use m_captcha::{mcaptcha::AddVisitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!
@@ -66,7 +66,7 @@
 //!         .start();
 //!
 //!     // increment count when user visits protected routes
-//!     mcaptcha.send(Visitor).await.unwrap();
+//!     mcaptcha.send(AddVisitor).await.unwrap();
 //!
 //!     Ok(())
 //! }
@@ -188,30 +188,30 @@ impl Handler<DeleteVisitor> for MCaptcha {
 /// Message to increment the visitor count
 /// returns difficulty factor and lifetime
 #[derive(Message)]
-#[rtype(result = "VisitorResult")]
-pub struct Visitor;
+#[rtype(result = "AddVisitorResult")]
+pub struct AddVisitor;
 
 /// Struct representing the return datatime of
-/// [Visitor] message. Contains MCaptcha lifetime
+/// [AddVisitor] message. Contains MCaptcha lifetime
 /// and difficulty factor
-pub struct VisitorResult {
+pub struct AddVisitorResult {
     pub duration: u64,
     pub difficulty_factor: u32,
 }
 
-impl VisitorResult {
+impl AddVisitorResult {
     fn new(m: &MCaptcha) -> Self {
-        VisitorResult {
+        AddVisitorResult {
             duration: m.get_duration(),
             difficulty_factor: m.get_difficulty(),
         }
     }
 }
 
-impl Handler<Visitor> for MCaptcha {
-    type Result = MessageResult<Visitor>;
+impl Handler<AddVisitor> for MCaptcha {
+    type Result = MessageResult<AddVisitor>;
 
-    fn handle(&mut self, _: Visitor, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
         use actix::clock::delay_for;
 
         let addr = ctx.address();
@@ -225,7 +225,7 @@ impl Handler<Visitor> for MCaptcha {
         ctx.spawn(wait_for);
 
         self.add_visitor();
-        MessageResult(VisitorResult::new(&self))
+        MessageResult(AddVisitorResult::new(&self))
     }
 }
 
@@ -268,7 +268,7 @@ pub mod tests {
 
     async fn race(addr: Addr<MCaptcha>, count: (u32, u32)) {
         for _ in 0..count.0 as usize - 1 {
-            let _ = addr.send(Visitor).await.unwrap();
+            let _ = addr.send(AddVisitor).await.unwrap();
         }
     }
 
@@ -284,11 +284,11 @@ pub mod tests {
     async fn counter_defense_tightenup_works() {
         let addr: MyActor = get_counter().start();
 
-        let mut mcaptcha = addr.send(Visitor).await.unwrap();
+        let mut mcaptcha = addr.send(AddVisitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.0);
 
         race(addr.clone(), LEVEL_2).await;
-        mcaptcha = addr.send(Visitor).await.unwrap();
+        mcaptcha = addr.send(AddVisitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_2.1);
     }
 
@@ -299,13 +299,13 @@ pub mod tests {
 
         race(addr.clone(), LEVEL_2).await;
         race(addr.clone(), LEVEL_2).await;
-        let mut mcaptcha = addr.send(Visitor).await.unwrap();
+        let mut mcaptcha = addr.send(AddVisitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_2.1);
 
         let duration = Duration::new(DURATION, 0);
         delay_for(duration).await;
 
-        mcaptcha = addr.send(Visitor).await.unwrap();
+        mcaptcha = addr.send(AddVisitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.1);
     }
 

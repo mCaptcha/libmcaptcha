@@ -98,7 +98,7 @@ impl Handler<Retrive> for HashCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mcaptcha::VisitorResult;
+    use crate::mcaptcha::AddVisitorResult;
     use crate::pow::PoWConfig;
 
     async fn sleep(time: u64) {
@@ -115,7 +115,7 @@ mod tests {
         const DURATION: u64 = 5;
         let addr = HashCache::default().start();
         let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR);
-        let visitor_result = VisitorResult {
+        let visitor_result = AddVisitorResult {
             difficulty_factor: DIFFICULTY_FACTOR,
             duration: DURATION,
         };

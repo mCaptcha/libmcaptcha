@@ -31,8 +31,8 @@
 //! - Difficulty(Factor): Minimum ammount of work that a client must do to make a valid
 //! request.
 //! - [Defense]: A datatype that various visitor-difficulty mappigns
-//! - [Visitor][crate::mcaptcha::Visitor]: Smallest unit of traffic, usually a single request. The more you have, the busier
-//! your service is. Determines mCaptcha defense defense
+//! - [Visitor][crate::mcaptcha::AddVisitor]: Smallest unit of traffic, usually a single request.
+//! The more you have, the busier your service is. Determines mCaptcha defense defense
 //! - Visitor threshold: The threshold at which [MCaptcha] will adjust defense defense
 //! - [Cache][crate::cache] : A datatype that implements [Save][crate::cache::Save]. Used to store
 //! PoW requirements to defend against replay attacks and dictionary attacks.
@@ -160,7 +160,7 @@
 //!     Ok(())
 //! }
 //! ```
-
+#![forbid(unsafe_code)]
 pub mod defense;
 pub mod errors;
 pub mod master;

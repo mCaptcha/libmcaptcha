@@ -34,7 +34,7 @@ pub mod messages {
     use serde::{Deserialize, Serialize};
 
     use crate::errors::*;
-    use crate::mcaptcha::VisitorResult;
+    use crate::mcaptcha::AddVisitorResult;
     use crate::pow::PoWConfig;
 
     /// Message to cache PoW difficulty factor and string
@@ -47,7 +47,7 @@ pub mod messages {
     }
 
     impl Cache {
-        pub fn new(p: &PoWConfig, v: &VisitorResult) -> Self {
+        pub fn new(p: &PoWConfig, v: &AddVisitorResult) -> Self {
             CacheBuilder::default()
                 .string(p.string.clone())
                 .difficulty_factor(v.difficulty_factor)

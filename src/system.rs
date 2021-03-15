@@ -43,13 +43,13 @@ where
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
         use crate::cache::messages::Cache;
         use crate::master::GetSite;
-        use crate::mcaptcha::Visitor;
+        use crate::mcaptcha::AddVisitor;
 
         let site_addr = self.master.send(GetSite(id)).await.unwrap();
         if site_addr.is_none() {
             return None;
         }
-        let mcaptcha = site_addr.unwrap().send(Visitor).await.unwrap();
+        let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
         let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
 
         let cache_msg = Cache::new(&pow_config, &mcaptcha);
