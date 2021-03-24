@@ -60,7 +60,7 @@ impl Actor for HashCache {
 impl Handler<Cache> for HashCache {
     type Result = MessageResult<Cache>;
     fn handle(&mut self, msg: Cache, ctx: &mut Self::Context) -> Self::Result {
-        use actix::clock::delay_for;
+        use actix::clock::sleep;
         use std::time::Duration;
 
         let addr = ctx.address();
@@ -68,7 +68,7 @@ impl Handler<Cache> for HashCache {
 
         let duration: Duration = Duration::new(msg.duration.clone(), 0);
         let wait_for = async move {
-            delay_for(duration).await;
+            sleep(duration).await;
             addr.send(del_msg).await.unwrap().unwrap();
         }
         .into_actor(self);
@@ -102,11 +102,11 @@ mod tests {
     use crate::pow::PoWConfig;
 
     async fn sleep(time: u64) {
-        use actix::clock::delay_for;
+        use actix::clock::sleep;
         use std::time::Duration;
 
         let duration: Duration = Duration::new(time, 0);
-        delay_for(duration).await;
+        sleep(duration).await;
     }
 
     #[actix_rt::test]
