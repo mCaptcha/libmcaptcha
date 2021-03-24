@@ -7,3 +7,7 @@
   `MCaptcha` actors
 - `Master` constructor accepts a parameter to configure GC(see previous
   point) period
+
+# 0.1.2
+- no API changes
+- actix upgraded to `0.11`
