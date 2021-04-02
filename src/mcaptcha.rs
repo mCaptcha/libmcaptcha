@@ -74,7 +74,7 @@
 
 use std::time::Duration;
 
-use actix::clock::sleep;
+//use actix::clock::sleep;
 use actix::dev::*;
 use serde::{Deserialize, Serialize};
 
@@ -215,10 +215,12 @@ impl Handler<AddVisitor> for MCaptcha {
 
     fn handle(&mut self, _: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
         let addr = ctx.address();
+        use actix::clock::delay_for;
 
         let duration: Duration = Duration::new(self.duration.clone(), 0);
         let wait_for = async move {
-            sleep(duration).await;
+            //sleep(duration).await;
+            delay_for(duration).await;
             addr.send(DeleteVisitor).await.unwrap();
         }
         .into_actor(self);
@@ -320,7 +322,8 @@ pub mod tests {
 
     #[actix_rt::test]
     async fn counter_defense_loosenup_works() {
-        use actix::clock::sleep;
+        //use actix::clock::sleep;
+        use actix::clock::delay_for;
         let addr: MyActor = get_counter().start();
 
         race(addr.clone(), LEVEL_2).await;
@@ -329,7 +332,8 @@ pub mod tests {
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_2.1);
 
         let duration = Duration::new(DURATION, 0);
-        sleep(duration).await;
+        //sleep(duration).await;
+        delay_for(duration).await;
 
         mcaptcha = addr.send(AddVisitor).await.unwrap();
         assert_eq!(mcaptcha.difficulty_factor, LEVEL_1.1);

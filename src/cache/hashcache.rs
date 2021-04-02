@@ -60,7 +60,8 @@ impl Actor for HashCache {
 impl Handler<Cache> for HashCache {
     type Result = MessageResult<Cache>;
     fn handle(&mut self, msg: Cache, ctx: &mut Self::Context) -> Self::Result {
-        use actix::clock::sleep;
+        //use actix::clock::sleep;
+        use actix::clock::delay_for;
         use std::time::Duration;
 
         let addr = ctx.address();
@@ -68,7 +69,8 @@ impl Handler<Cache> for HashCache {
 
         let duration: Duration = Duration::new(msg.duration.clone(), 0);
         let wait_for = async move {
-            sleep(duration).await;
+            //sleep(duration).await;
+            delay_for(duration).await;
             addr.send(del_msg).await.unwrap().unwrap();
         }
         .into_actor(self);
@@ -102,15 +104,20 @@ mod tests {
     use crate::pow::PoWConfig;
 
     async fn sleep(time: u64) {
-        use actix::clock::sleep;
+        //use actix::clock::sleep;
+        use actix::clock::delay_for;
         use std::time::Duration;
 
         let duration: Duration = Duration::new(time, 0);
-        sleep(duration).await;
+        //sleep(duration).await;
+        delay_for(duration).await;
     }
 
     #[actix_rt::test]
     async fn hashcache_works() {
+        use actix::clock::delay_for;
+        use actix::clock::Duration;
+
         const DIFFICULTY_FACTOR: u32 = 54;
         const DURATION: u64 = 5;
         let addr = HashCache::default().start();
@@ -127,7 +134,9 @@ mod tests {
         let cache_difficulty_factor = addr.send(Retrive(string.clone())).await.unwrap().unwrap();
         assert_eq!(DIFFICULTY_FACTOR, cache_difficulty_factor.unwrap());
 
-        sleep(DURATION + DURATION).await;
+        let duration: Duration = Duration::new(5, 0);
+        //sleep(DURATION + DURATION).await;
+        delay_for(duration + duration).await;
 
         let expired_string = addr.send(Retrive(string)).await.unwrap().unwrap();
         assert_eq!(None, expired_string);

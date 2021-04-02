@@ -23,4 +23,4 @@ rand = "0.8"
 pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256" }
 
 [dev-dependencies]
-actix-rt = "2"
+actix-rt = "1"
