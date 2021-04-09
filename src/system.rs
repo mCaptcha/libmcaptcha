@@ -37,11 +37,12 @@ pub struct System<T: Save> {
 impl<T> System<T>
 where
     T: Save,
-    <T as actix::Actor>::Context: ToEnvelope<T, messages::Cache> + ToEnvelope<T, messages::Retrive>,
+    <T as actix::Actor>::Context:
+        ToEnvelope<T, messages::CachePoW> + ToEnvelope<T, messages::RetrivePoW>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        use crate::cache::messages::Cache;
+        use crate::cache::messages::CachePoW;
         use crate::master::GetSite;
         use crate::mcaptcha::AddVisitor;
 
@@ -52,17 +53,17 @@ where
         let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
         let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
 
-        let cache_msg = Cache::new(&pow_config, &mcaptcha);
+        let cache_msg = CachePoW::new(&pow_config, &mcaptcha);
         self.cache.send(cache_msg).await.unwrap().unwrap();
         Some(pow_config)
     }
 
     /// utility function to verify [Work]
     pub async fn verify_pow(&self, work: Work) -> CaptchaResult<bool> {
-        use crate::cache::messages::Retrive;
+        use crate::cache::messages::RetrivePoW;
 
         let string = work.string.clone();
-        let msg = Retrive(string.clone());
+        let msg = RetrivePoW(string.clone());
         let pow: PoW<String> = work.into();
 
         let difficulty = self.cache.send(msg).await.unwrap()?;

@@ -23,6 +23,7 @@ use std::time::Duration;
 use actix::clock::delay_for;
 use actix::dev::*;
 use derive_builder::Builder;
+use log::info;
 
 use crate::mcaptcha::MCaptcha;
 
@@ -111,7 +112,7 @@ impl Handler<CleanUp> for Master {
         let sites = self.sites.clone();
         let gc = self.gc;
         let master = ctx.address();
-        println!("init cleanup up");
+        info!("init master actor cleanup up");
         let task = async move {
             for (id, (new, addr)) in sites.iter() {
                 use crate::mcaptcha::{GetCurrentVisitorCount, Stop};

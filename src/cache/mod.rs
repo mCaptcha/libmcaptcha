@@ -24,7 +24,7 @@ pub mod hashcache;
 
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Save:
-    actix::Actor + actix::Handler<Retrive> + actix::Handler<Cache> + actix::Handler<DeleteString>
+    actix::Actor + actix::Handler<RetrivePoW> + actix::Handler<CachePoW> + actix::Handler<DeletePoW>
 {
 }
 pub mod messages {
@@ -40,15 +40,15 @@ pub mod messages {
     /// Message to cache PoW difficulty factor and string
     #[derive(Message, Serialize, Deserialize, Builder)]
     #[rtype(result = "CaptchaResult<()>")]
-    pub struct Cache {
+    pub struct CachePoW {
         pub string: String,
         pub difficulty_factor: u32,
         pub duration: u64,
     }
 
-    impl Cache {
+    impl CachePoW {
         pub fn new(p: &PoWConfig, v: &AddVisitorResult) -> Self {
-            CacheBuilder::default()
+            CachePoWBuilder::default()
                 .string(p.string.clone())
                 .difficulty_factor(v.difficulty_factor)
                 .duration(v.duration)
@@ -61,11 +61,11 @@ pub mod messages {
     /// string from the cache
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<Option<u32>>")]
-    pub struct Retrive(pub String);
+    pub struct RetrivePoW(pub String);
 
     /// Message to delete cached PoW difficulty factor and string
     /// when they expire
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
-    pub struct DeleteString(pub String);
+    pub struct DeletePoW(pub String);
 }

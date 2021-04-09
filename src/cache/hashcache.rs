@@ -26,12 +26,16 @@ use crate::errors::*;
 
 #[derive(Clone, Default)]
 /// cache datastructure implementing [Save]
-pub struct HashCache(HashMap<String, u32>);
+pub struct HashCache {
+    difficulty_map: HashMap<String, u32>,
+    result_map: HashMap<String, String>,
+}
 
 impl HashCache {
     // save [PoWConfig] to cache
-    fn save(&mut self, config: Cache) -> CaptchaResult<()> {
-        self.0.insert(config.string, config.difficulty_factor);
+    fn save(&mut self, config: CachePoW) -> CaptchaResult<()> {
+        self.difficulty_map
+            .insert(config.string, config.difficulty_factor);
         Ok(())
     }
 
@@ -46,7 +50,7 @@ impl HashCache {
 
     // delete [PoWConfig] from cache
     fn remove(&mut self, string: &str) -> Option<u32> {
-        self.0.remove(string)
+        self.difficulty_map.remove(string)
     }
 }
 
@@ -57,15 +61,15 @@ impl Actor for HashCache {
 }
 
 /// cache a PoWConfig
-impl Handler<Cache> for HashCache {
-    type Result = MessageResult<Cache>;
-    fn handle(&mut self, msg: Cache, ctx: &mut Self::Context) -> Self::Result {
+impl Handler<CachePoW> for HashCache {
+    type Result = MessageResult<CachePoW>;
+    fn handle(&mut self, msg: CachePoW, ctx: &mut Self::Context) -> Self::Result {
         //use actix::clock::sleep;
         use actix::clock::delay_for;
         use std::time::Duration;
 
         let addr = ctx.address();
-        let del_msg = DeleteString(msg.string.clone());
+        let del_msg = DeletePoW(msg.string.clone());
 
         let duration: Duration = Duration::new(msg.duration.clone(), 0);
         let wait_for = async move {
@@ -81,18 +85,18 @@ impl Handler<Cache> for HashCache {
 }
 
 /// Delte a PoWConfig
-impl Handler<DeleteString> for HashCache {
-    type Result = MessageResult<DeleteString>;
-    fn handle(&mut self, msg: DeleteString, _ctx: &mut Self::Context) -> Self::Result {
+impl Handler<DeletePoW> for HashCache {
+    type Result = MessageResult<DeletePoW>;
+    fn handle(&mut self, msg: DeletePoW, _ctx: &mut Self::Context) -> Self::Result {
         self.remove(&msg.0);
         MessageResult(Ok(()))
     }
 }
 
 /// Retrive PoW difficulty_factor for a PoW string
-impl Handler<Retrive> for HashCache {
-    type Result = MessageResult<Retrive>;
-    fn handle(&mut self, msg: Retrive, _ctx: &mut Self::Context) -> Self::Result {
+impl Handler<RetrivePoW> for HashCache {
+    type Result = MessageResult<RetrivePoW>;
+    fn handle(&mut self, msg: RetrivePoW, _ctx: &mut Self::Context) -> Self::Result {
         MessageResult(self.retrive(msg.0))
     }
 }
@@ -127,18 +131,22 @@ mod tests {
             duration: DURATION,
         };
         let string = pow.string.clone();
-        let msg = Cache::new(&pow, &visitor_result);
+        let msg = CachePoW::new(&pow, &visitor_result);
 
         addr.send(msg).await.unwrap().unwrap();
 
-        let cache_difficulty_factor = addr.send(Retrive(string.clone())).await.unwrap().unwrap();
+        let cache_difficulty_factor = addr
+            .send(RetrivePoW(string.clone()))
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(DIFFICULTY_FACTOR, cache_difficulty_factor.unwrap());
 
         let duration: Duration = Duration::new(5, 0);
         //sleep(DURATION + DURATION).await;
         delay_for(duration + duration).await;
 
-        let expired_string = addr.send(Retrive(string)).await.unwrap().unwrap();
+        let expired_string = addr.send(RetrivePoW(string)).await.unwrap().unwrap();
         assert_eq!(None, expired_string);
     }
 }
