@@ -24,7 +24,13 @@ pub mod hashcache;
 
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Save:
-    actix::Actor + actix::Handler<RetrivePoW> + actix::Handler<CachePoW> + actix::Handler<DeletePoW>
+    actix::Actor
+    + actix::Handler<RetrivePoW>
+    + actix::Handler<CachePoW>
+    + actix::Handler<DeletePoW>
+    + actix::Handler<CacheResult>
+    + actix::Handler<VerifyCaptchaResult>
+    + actix::Handler<DeleteCaptchaResult>
 {
 }
 pub mod messages {
@@ -68,4 +74,31 @@ pub mod messages {
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct DeletePoW(pub String);
+
+    /// Message to cache captcha result and the captcha key for which
+    /// it was generated
+    #[derive(Message, Serialize, Deserialize, Builder)]
+    #[rtype(result = "CaptchaResult<()>")]
+    pub struct CacheResult {
+        pub result: String,
+        // key is Captcha identifier
+        pub key: String,
+        pub duration: u64,
+    }
+
+    /// Message to verify captcha result against
+    /// the stored captcha key
+    #[derive(Message)]
+    #[rtype(result = "CaptchaResult<bool>")]
+    pub struct VerifyCaptchaResult {
+        pub result: String,
+        pub key: String,
+    }
+
+    /// Message to delete cached capthca result when it expires
+    #[derive(Message)]
+    #[rtype(result = "CaptchaResult<()>")]
+    pub struct DeleteCaptchaResult {
+        pub result: String,
+    }
 }

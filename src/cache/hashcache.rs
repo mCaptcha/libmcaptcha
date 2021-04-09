@@ -33,15 +33,15 @@ pub struct HashCache {
 
 impl HashCache {
     // save [PoWConfig] to cache
-    fn save(&mut self, config: CachePoW) -> CaptchaResult<()> {
+    fn save_pow_config(&mut self, config: CachePoW) -> CaptchaResult<()> {
         self.difficulty_map
             .insert(config.string, config.difficulty_factor);
         Ok(())
     }
 
     // retrive [PoWConfig] from cache. Deletes config post retrival
-    fn retrive(&mut self, string: String) -> CaptchaResult<Option<u32>> {
-        if let Some(difficulty_factor) = self.remove(&string) {
+    fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<u32>> {
+        if let Some(difficulty_factor) = self.remove_pow_config(&string) {
             Ok(Some(difficulty_factor.to_owned()))
         } else {
             Ok(None)
@@ -49,8 +49,32 @@ impl HashCache {
     }
 
     // delete [PoWConfig] from cache
-    fn remove(&mut self, string: &str) -> Option<u32> {
+    fn remove_pow_config(&mut self, string: &str) -> Option<u32> {
         self.difficulty_map.remove(string)
+    }
+
+    // save captcha result
+    fn save_captcha_result(&mut self, res: CacheResult) -> CaptchaResult<()> {
+        self.result_map.insert(res.result, res.key);
+        Ok(())
+    }
+
+    // verify captcha result
+    fn verify_captcha_result(&mut self, challenge: VerifyCaptchaResult) -> CaptchaResult<bool> {
+        if let Some(captcha_id) = self.remove_cache_result(&challenge.result) {
+            if captcha_id == challenge.key {
+                return Ok(true);
+            } else {
+                return Ok(false);
+            }
+        } else {
+            Ok(false)
+        }
+    }
+
+    // delete cache result
+    fn remove_cache_result(&mut self, string: &str) -> Option<String> {
+        self.result_map.remove(string)
     }
 }
 
@@ -80,7 +104,7 @@ impl Handler<CachePoW> for HashCache {
         .into_actor(self);
         ctx.spawn(wait_for);
 
-        MessageResult(self.save(msg))
+        MessageResult(self.save_pow_config(msg))
     }
 }
 
@@ -88,7 +112,7 @@ impl Handler<CachePoW> for HashCache {
 impl Handler<DeletePoW> for HashCache {
     type Result = MessageResult<DeletePoW>;
     fn handle(&mut self, msg: DeletePoW, _ctx: &mut Self::Context) -> Self::Result {
-        self.remove(&msg.0);
+        self.remove_pow_config(&msg.0);
         MessageResult(Ok(()))
     }
 }
@@ -97,7 +121,51 @@ impl Handler<DeletePoW> for HashCache {
 impl Handler<RetrivePoW> for HashCache {
     type Result = MessageResult<RetrivePoW>;
     fn handle(&mut self, msg: RetrivePoW, _ctx: &mut Self::Context) -> Self::Result {
-        MessageResult(self.retrive(msg.0))
+        MessageResult(self.retrive_pow_config(msg.0))
+    }
+}
+
+/// cache PoW result
+impl Handler<CacheResult> for HashCache {
+    type Result = MessageResult<CacheResult>;
+    fn handle(&mut self, msg: CacheResult, ctx: &mut Self::Context) -> Self::Result {
+        //use actix::clock::sleep;
+        use actix::clock::delay_for;
+        use std::time::Duration;
+
+        let addr = ctx.address();
+        let del_msg = DeleteCaptchaResult {
+            result: msg.result.clone(),
+        };
+
+        let duration: Duration = Duration::new(msg.duration.clone(), 0);
+        let wait_for = async move {
+            //sleep(duration).await;
+            delay_for(duration).await;
+            addr.send(del_msg).await.unwrap().unwrap();
+        }
+        .into_actor(self);
+        ctx.spawn(wait_for);
+
+        MessageResult(self.save_captcha_result(msg))
+    }
+}
+
+/// Delte a PoWConfig
+impl Handler<DeleteCaptchaResult> for HashCache {
+    type Result = MessageResult<DeleteCaptchaResult>;
+    fn handle(&mut self, msg: DeleteCaptchaResult, _ctx: &mut Self::Context) -> Self::Result {
+        self.remove_cache_result(&msg.result);
+        MessageResult(Ok(()))
+    }
+}
+
+/// Retrive PoW difficulty_factor for a PoW string
+impl Handler<VerifyCaptchaResult> for HashCache {
+    type Result = MessageResult<VerifyCaptchaResult>;
+    fn handle(&mut self, msg: VerifyCaptchaResult, _ctx: &mut Self::Context) -> Self::Result {
+        // MessageResult(self.retrive(msg.0))
+        MessageResult(self.verify_captcha_result(msg))
     }
 }
 
@@ -107,18 +175,18 @@ mod tests {
     use crate::mcaptcha::AddVisitorResult;
     use crate::pow::PoWConfig;
 
-    async fn sleep(time: u64) {
-        //use actix::clock::sleep;
-        use actix::clock::delay_for;
-        use std::time::Duration;
+    //   async fn sleep(time: u64) {
+    //       //use actix::clock::sleep;
+    //       use actix::clock::delay_for;
+    //       use std::time::Duration;
 
-        let duration: Duration = Duration::new(time, 0);
-        //sleep(duration).await;
-        delay_for(duration).await;
-    }
+    //       let duration: Duration = Duration::new(time, 0);
+    //       //sleep(duration).await;
+    //       delay_for(duration).await;
+    //   }
 
     #[actix_rt::test]
-    async fn hashcache_works() {
+    async fn hashcache_pow_cache_works() {
         use actix::clock::delay_for;
         use actix::clock::Duration;
 
@@ -148,5 +216,51 @@ mod tests {
 
         let expired_string = addr.send(RetrivePoW(string)).await.unwrap().unwrap();
         assert_eq!(None, expired_string);
+    }
+
+    #[actix_rt::test]
+    async fn hashcache_result_cache_works() {
+        use actix::clock::delay_for;
+        use actix::clock::Duration;
+
+        const DURATION: u64 = 5;
+        const KEY: &str = "a";
+        const RES: &str = "b";
+        let addr = HashCache::default().start();
+        // send value to cache
+        // send another value to cache for auto delete
+        // verify_captcha_result
+        // delete
+        // wait for timeout and verify_captcha_result against second value
+
+        let add_cache = CacheResult {
+            key: KEY.into(),
+            result: RES.into(),
+            duration: DURATION,
+        };
+
+        addr.send(add_cache).await.unwrap().unwrap();
+
+        let verify_msg = VerifyCaptchaResult {
+            key: KEY.into(),
+            result: RES.into(),
+        };
+
+        assert!(addr.send(verify_msg).await.unwrap().unwrap());
+
+        let verify_msg = VerifyCaptchaResult {
+            key: "cz".into(),
+            result: RES.into(),
+        };
+        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
+
+        let duration: Duration = Duration::new(5, 0);
+        delay_for(duration + duration).await;
+
+        let verify_msg = VerifyCaptchaResult {
+            key: KEY.into(),
+            result: RES.into(),
+        };
+        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
     }
 }
