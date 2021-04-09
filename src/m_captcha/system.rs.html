@@ -164,6 +164,7 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
+<span id="164">164</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -204,11 +205,12 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">System</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Save</span>,
-    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">actix</span>::<span class="ident">Actor</span><span class="op">&gt;</span>::<span class="ident">Context</span>: <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">messages</span>::<span class="ident">Cache</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">messages</span>::<span class="ident">Retrive</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">actix</span>::<span class="ident">Actor</span><span class="op">&gt;</span>::<span class="ident">Context</span>:
+        <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">messages</span>::<span class="ident">CachePoW</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">ToEnvelope</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">messages</span>::<span class="ident">RetrivePoW</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// utility function to get difficulty factor of site `id` and cache it</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_pow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PoWConfig</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">messages</span>::<span class="ident">Cache</span>;
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">messages</span>::<span class="ident">CachePoW</span>;
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">GetSite</span>;
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">AddVisitor</span>;
 
@@ -219,17 +221,17 @@
         <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">site_addr</span>.<span class="ident">unwrap</span>().<span class="ident">send</span>(<span class="ident">AddVisitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">pow_config</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>);
 
-        <span class="kw">let</span> <span class="ident">cache_msg</span> <span class="op">=</span> <span class="ident">Cache</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">pow_config</span>, <span class="kw-2">&amp;</span><span class="ident">mcaptcha</span>);
+        <span class="kw">let</span> <span class="ident">cache_msg</span> <span class="op">=</span> <span class="ident">CachePoW</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">pow_config</span>, <span class="kw-2">&amp;</span><span class="ident">mcaptcha</span>);
         <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">cache_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
         <span class="prelude-val">Some</span>(<span class="ident">pow_config</span>)
     }
 
     <span class="doccomment">/// utility function to verify [Work]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">verify_pow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">work</span>: <span class="ident">Work</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">messages</span>::<span class="ident">Retrive</span>;
+        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">messages</span>::<span class="ident">RetrivePoW</span>;
 
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">work</span>.<span class="ident">string</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">Retrive</span>(<span class="ident">string</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">RetrivePoW</span>(<span class="ident">string</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">pow</span>: <span class="ident">PoW</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">work</span>.<span class="ident">into</span>();
 
         <span class="kw">let</span> <span class="ident">difficulty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>()<span class="question-mark">?</span>;
