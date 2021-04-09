@@ -61,6 +61,7 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -110,6 +111,7 @@
     <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">nonce</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Work</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PoW</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {

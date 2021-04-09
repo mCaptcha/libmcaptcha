@@ -78,6 +78,11 @@
 <span id="75">75</span>
 <span id="76">76</span>
 <span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -148,6 +153,11 @@
     <span class="doccomment">/// isn&#39;t in cache</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;String now found&quot;</span>)]</span>
     <span class="ident">StringNotFound</span>,
+
+    <span class="doccomment">/// Happens when submitted work is computed over configuration intended for</span>
+    <span class="doccomment">/// a different mCAptcha sitekey</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;PoW computed over configuration not intended for target sitekey&quot;</span>)]</span>
+    <span class="ident">MCaptchaKeyValidationFail</span>,
 
     <span class="doccomment">/// Used in builder structs when a value is not set</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Please set value: {}&quot;</span>, <span class="ident">_0</span>)]</span>

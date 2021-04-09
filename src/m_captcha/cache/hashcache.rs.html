@@ -267,6 +267,22 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -297,20 +313,25 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="doccomment">/// cache datastructure implementing [Save]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HashCache</span> {
-    <span class="ident">difficulty_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">difficulty_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">CachedPoWConfig</span><span class="op">&gt;</span>,
     <span class="ident">result_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">HashCache</span> {
     <span class="comment">// save [PoWConfig] to cache</span>
     <span class="kw">fn</span> <span class="ident">save_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">config</span>: <span class="ident">CachePoW</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">difficulty_map</span>
-            .<span class="ident">insert</span>(<span class="ident">config</span>.<span class="ident">string</span>, <span class="ident">config</span>.<span class="ident">difficulty_factor</span>);
+        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">string</span>;
+        <span class="kw">let</span> <span class="ident">config</span>: <span class="ident">CachedPoWConfig</span> <span class="op">=</span> <span class="ident">CachedPoWConfig</span> {
+            <span class="ident">key</span>: <span class="ident">config</span>.<span class="ident">key</span>,
+            <span class="ident">difficulty_factor</span>: <span class="ident">config</span>.<span class="ident">difficulty_factor</span>,
+        };
+
+        <span class="self">self</span>.<span class="ident">difficulty_map</span>.<span class="ident">insert</span>(<span class="ident">challenge</span>, <span class="ident">config</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="comment">// retrive [PoWConfig] from cache. Deletes config post retrival</span>
-    <span class="kw">fn</span> <span class="ident">retrive_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">retrive_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">difficulty_factor</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">difficulty_factor</span>.<span class="ident">to_owned</span>()))
         } <span class="kw">else</span> {
@@ -319,7 +340,7 @@
     }
 
     <span class="comment">// delete [PoWConfig] from cache</span>
-    <span class="kw">fn</span> <span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">difficulty_map</span>.<span class="ident">remove</span>(<span class="ident">string</span>)
     }
 
@@ -462,6 +483,7 @@
 
         <span class="kw">const</span> <span class="ident">DIFFICULTY_FACTOR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">54</span>;
         <span class="kw">const</span> <span class="ident">DURATION</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">5</span>;
+        <span class="kw">const</span> <span class="ident">KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;mcaptchakey&quot;</span>;
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">HashCache</span>::<span class="ident">default</span>().<span class="ident">start</span>();
         <span class="kw">let</span> <span class="ident">pow</span>: <span class="ident">PoWConfig</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">DIFFICULTY_FACTOR</span>);
         <span class="kw">let</span> <span class="ident">visitor_result</span> <span class="op">=</span> <span class="ident">AddVisitorResult</span> {
@@ -469,7 +491,14 @@
             <span class="ident">duration</span>: <span class="ident">DURATION</span>,
         };
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">pow</span>.<span class="ident">string</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">CachePoW</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">pow</span>, <span class="kw-2">&amp;</span><span class="ident">visitor_result</span>);
+
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">CachePoWBuilder</span>::<span class="ident">default</span>()
+            .<span class="ident">string</span>(<span class="ident">pow</span>.<span class="ident">string</span>.<span class="ident">clone</span>())
+            .<span class="ident">difficulty_factor</span>(<span class="ident">DIFFICULTY_FACTOR</span>)
+            .<span class="ident">duration</span>(<span class="ident">visitor_result</span>.<span class="ident">duration</span>)
+            .<span class="ident">key</span>(<span class="ident">KEY</span>.<span class="ident">into</span>())
+            .<span class="ident">build</span>()
+            .<span class="ident">unwrap</span>();
 
         <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
 
@@ -478,7 +507,10 @@
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>()
             .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">DIFFICULTY_FACTOR</span>, <span class="ident">cache_difficulty_factor</span>.<span class="ident">unwrap</span>());
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">DIFFICULTY_FACTOR</span>,
+            <span class="ident">cache_difficulty_factor</span>.<span class="ident">unwrap</span>().<span class="ident">difficulty_factor</span>
+        );
 
         <span class="kw">let</span> <span class="ident">duration</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">new</span>(<span class="number">5</span>, <span class="number">0</span>);
         <span class="comment">//sleep(DURATION + DURATION).await;</span>

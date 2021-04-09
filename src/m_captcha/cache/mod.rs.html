@@ -105,6 +105,11 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -148,8 +153,6 @@
     <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">AddVisitorResult</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pow</span>::<span class="ident">PoWConfig</span>;
 
     <span class="doccomment">/// Message to cache PoW difficulty factor and string</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>)]</span>
@@ -158,24 +161,31 @@
         <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
         <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
+        <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
     }
 
-    <span class="kw">impl</span> <span class="ident">CachePoW</span> {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">PoWConfig</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">AddVisitorResult</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="ident">CachePoWBuilder</span>::<span class="ident">default</span>()
-                .<span class="ident">string</span>(<span class="ident">p</span>.<span class="ident">string</span>.<span class="ident">clone</span>())
-                .<span class="ident">difficulty_factor</span>(<span class="ident">v</span>.<span class="ident">difficulty_factor</span>)
-                .<span class="ident">duration</span>(<span class="ident">v</span>.<span class="ident">duration</span>)
-                .<span class="ident">build</span>()
-                .<span class="ident">unwrap</span>()
-        }
-    }
+    <span class="comment">//    pub fn new(p: &amp;PoWConfig, k: String, v: &amp;AddVisitorResult) -&gt; Self {</span>
+    <span class="comment">//        CachePoWBuilder::default()</span>
+    <span class="comment">//            .string(p.string.clone())</span>
+    <span class="comment">//            .difficulty_factor(v.difficulty_factor)</span>
+    <span class="comment">//            .duration(v.duration)</span>
+    <span class="comment">//            .key(k)</span>
+    <span class="comment">//            .build()</span>
+    <span class="comment">//            .unwrap()</span>
+    <span class="comment">//    }</span>
+    <span class="comment">//}</span>
 
     <span class="doccomment">/// Message to retrive the the difficulty factor for the specified</span>
     <span class="doccomment">/// string from the cache</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
-    <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;Option&lt;u32&gt;&gt;&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;Option&lt;CachedPoWConfig&gt;&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RetrivePoW</span>(<span class="kw">pub</span> <span class="ident">String</span>);
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CachedPoWConfig</span> {
+        <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
+    }
 
     <span class="doccomment">/// Message to delete cached PoW difficulty factor and string</span>
     <span class="doccomment">/// when they expire</span>
