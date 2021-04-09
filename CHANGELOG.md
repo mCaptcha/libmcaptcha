@@ -1,6 +1,10 @@
 ## 0.1.3
-## Fixed
-- a bug in `mCaptcha/pow_sha256` was causing errors in PoW computation
+
+## Added
+- `HashCache` was extended to store captcha responses
+- `HashCache` was extended to cache site keys when caching `PoW` configurations
+  as a result:
+- <strike>`Retrieve`</strike> `RetrievePoW` now returns `CachedPoWConfig`
 
 ## Changed
 - `Cache` became `CachePoW` (`HashCache` extension)
@@ -8,9 +12,11 @@
 - `DeleteString` became `DeletePoW` (`HashCache` extension)
 - `Save` trait now requires three new message impls (`HashCache` extension_
 
-## Added
-- `HashCache` was extended to store captcha responses
+## Removed
+- `CachePoW` constructor was removed in favour of `CachwPoWBuilder`
 
+## Fixed
+- a bug in `mCaptcha/pow_sha256` was causing errors in PoW computation
 
 ## 0.1.2
 ## Changed

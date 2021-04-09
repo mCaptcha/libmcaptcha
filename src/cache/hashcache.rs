@@ -27,20 +27,25 @@ use crate::errors::*;
 #[derive(Clone, Default)]
 /// cache datastructure implementing [Save]
 pub struct HashCache {
-    difficulty_map: HashMap<String, u32>,
+    difficulty_map: HashMap<String, CachedPoWConfig>,
     result_map: HashMap<String, String>,
 }
 
 impl HashCache {
     // save [PoWConfig] to cache
     fn save_pow_config(&mut self, config: CachePoW) -> CaptchaResult<()> {
-        self.difficulty_map
-            .insert(config.string, config.difficulty_factor);
+        let challenge = config.string;
+        let config: CachedPoWConfig = CachedPoWConfig {
+            key: config.key,
+            difficulty_factor: config.difficulty_factor,
+        };
+
+        self.difficulty_map.insert(challenge, config);
         Ok(())
     }
 
     // retrive [PoWConfig] from cache. Deletes config post retrival
-    fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<u32>> {
+    fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<CachedPoWConfig>> {
         if let Some(difficulty_factor) = self.remove_pow_config(&string) {
             Ok(Some(difficulty_factor.to_owned()))
         } else {
@@ -49,7 +54,7 @@ impl HashCache {
     }
 
     // delete [PoWConfig] from cache
-    fn remove_pow_config(&mut self, string: &str) -> Option<u32> {
+    fn remove_pow_config(&mut self, string: &str) -> Option<CachedPoWConfig> {
         self.difficulty_map.remove(string)
     }
 
@@ -192,6 +197,7 @@ mod tests {
 
         const DIFFICULTY_FACTOR: u32 = 54;
         const DURATION: u64 = 5;
+        const KEY: &str = "mcaptchakey";
         let addr = HashCache::default().start();
         let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR);
         let visitor_result = AddVisitorResult {
@@ -199,7 +205,14 @@ mod tests {
             duration: DURATION,
         };
         let string = pow.string.clone();
-        let msg = CachePoW::new(&pow, &visitor_result);
+
+        let msg = CachePoWBuilder::default()
+            .string(pow.string.clone())
+            .difficulty_factor(DIFFICULTY_FACTOR)
+            .duration(visitor_result.duration)
+            .key(KEY.into())
+            .build()
+            .unwrap();
 
         addr.send(msg).await.unwrap().unwrap();
 
@@ -208,7 +221,10 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
-        assert_eq!(DIFFICULTY_FACTOR, cache_difficulty_factor.unwrap());
+        assert_eq!(
+            DIFFICULTY_FACTOR,
+            cache_difficulty_factor.unwrap().difficulty_factor
+        );
 
         let duration: Duration = Duration::new(5, 0);
         //sleep(DURATION + DURATION).await;

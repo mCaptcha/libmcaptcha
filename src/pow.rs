@@ -46,6 +46,7 @@ pub struct Work {
     pub string: String,
     pub result: String,
     pub nonce: u64,
+    pub key: String,
 }
 
 impl From<Work> for PoW<String> {

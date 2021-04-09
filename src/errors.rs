@@ -68,6 +68,11 @@ pub enum CaptchaError {
     #[display(fmt = "String now found")]
     StringNotFound,
 
+    /// Happens when submitted work is computed over configuration intended for
+    /// a different mCAptcha sitekey
+    #[display(fmt = "PoW computed over configuration not intended for target sitekey")]
+    MCaptchaKeyValidationFail,
+
     /// Used in builder structs when a value is not set
     #[display(fmt = "Please set value: {}", _0)]
     PleaseSetValue(#[error(not(source))] String),

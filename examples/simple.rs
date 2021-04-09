@@ -104,6 +104,7 @@ async fn main() -> std::io::Result<()> {
         string: work_req.string,
         result: work.result,
         nonce: work.nonce,
+        key: mcaptcha_name.into(),
     };
 
     // Server evaluates client's work. Returns true if everything

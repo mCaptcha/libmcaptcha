@@ -40,8 +40,6 @@ pub mod messages {
     use serde::{Deserialize, Serialize};
 
     use crate::errors::*;
-    use crate::mcaptcha::AddVisitorResult;
-    use crate::pow::PoWConfig;
 
     /// Message to cache PoW difficulty factor and string
     #[derive(Message, Serialize, Deserialize, Builder)]
@@ -50,24 +48,31 @@ pub mod messages {
         pub string: String,
         pub difficulty_factor: u32,
         pub duration: u64,
+        pub key: String,
     }
 
-    impl CachePoW {
-        pub fn new(p: &PoWConfig, v: &AddVisitorResult) -> Self {
-            CachePoWBuilder::default()
-                .string(p.string.clone())
-                .difficulty_factor(v.difficulty_factor)
-                .duration(v.duration)
-                .build()
-                .unwrap()
-        }
-    }
+    //    pub fn new(p: &PoWConfig, k: String, v: &AddVisitorResult) -> Self {
+    //        CachePoWBuilder::default()
+    //            .string(p.string.clone())
+    //            .difficulty_factor(v.difficulty_factor)
+    //            .duration(v.duration)
+    //            .key(k)
+    //            .build()
+    //            .unwrap()
+    //    }
+    //}
 
     /// Message to retrive the the difficulty factor for the specified
     /// string from the cache
     #[derive(Message)]
-    #[rtype(result = "CaptchaResult<Option<u32>>")]
+    #[rtype(result = "CaptchaResult<Option<CachedPoWConfig>>")]
     pub struct RetrivePoW(pub String);
+
+    #[derive(Clone, PartialEq, Debug, Default)]
+    pub struct CachedPoWConfig {
+        pub key: String,
+        pub difficulty_factor: u32,
+    }
 
     /// Message to delete cached PoW difficulty factor and string
     /// when they expire

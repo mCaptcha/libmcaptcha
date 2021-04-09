@@ -18,7 +18,7 @@
 //! module describing mCaptcha system
 use actix::dev::*;
 use derive_builder::Builder;
-use pow_sha256::{Config, PoW};
+use pow_sha256::Config;
 
 use crate::cache::messages;
 use crate::cache::Save;
@@ -42,18 +42,27 @@ where
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        use crate::cache::messages::CachePoW;
+        use crate::cache::messages::CachePoWBuilder;
         use crate::master::GetSite;
         use crate::mcaptcha::AddVisitor;
 
-        let site_addr = self.master.send(GetSite(id)).await.unwrap();
+        let site_addr = self.master.send(GetSite(id.clone())).await.unwrap();
         if site_addr.is_none() {
             return None;
         }
         let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
         let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
 
-        let cache_msg = CachePoW::new(&pow_config, &mcaptcha);
+        //        let cache_msg = CachePoW::new(&pow_config, &mcaptcha);
+
+        let cache_msg = CachePoWBuilder::default()
+            .string(pow_config.string.clone())
+            .difficulty_factor(mcaptcha.difficulty_factor)
+            .duration(mcaptcha.duration)
+            .key(id)
+            .build()
+            .unwrap();
+
         self.cache.send(cache_msg).await.unwrap().unwrap();
         Some(pow_config)
     }
@@ -64,19 +73,29 @@ where
 
         let string = work.string.clone();
         let msg = RetrivePoW(string.clone());
-        let pow: PoW<String> = work.into();
 
-        let difficulty = self.cache.send(msg).await.unwrap()?;
-        match difficulty {
-            Some(difficulty) => {
-                if self.pow.is_sufficient_difficulty(&pow, difficulty) {
-                    Ok(self.pow.is_valid_proof(&pow, &string))
-                } else {
-                    Err(CaptchaError::InsuffiencientDifficulty)
-                }
-            }
-            None => Err(CaptchaError::StringNotFound),
+        let cached_config = self.cache.send(msg).await.unwrap()?;
+
+        if cached_config.is_none() {
+            return Err(CaptchaError::StringNotFound);
         }
+
+        let cached_config = cached_config.unwrap();
+
+        if work.key != cached_config.key {
+            return Err(CaptchaError::MCaptchaKeyValidationFail);
+        }
+
+        let pow = work.into();
+
+        if !self
+            .pow
+            .is_sufficient_difficulty(&pow, cached_config.difficulty_factor)
+        {
+            return Err(CaptchaError::InsuffiencientDifficulty);
+        }
+
+        Ok(self.pow.is_valid_proof(&pow, &string))
     }
 }
 
@@ -142,6 +161,7 @@ mod tests {
             string: work_req.string,
             result: work.result,
             nonce: work.nonce,
+            key: MCAPTCHA_NAME.into(),
         };
 
         let res = actors.verify_pow(payload.clone()).await.unwrap();
@@ -157,8 +177,27 @@ mod tests {
             string: insufficient_work_req.string,
             result: insufficient_work.result,
             nonce: insufficient_work.nonce,
+            key: MCAPTCHA_NAME.into(),
         };
         let res = actors.verify_pow(insufficient_work_payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
+
+        let sitekeyfail_config = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let sitekeyfail_work = config
+            .prove_work(
+                &sitekeyfail_config.string,
+                sitekeyfail_config.difficulty_factor,
+            )
+            .unwrap();
+
+        let sitekeyfail = Work {
+            string: sitekeyfail_config.string,
+            result: sitekeyfail_work.result,
+            nonce: sitekeyfail_work.nonce,
+            key: "example.com".into(),
+        };
+
+        let res = actors.verify_pow(sitekeyfail).await;
+        assert_eq!(res, Err(CaptchaError::MCaptchaKeyValidationFail));
     }
 }
