@@ -83,6 +83,10 @@
 <span id="80">80</span>
 <span id="81">81</span>
 <span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -158,6 +162,10 @@
     <span class="doccomment">/// a different mCAptcha sitekey</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;PoW computed over configuration not intended for target sitekey&quot;</span>)]</span>
     <span class="ident">MCaptchaKeyValidationFail</span>,
+
+    <span class="doccomment">/// Submitted PoW is invalid</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Invalid PoW&quot;</span>)]</span>
+    <span class="ident">InvalidPoW</span>,
 
     <span class="doccomment">/// Used in builder structs when a value is not set</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Please set value: {}&quot;</span>, <span class="ident">_0</span>)]</span>
