@@ -37,8 +37,10 @@ pub struct System<T: Save> {
 impl<T> System<T>
 where
     T: Save,
-    <T as actix::Actor>::Context:
-        ToEnvelope<T, messages::CachePoW> + ToEnvelope<T, messages::RetrivePoW>,
+    <T as actix::Actor>::Context: ToEnvelope<T, messages::CachePoW>
+        + ToEnvelope<T, messages::RetrivePoW>
+        + ToEnvelope<T, messages::CacheResult>
+        + ToEnvelope<T, messages::VerifyCaptchaResult>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
@@ -68,8 +70,8 @@ where
     }
 
     /// utility function to verify [Work]
-    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<bool> {
-        use crate::cache::messages::RetrivePoW;
+    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<String> {
+        use crate::cache::messages::*;
 
         let string = work.string.clone();
         let msg = RetrivePoW(string.clone());
@@ -95,7 +97,14 @@ where
             return Err(CaptchaError::InsuffiencientDifficulty);
         }
 
-        Ok(self.pow.is_valid_proof(&pow, &string))
+        if !self.pow.is_valid_proof(&pow, &string) {
+            return Err(CaptchaError::InvalidPoW);
+        }
+
+        let msg: CacheResult = cached_config.into();
+        let res = msg.result.clone();
+        self.cache.send(msg).await.unwrap()?;
+        Ok(res)
     }
 }
 
@@ -164,8 +173,8 @@ mod tests {
             key: MCAPTCHA_NAME.into(),
         };
 
-        let res = actors.verify_pow(payload.clone()).await.unwrap();
-        assert!(res);
+        let res = actors.verify_pow(payload.clone()).await;
+        assert!(res.is_ok());
 
         payload.string = "wrongstring".into();
         let res = actors.verify_pow(payload.clone()).await;

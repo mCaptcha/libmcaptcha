@@ -73,6 +73,10 @@ pub enum CaptchaError {
     #[display(fmt = "PoW computed over configuration not intended for target sitekey")]
     MCaptchaKeyValidationFail,
 
+    /// Submitted PoW is invalid
+    #[display(fmt = "Invalid PoW")]
+    InvalidPoW,
+
     /// Used in builder structs when a value is not set
     #[display(fmt = "Please set value: {}", _0)]
     PleaseSetValue(#[error(not(source))] String),

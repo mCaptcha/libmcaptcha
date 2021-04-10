@@ -72,6 +72,7 @@ pub mod messages {
     pub struct CachedPoWConfig {
         pub key: String,
         pub difficulty_factor: u32,
+        pub duration: u64,
     }
 
     /// Message to delete cached PoW difficulty factor and string
@@ -89,6 +90,19 @@ pub mod messages {
         // key is Captcha identifier
         pub key: String,
         pub duration: u64,
+    }
+
+    impl From<CachedPoWConfig> for CacheResult {
+        fn from(c: CachedPoWConfig) -> Self {
+            use crate::utils::get_random;
+
+            CacheResultBuilder::default()
+                .key(c.key)
+                .duration(c.duration)
+                .result(get_random(32))
+                .build()
+                .unwrap()
+        }
     }
 
     /// Message to verify captcha result against

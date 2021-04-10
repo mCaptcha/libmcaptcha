@@ -5,12 +5,14 @@
 - `HashCache` was extended to cache site keys when caching `PoW` configurations
   as a result:
 - <strike>`Retrieve`</strike> `RetrievePoW` now returns `CachedPoWConfig`
+- random token generation post `PoW` verification
 
 ## Changed
 - `Cache` became `CachePoW` (`HashCache` extension)
 - `Retrieve` became `RetrievePoW`(`HashCache` extension)
 - `DeleteString` became `DeletePoW` (`HashCache` extension)
 - `Save` trait now requires three new message impls (`HashCache` extension_
+- `System.verify_pow` now returns a `String` instead of `bool`
 
 ## Removed
 - `CachePoW` constructor was removed in favour of `CachwPoWBuilder`

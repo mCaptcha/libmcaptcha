@@ -157,8 +157,8 @@
 //!
 //!     // Server evaluates client's work. Returns true if everything
 //!     // checksout and Err() if something fishy is happening
-//!     let res = system.verify_pow(payload.clone()).await.unwrap();
-//!     assert!(res);
+//!     let res = system.verify_pow(payload.clone()).await;
+//!     assert!(res.is_ok());
 //!
 //!     Ok(())
 //! }

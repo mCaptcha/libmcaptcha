@@ -38,6 +38,7 @@ impl HashCache {
         let config: CachedPoWConfig = CachedPoWConfig {
             key: config.key,
             difficulty_factor: config.difficulty_factor,
+            duration: config.duration,
         };
 
         self.difficulty_map.insert(challenge, config);
