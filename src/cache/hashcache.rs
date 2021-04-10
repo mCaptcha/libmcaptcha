@@ -200,7 +200,7 @@ mod tests {
         const DURATION: u64 = 5;
         const KEY: &str = "mcaptchakey";
         let addr = HashCache::default().start();
-        let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR);
+        let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR, KEY.into()); //salt is dummy here
         let visitor_result = AddVisitorResult {
             difficulty_factor: DIFFICULTY_FACTOR,
             duration: DURATION,

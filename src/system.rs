@@ -52,7 +52,7 @@ where
             return None;
         }
         let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
-        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
+        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
 
         let cache_msg = CachePoWBuilder::default()
             .string(pow_config.string.clone())

@@ -5,7 +5,7 @@
   </p>
 
 [![Documentation](https://img.shields.io/badge/docs-master-yellow)](https://mcaptcha.github.io/mCaptcha/m_captcha/index.html)
-[![Documentation](https://img.shields.io/badge/docs-0.1.2-blue)](https://mcaptcha.org/docs/api/mcaptcha-system)
+[![Documentation](https://img.shields.io/badge/docs-0.1.3-blue)](https://mcaptcha.org/docs/api/mcaptcha-system)
 [![dependency status](https://deps.rs/repo/github/mCaptcha/mCaptcha/status.svg)](https://deps.rs/repo/github/mCaptcha/mCaptcha)
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 ![CI (Linux)](<https://github.com/mCaptcha/mCaptcha/workflows/CI%20(Linux)/badge.svg>)

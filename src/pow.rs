@@ -27,15 +27,17 @@ pub use pow_sha256::ConfigBuilder;
 pub struct PoWConfig {
     pub string: String,
     pub difficulty_factor: u32,
+    pub salt: String,
 }
 impl PoWConfig {
     /// create new instance of [PoWConfig]
-    pub fn new(m: u32) -> Self {
+    pub fn new(difficulty_factor: u32, salt: String) -> Self {
         use crate::utils::get_random;
 
         PoWConfig {
             string: get_random(32),
-            difficulty_factor: m,
+            difficulty_factor,
+            salt,
         }
     }
 }
