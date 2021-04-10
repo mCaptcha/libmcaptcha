@@ -169,7 +169,7 @@
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// Message to cache PoW difficulty factor and string</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>, <span class="ident">Clone</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CachePoW</span> {
         <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
@@ -195,7 +195,7 @@
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;Option&lt;CachedPoWConfig&gt;&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RetrivePoW</span>(<span class="kw">pub</span> <span class="ident">String</span>);
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CachedPoWConfig</span> {
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
@@ -213,7 +213,7 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CacheResult</span> {
-        <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">String</span>,
         <span class="comment">// key is Captcha identifier</span>
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
@@ -226,7 +226,7 @@
             <span class="ident">CacheResultBuilder</span>::<span class="ident">default</span>()
                 .<span class="ident">key</span>(<span class="ident">c</span>.<span class="ident">key</span>)
                 .<span class="ident">duration</span>(<span class="ident">c</span>.<span class="ident">duration</span>)
-                .<span class="ident">result</span>(<span class="ident">get_random</span>(<span class="number">32</span>))
+                .<span class="ident">token</span>(<span class="ident">get_random</span>(<span class="number">32</span>))
                 .<span class="ident">build</span>()
                 .<span class="ident">unwrap</span>()
         }
@@ -234,10 +234,10 @@
 
     <span class="doccomment">/// Message to verify captcha result against</span>
     <span class="doccomment">/// the stored captcha key</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Clone</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;bool&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VerifyCaptchaResult</span> {
-        <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
     }
 
@@ -245,7 +245,7 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DeleteCaptchaResult</span> {
-        <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">String</span>,
     }
 }
 </pre></div>
