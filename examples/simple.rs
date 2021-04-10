@@ -1,5 +1,5 @@
 use m_captcha::{
-    cache::HashCache,
+    cache::{messages::VerifyCaptchaResult, HashCache},
     master::{AddSiteBuilder, Master},
     pow::{ConfigBuilder, Work},
     system::SystemBuilder,
@@ -107,11 +107,29 @@ async fn main() -> std::io::Result<()> {
         key: mcaptcha_name.into(),
     };
 
-    // Server evaluates client's work. Returns true if everything
+    // mCAptcha evaluates client's work. Returns a token if everything
     // checksout and Err() if something fishy is happening
     let res = system.verify_pow(payload.clone()).await;
     assert!(res.is_ok());
-    // TODO add server-sideverification
+
+    // The client should submit the token to the mCaptcha protected service
+    // The service should validate the token received from the client
+    // with the mCaptcha server before processing client's
+    // request
+
+    // mcaptcha protected service sends the following paylaod to mCaptcha
+    // server:
+    let verify_msg = VerifyCaptchaResult {
+        token: res.unwrap(),
+        key: mcaptcha_name.into(),
+    };
+
+    // on mCaptcha server:
+    let res = system.validate_verification_tokens(verify_msg).await;
+    // mCaptcha will return true if token is valid and false if
+    // token is invalid
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     Ok(())
 }

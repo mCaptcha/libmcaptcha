@@ -20,7 +20,7 @@ use actix::dev::*;
 use derive_builder::Builder;
 use pow_sha256::Config;
 
-use crate::cache::messages;
+use crate::cache::messages::*;
 use crate::cache::Save;
 use crate::errors::*;
 use crate::master::Master;
@@ -37,14 +37,13 @@ pub struct System<T: Save> {
 impl<T> System<T>
 where
     T: Save,
-    <T as actix::Actor>::Context: ToEnvelope<T, messages::CachePoW>
-        + ToEnvelope<T, messages::RetrivePoW>
-        + ToEnvelope<T, messages::CacheResult>
-        + ToEnvelope<T, messages::VerifyCaptchaResult>,
+    <T as actix::Actor>::Context: ToEnvelope<T, CachePoW>
+        + ToEnvelope<T, RetrivePoW>
+        + ToEnvelope<T, CacheResult>
+        + ToEnvelope<T, VerifyCaptchaResult>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        use crate::cache::messages::CachePoWBuilder;
         use crate::master::GetSite;
         use crate::mcaptcha::AddVisitor;
 
@@ -54,8 +53,6 @@ where
         }
         let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
         let pow_config = PoWConfig::new(mcaptcha.difficulty_factor);
-
-        //        let cache_msg = CachePoW::new(&pow_config, &mcaptcha);
 
         let cache_msg = CachePoWBuilder::default()
             .string(pow_config.string.clone())
@@ -71,8 +68,6 @@ where
 
     /// utility function to verify [Work]
     pub async fn verify_pow(&self, work: Work) -> CaptchaResult<String> {
-        use crate::cache::messages::*;
-
         let string = work.string.clone();
         let msg = RetrivePoW(string.clone());
 
@@ -102,9 +97,17 @@ where
         }
 
         let msg: CacheResult = cached_config.into();
-        let res = msg.result.clone();
+        let res = msg.token.clone();
         self.cache.send(msg).await.unwrap()?;
         Ok(res)
+    }
+
+    /// utility function to validate verification tokens
+    pub async fn validate_verification_tokens(
+        &self,
+        msg: VerifyCaptchaResult,
+    ) -> CaptchaResult<bool> {
+        self.cache.send(msg).await.unwrap()
     }
 }
 
@@ -159,13 +162,18 @@ mod tests {
 
     #[actix_rt::test]
     async fn verify_pow_works() {
+        // start system
         let actors = boostrap_system(10).await;
+        // get work
         let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        // get config
         let config = get_config();
 
+        // generate proof
         let work = config
             .prove_work(&work_req.string, work_req.difficulty_factor)
             .unwrap();
+        // generate proof payload
         let mut payload = Work {
             string: work_req.string,
             result: work.result,
@@ -173,8 +181,26 @@ mod tests {
             key: MCAPTCHA_NAME.into(),
         };
 
+        // verifiy proof
         let res = actors.verify_pow(payload.clone()).await;
         assert!(res.is_ok());
+
+        // verify validation token
+        let mut verifi_msg = VerifyCaptchaResult {
+            token: res.unwrap(),
+            key: MCAPTCHA_NAME.into(),
+        };
+        assert!(actors
+            .validate_verification_tokens(verifi_msg.clone())
+            .await
+            .unwrap());
+
+        // verify wrong validation token
+        verifi_msg.token = MCAPTCHA_NAME.into();
+        assert!(!actors
+            .validate_verification_tokens(verifi_msg)
+            .await
+            .unwrap());
 
         payload.string = "wrongstring".into();
         let res = actors.verify_pow(payload.clone()).await;

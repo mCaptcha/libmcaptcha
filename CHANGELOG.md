@@ -6,6 +6,7 @@
   as a result:
 - <strike>`Retrieve`</strike> `RetrievePoW` now returns `CachedPoWConfig`
 - random token generation post `PoW` verification
+- token validation
 
 ## Changed
 - `Cache` became `CachePoW` (`HashCache` extension)

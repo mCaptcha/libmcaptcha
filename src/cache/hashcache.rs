@@ -61,13 +61,13 @@ impl HashCache {
 
     // save captcha result
     fn save_captcha_result(&mut self, res: CacheResult) -> CaptchaResult<()> {
-        self.result_map.insert(res.result, res.key);
+        self.result_map.insert(res.token, res.key);
         Ok(())
     }
 
     // verify captcha result
     fn verify_captcha_result(&mut self, challenge: VerifyCaptchaResult) -> CaptchaResult<bool> {
-        if let Some(captcha_id) = self.remove_cache_result(&challenge.result) {
+        if let Some(captcha_id) = self.remove_cache_result(&challenge.token) {
             if captcha_id == challenge.key {
                 return Ok(true);
             } else {
@@ -141,7 +141,7 @@ impl Handler<CacheResult> for HashCache {
 
         let addr = ctx.address();
         let del_msg = DeleteCaptchaResult {
-            result: msg.result.clone(),
+            token: msg.token.clone(),
         };
 
         let duration: Duration = Duration::new(msg.duration.clone(), 0);
@@ -161,7 +161,7 @@ impl Handler<CacheResult> for HashCache {
 impl Handler<DeleteCaptchaResult> for HashCache {
     type Result = MessageResult<DeleteCaptchaResult>;
     fn handle(&mut self, msg: DeleteCaptchaResult, _ctx: &mut Self::Context) -> Self::Result {
-        self.remove_cache_result(&msg.result);
+        self.remove_cache_result(&msg.token);
         MessageResult(Ok(()))
     }
 }
@@ -252,7 +252,7 @@ mod tests {
 
         let add_cache = CacheResult {
             key: KEY.into(),
-            result: RES.into(),
+            token: RES.into(),
             duration: DURATION,
         };
 
@@ -260,14 +260,14 @@ mod tests {
 
         let verify_msg = VerifyCaptchaResult {
             key: KEY.into(),
-            result: RES.into(),
+            token: RES.into(),
         };
 
         assert!(addr.send(verify_msg).await.unwrap().unwrap());
 
         let verify_msg = VerifyCaptchaResult {
             key: "cz".into(),
-            result: RES.into(),
+            token: RES.into(),
         };
         assert!(!addr.send(verify_msg).await.unwrap().unwrap());
 
@@ -276,7 +276,7 @@ mod tests {
 
         let verify_msg = VerifyCaptchaResult {
             key: KEY.into(),
-            result: RES.into(),
+            token: RES.into(),
         };
         assert!(!addr.send(verify_msg).await.unwrap().unwrap());
     }

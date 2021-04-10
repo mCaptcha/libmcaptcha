@@ -42,7 +42,7 @@ pub mod messages {
     use crate::errors::*;
 
     /// Message to cache PoW difficulty factor and string
-    #[derive(Message, Serialize, Deserialize, Builder)]
+    #[derive(Message, Serialize, Deserialize, Builder, Clone)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CachePoW {
         pub string: String,
@@ -68,7 +68,7 @@ pub mod messages {
     #[rtype(result = "CaptchaResult<Option<CachedPoWConfig>>")]
     pub struct RetrivePoW(pub String);
 
-    #[derive(Clone, PartialEq, Debug, Default)]
+    #[derive(Clone, PartialEq, Debug, Default, Deserialize, Serialize)]
     pub struct CachedPoWConfig {
         pub key: String,
         pub difficulty_factor: u32,
@@ -86,7 +86,7 @@ pub mod messages {
     #[derive(Message, Serialize, Deserialize, Builder)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CacheResult {
-        pub result: String,
+        pub token: String,
         // key is Captcha identifier
         pub key: String,
         pub duration: u64,
@@ -99,7 +99,7 @@ pub mod messages {
             CacheResultBuilder::default()
                 .key(c.key)
                 .duration(c.duration)
-                .result(get_random(32))
+                .token(get_random(32))
                 .build()
                 .unwrap()
         }
@@ -107,10 +107,10 @@ pub mod messages {
 
     /// Message to verify captcha result against
     /// the stored captcha key
-    #[derive(Message)]
+    #[derive(Message, Clone, Deserialize, Serialize)]
     #[rtype(result = "CaptchaResult<bool>")]
     pub struct VerifyCaptchaResult {
-        pub result: String,
+        pub token: String,
         pub key: String,
     }
 
@@ -118,6 +118,6 @@ pub mod messages {
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct DeleteCaptchaResult {
-        pub result: String,
+        pub token: String,
     }
 }
