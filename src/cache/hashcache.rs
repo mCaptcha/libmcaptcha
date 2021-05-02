@@ -263,7 +263,9 @@ mod tests {
             token: RES.into(),
         };
 
-        assert!(addr.send(verify_msg).await.unwrap().unwrap());
+        assert!(addr.send(verify_msg.clone()).await.unwrap().unwrap());
+        // duplicate
+        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
 
         let verify_msg = VerifyCaptchaResult {
             key: "cz".into(),
