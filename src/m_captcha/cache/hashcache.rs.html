@@ -284,6 +284,8 @@
 <span id="281">281</span>
 <span id="282">282</span>
 <span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -550,7 +552,9 @@
             <span class="ident">token</span>: <span class="ident">RES</span>.<span class="ident">into</span>(),
         };
 
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>.<span class="ident">clone</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
+        <span class="comment">// duplicate</span>
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
 
         <span class="kw">let</span> <span class="ident">verify_msg</span> <span class="op">=</span> <span class="ident">VerifyCaptchaResult</span> {
             <span class="ident">key</span>: <span class="string">&quot;cz&quot;</span>.<span class="ident">into</span>(),
