@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! module describing mCaptcha system
+use std::sync::Arc;
+
 use actix::dev::*;
 use derive_builder::Builder;
 use pow_sha256::Config;
@@ -32,6 +34,7 @@ pub struct System<T: Save> {
     pub master: Addr<Master>,
     cache: Addr<T>,
     pow: Config,
+    pow_salt: Arc<String>,
 }
 
 impl<T> System<T>
@@ -43,7 +46,7 @@ where
         + ToEnvelope<T, VerifyCaptchaResult>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
-    pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
+    pub async fn get_pow(&self, id: Arc<String>) -> Option<PoWConfig> {
         use crate::master::GetSite;
         use crate::mcaptcha::AddVisitor;
 
@@ -52,7 +55,7 @@ where
             return None;
         }
         let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
-        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
+        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow_salt.clone());
 
         let cache_msg = CachePoWBuilder::default()
             .string(pow_config.string.clone())
@@ -67,7 +70,7 @@ where
     }
 
     /// utility function to verify [Work]
-    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<String> {
+    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<Arc<String>> {
         let string = work.string.clone();
         let msg = RetrivePoW(string.clone());
 
@@ -141,7 +144,8 @@ mod tests {
         SystemBuilder::default()
             .master(master)
             .cache(cache)
-            .pow(pow)
+            .pow(pow.clone())
+            .pow_salt(Arc::new(pow.salt.clone()))
             .build()
             .unwrap()
     }
@@ -156,7 +160,10 @@ mod tests {
     #[actix_rt::test]
     async fn get_pow_works() {
         let actors = boostrap_system(10).await;
-        let pow = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let pow = actors
+            .get_pow(Arc::new(MCAPTCHA_NAME.into()))
+            .await
+            .unwrap();
         assert_eq!(pow.difficulty_factor, LEVEL_1.0);
     }
 
@@ -165,7 +172,10 @@ mod tests {
         // start system
         let actors = boostrap_system(10).await;
         // get work
-        let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let work_req = actors
+            .get_pow(Arc::new(MCAPTCHA_NAME.into()))
+            .await
+            .unwrap();
         // get config
         let config = get_config();
 
@@ -178,7 +188,7 @@ mod tests {
             string: work_req.string,
             result: work.result,
             nonce: work.nonce,
-            key: MCAPTCHA_NAME.into(),
+            key: Arc::new(MCAPTCHA_NAME.into()),
         };
 
         // verifiy proof
@@ -188,7 +198,7 @@ mod tests {
         // verify validation token
         let mut verifi_msg = VerifyCaptchaResult {
             token: res.unwrap(),
-            key: MCAPTCHA_NAME.into(),
+            key: Arc::new(MCAPTCHA_NAME.into()),
         };
         assert!(actors
             .validate_verification_tokens(verifi_msg.clone())
@@ -196,28 +206,34 @@ mod tests {
             .unwrap());
 
         // verify wrong validation token
-        verifi_msg.token = MCAPTCHA_NAME.into();
+        verifi_msg.token = Arc::new(MCAPTCHA_NAME.into());
         assert!(!actors
             .validate_verification_tokens(verifi_msg)
             .await
             .unwrap());
 
-        payload.string = "wrongstring".into();
+        payload.string = Arc::new("wrongstring".into());
         let res = actors.verify_pow(payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::StringNotFound));
 
-        let insufficient_work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let insufficient_work_req = actors
+            .get_pow(Arc::new(MCAPTCHA_NAME.into()))
+            .await
+            .unwrap();
         let insufficient_work = config.prove_work(&insufficient_work_req.string, 1).unwrap();
         let insufficient_work_payload = Work {
             string: insufficient_work_req.string,
             result: insufficient_work.result,
             nonce: insufficient_work.nonce,
-            key: MCAPTCHA_NAME.into(),
+            key: Arc::new(MCAPTCHA_NAME.into()),
         };
         let res = actors.verify_pow(insufficient_work_payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
 
-        let sitekeyfail_config = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let sitekeyfail_config = actors
+            .get_pow(Arc::new(MCAPTCHA_NAME.into()))
+            .await
+            .unwrap();
         let sitekeyfail_work = config
             .prove_work(
                 &sitekeyfail_config.string,
@@ -229,7 +245,7 @@ mod tests {
             string: sitekeyfail_config.string,
             result: sitekeyfail_work.result,
             nonce: sitekeyfail_work.nonce,
-            key: "example.com".into(),
+            key: Arc::new("example.com".into()),
         };
 
         let res = actors.verify_pow(sitekeyfail).await;

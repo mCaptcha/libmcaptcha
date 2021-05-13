@@ -133,6 +133,7 @@ impl DefenseBuilder {
             if i.visitor_threshold == level.visitor_threshold {
                 return Err(CaptchaError::DuplicateVisitorCount);
             }
+            //TODO check for duplicate difficulty_factor
         }
         self.levels.push(level);
         Ok(self)

@@ -17,6 +17,8 @@
  */
 
 //! PoW datatypes used in client-server interaction
+use std::sync::Arc;
+
 use pow_sha256::PoW;
 use serde::{Deserialize, Serialize};
 
@@ -25,17 +27,17 @@ pub use pow_sha256::ConfigBuilder;
 /// PoW requirement datatype that is be sent to clients for generating PoW
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct PoWConfig {
-    pub string: String,
+    pub string: Arc<String>,
     pub difficulty_factor: u32,
-    pub salt: String,
+    pub salt: Arc<String>,
 }
 impl PoWConfig {
     /// create new instance of [PoWConfig]
-    pub fn new(difficulty_factor: u32, salt: String) -> Self {
+    pub fn new(difficulty_factor: u32, salt: Arc<String>) -> Self {
         use crate::utils::get_random;
 
         PoWConfig {
-            string: get_random(32),
+            string: Arc::new(get_random(32)),
             difficulty_factor,
             salt,
         }
@@ -45,10 +47,10 @@ impl PoWConfig {
 /// PoW datatype that clients send to server
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Work {
-    pub string: String,
+    pub string: Arc<String>,
     pub result: String,
     pub nonce: u64,
-    pub key: String,
+    pub key: Arc<String>,
 }
 
 impl From<Work> for PoW<String> {

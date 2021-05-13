@@ -17,6 +17,7 @@
  */
 //! In-memory cache implementation that uses [HashMap]
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use actix::prelude::*;
 
@@ -27,8 +28,8 @@ use crate::errors::*;
 #[derive(Clone, Default)]
 /// cache datastructure implementing [Save]
 pub struct HashCache {
-    difficulty_map: HashMap<String, CachedPoWConfig>,
-    result_map: HashMap<String, String>,
+    difficulty_map: HashMap<Arc<String>, CachedPoWConfig>,
+    result_map: HashMap<Arc<String>, Arc<String>>,
 }
 
 impl HashCache {
@@ -46,7 +47,10 @@ impl HashCache {
     }
 
     // retrive [PoWConfig] from cache. Deletes config post retrival
-    fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<CachedPoWConfig>> {
+    fn retrive_pow_config(
+        &mut self,
+        string: Arc<String>,
+    ) -> CaptchaResult<Option<CachedPoWConfig>> {
         if let Some(difficulty_factor) = self.remove_pow_config(&string) {
             Ok(Some(difficulty_factor.to_owned()))
         } else {
@@ -55,7 +59,7 @@ impl HashCache {
     }
 
     // delete [PoWConfig] from cache
-    fn remove_pow_config(&mut self, string: &str) -> Option<CachedPoWConfig> {
+    fn remove_pow_config(&mut self, string: &Arc<String>) -> Option<CachedPoWConfig> {
         self.difficulty_map.remove(string)
     }
 
@@ -79,7 +83,7 @@ impl HashCache {
     }
 
     // delete cache result
-    fn remove_cache_result(&mut self, string: &str) -> Option<String> {
+    fn remove_cache_result(&mut self, string: &Arc<String>) -> Option<Arc<String>> {
         self.result_map.remove(string)
     }
 }
@@ -200,7 +204,7 @@ mod tests {
         const DURATION: u64 = 5;
         const KEY: &str = "mcaptchakey";
         let addr = HashCache::default().start();
-        let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR, KEY.into()); //salt is dummy here
+        let pow: PoWConfig = PoWConfig::new(DIFFICULTY_FACTOR, Arc::new(KEY.into())); //salt is dummy here
         let visitor_result = AddVisitorResult {
             difficulty_factor: DIFFICULTY_FACTOR,
             duration: DURATION,
@@ -211,7 +215,7 @@ mod tests {
             .string(pow.string.clone())
             .difficulty_factor(DIFFICULTY_FACTOR)
             .duration(visitor_result.duration)
-            .key(KEY.into())
+            .key(Arc::new(KEY.into()))
             .build()
             .unwrap();
 
@@ -251,16 +255,16 @@ mod tests {
         // wait for timeout and verify_captcha_result against second value
 
         let add_cache = CacheResult {
-            key: KEY.into(),
-            token: RES.into(),
+            key: Arc::new(KEY.into()),
+            token: Arc::new(RES.into()),
             duration: DURATION,
         };
 
         addr.send(add_cache).await.unwrap().unwrap();
 
         let verify_msg = VerifyCaptchaResult {
-            key: KEY.into(),
-            token: RES.into(),
+            key: Arc::new(KEY.into()),
+            token: Arc::new(RES.into()),
         };
 
         assert!(addr.send(verify_msg.clone()).await.unwrap().unwrap());
@@ -268,8 +272,8 @@ mod tests {
         assert!(!addr.send(verify_msg).await.unwrap().unwrap());
 
         let verify_msg = VerifyCaptchaResult {
-            key: "cz".into(),
-            token: RES.into(),
+            key: Arc::new("cz".into()),
+            token: Arc::new(RES.into()),
         };
         assert!(!addr.send(verify_msg).await.unwrap().unwrap());
 
@@ -277,8 +281,8 @@ mod tests {
         delay_for(duration + duration).await;
 
         let verify_msg = VerifyCaptchaResult {
-            key: KEY.into(),
-            token: RES.into(),
+            key: Arc::new(KEY.into()),
+            token: Arc::new(RES.into()),
         };
         assert!(!addr.send(verify_msg).await.unwrap().unwrap());
     }

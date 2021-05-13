@@ -46,6 +46,8 @@
 //! ## Example:
 //!
 //! ```rust
+//! use std::sync::Arc;
+//!
 //! use m_captcha::{
 //!     cache::{messages::VerifyCaptchaResult, HashCache},
 //!     master::{AddSiteBuilder, Master},
@@ -81,6 +83,7 @@
 //!         .master(master)
 //!         .cache(cache)
 //!         .pow(pow.clone())
+//!         .pow_salt(Arc::new(pow.salt.clone()))
 //!         .build()
 //!         .unwrap();
 //!
@@ -139,7 +142,7 @@
 //!
 //!     // Get PoW config. Should be called everytime there's a visitor for a
 //!     // managed site(here mcaptcha_name)
-//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap();
+//!     let work_req = system.get_pow(Arc::new(mcaptcha_name.into())).await.unwrap();
 //!
 //!     // the following computation should be done on the client but for the purpose
 //!     // of this illustration, we are going to do it on the server it self
@@ -152,7 +155,7 @@
 //!         string: work_req.string,
 //!         result: work.result,
 //!         nonce: work.nonce,
-//!         key: mcaptcha_name.into(),
+//!         key: Arc::new(mcaptcha_name.into()),
 //!     };
 //!
 //!     // Server evaluates client's work. Returns true if everything
@@ -169,7 +172,7 @@
 //!    // server:
 //!    let verify_msg = VerifyCaptchaResult {
 //!        token: res.unwrap(),
-//!        key: mcaptcha_name.into(),
+//!        key: Arc::new(mcaptcha_name.into()),
 //!    };
 //!
 //!    // on mCaptcha server:

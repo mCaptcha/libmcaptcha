@@ -17,6 +17,7 @@
  */
 //! Cache is used to save proofof work details and nonces to prevent replay attacks
 //! and rainbow/dictionary attacks
+
 pub use hashcache::HashCache;
 use messages::*;
 
@@ -35,6 +36,8 @@ pub trait Save:
 }
 pub mod messages {
     //! Messages that can be sent to cache data structures implementing [Save][super::Save]
+    use std::sync::Arc;
+
     use actix::dev::*;
     use derive_builder::Builder;
     use serde::{Deserialize, Serialize};
@@ -45,10 +48,10 @@ pub mod messages {
     #[derive(Message, Serialize, Deserialize, Builder, Clone)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CachePoW {
-        pub string: String,
+        pub string: Arc<String>,
         pub difficulty_factor: u32,
         pub duration: u64,
-        pub key: String,
+        pub key: Arc<String>,
     }
 
     //    pub fn new(p: &PoWConfig, k: String, v: &AddVisitorResult) -> Self {
@@ -66,11 +69,11 @@ pub mod messages {
     /// string from the cache
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<Option<CachedPoWConfig>>")]
-    pub struct RetrivePoW(pub String);
+    pub struct RetrivePoW(pub Arc<String>);
 
     #[derive(Clone, PartialEq, Debug, Default, Deserialize, Serialize)]
     pub struct CachedPoWConfig {
-        pub key: String,
+        pub key: Arc<String>,
         pub difficulty_factor: u32,
         pub duration: u64,
     }
@@ -79,16 +82,16 @@ pub mod messages {
     /// when they expire
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
-    pub struct DeletePoW(pub String);
+    pub struct DeletePoW(pub Arc<String>);
 
     /// Message to cache captcha result and the captcha key for which
     /// it was generated
     #[derive(Message, Serialize, Deserialize, Builder)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CacheResult {
-        pub token: String,
+        pub token: Arc<String>,
         // key is Captcha identifier
-        pub key: String,
+        pub key: Arc<String>,
         pub duration: u64,
     }
 
@@ -99,7 +102,7 @@ pub mod messages {
             CacheResultBuilder::default()
                 .key(c.key)
                 .duration(c.duration)
-                .token(get_random(32))
+                .token(Arc::new(get_random(32)))
                 .build()
                 .unwrap()
         }
@@ -110,14 +113,14 @@ pub mod messages {
     #[derive(Message, Clone, Deserialize, Serialize)]
     #[rtype(result = "CaptchaResult<bool>")]
     pub struct VerifyCaptchaResult {
-        pub token: String,
-        pub key: String,
+        pub token: Arc<String>,
+        pub key: Arc<String>,
     }
 
     /// Message to delete cached capthca result when it expires
     #[derive(Message)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct DeleteCaptchaResult {
-        pub token: String,
+        pub token: Arc<String>,
     }
 }

@@ -8,6 +8,10 @@
   internet. Ideally `mCaptcha` should automatically generate random
   salt and rotate periodically, maybe in the next version.
 
+- Migrated immutable, shared `String` to `Arc<String>`. There were
+  plenty of them so a bunch of structs changed. See
+  [865f2d1](https://github.com/mCaptcha/mCaptcha/commit/865f2d1c4a7627d352715118508499d4b333fe4a).
+
 ## 0.1.3
 
 ## Added

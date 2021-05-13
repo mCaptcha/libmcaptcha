@@ -17,6 +17,7 @@
  */
 //! [Master] actor module that manages [MCaptcha] actors
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 //use actix::clock::sleep;
@@ -85,7 +86,7 @@ impl Actor for Master {
 /// Message to get an [MCaptcha] actor from master
 #[derive(Message)]
 #[rtype(result = "Option<Addr<MCaptcha>>")]
-pub struct GetSite(pub String);
+pub struct GetSite(pub Arc<String>);
 
 impl Handler<GetSite> for Master {
     type Result = MessageResult<GetSite>;
@@ -183,10 +184,10 @@ mod tests {
 
         addr.send(msg).await.unwrap();
 
-        let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        let mcaptcha_addr = addr.send(GetSite(Arc::new(id.into()))).await.unwrap();
         assert_eq!(mcaptcha_addr, Some(mcaptcha));
 
-        let addr_doesnt_exist = addr.send(GetSite("a".into())).await.unwrap();
+        let addr_doesnt_exist = addr.send(GetSite(Arc::new("a".into()))).await.unwrap();
         assert!(addr_doesnt_exist.is_none());
 
         let timer_expire = Duration::new(DURATION, 0);
@@ -195,7 +196,7 @@ mod tests {
         delay_for(timer_expire).await;
         delay_for(timer_expire).await;
 
-        let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        let mcaptcha_addr = addr.send(GetSite(Arc::new(id.into()))).await.unwrap();
         assert_eq!(mcaptcha_addr, None);
     }
 }
