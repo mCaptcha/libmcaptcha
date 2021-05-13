@@ -201,9 +201,6 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -253,8 +250,6 @@
 <span class="doccomment">//! ## Example:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! use std::sync::Arc;</span>
-<span class="doccomment">//!</span>
 <span class="doccomment">//! use m_captcha::{</span>
 <span class="doccomment">//!     cache::{messages::VerifyCaptchaResult, HashCache},</span>
 <span class="doccomment">//!     master::{AddSiteBuilder, Master},</span>
@@ -290,7 +285,6 @@
 <span class="doccomment">//!         .master(master)</span>
 <span class="doccomment">//!         .cache(cache)</span>
 <span class="doccomment">//!         .pow(pow.clone())</span>
-<span class="doccomment">//!         .pow_salt(Arc::new(pow.salt.clone()))</span>
 <span class="doccomment">//!         .build()</span>
 <span class="doccomment">//!         .unwrap();</span>
 <span class="doccomment">//!</span>
@@ -349,7 +343,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // Get PoW config. Should be called everytime there&#39;s a visitor for a</span>
 <span class="doccomment">//!     // managed site(here mcaptcha_name)</span>
-<span class="doccomment">//!     let work_req = system.get_pow(Arc::new(mcaptcha_name.into())).await.unwrap();</span>
+<span class="doccomment">//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // the following computation should be done on the client but for the purpose</span>
 <span class="doccomment">//!     // of this illustration, we are going to do it on the server it self</span>
@@ -362,7 +356,7 @@
 <span class="doccomment">//!         string: work_req.string,</span>
 <span class="doccomment">//!         result: work.result,</span>
 <span class="doccomment">//!         nonce: work.nonce,</span>
-<span class="doccomment">//!         key: Arc::new(mcaptcha_name.into()),</span>
+<span class="doccomment">//!         key: mcaptcha_name.into(),</span>
 <span class="doccomment">//!     };</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // Server evaluates client&#39;s work. Returns true if everything</span>
@@ -379,7 +373,7 @@
 <span class="doccomment">//!    // server:</span>
 <span class="doccomment">//!    let verify_msg = VerifyCaptchaResult {</span>
 <span class="doccomment">//!        token: res.unwrap(),</span>
-<span class="doccomment">//!        key: Arc::new(mcaptcha_name.into()),</span>
+<span class="doccomment">//!        key: mcaptcha_name.into(),</span>
 <span class="doccomment">//!    };</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!    // on mCaptcha server:</span>

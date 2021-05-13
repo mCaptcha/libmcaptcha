@@ -64,8 +64,6 @@
 <span id="61">61</span>
 <span id="62">62</span>
 <span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -86,8 +84,6 @@
  */</span>
 
 <span class="doccomment">//! PoW datatypes used in client-server interaction</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-
 <span class="kw">use</span> <span class="ident">pow_sha256</span>::<span class="ident">PoW</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -96,17 +92,17 @@
 <span class="doccomment">/// PoW requirement datatype that is be sent to clients for generating PoW</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PoWConfig</span> {
-    <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">salt</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">salt</span>: <span class="ident">String</span>,
 }
 <span class="kw">impl</span> <span class="ident">PoWConfig</span> {
     <span class="doccomment">/// create new instance of [PoWConfig]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">difficulty_factor</span>: <span class="ident">u32</span>, <span class="ident">salt</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">difficulty_factor</span>: <span class="ident">u32</span>, <span class="ident">salt</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">get_random</span>;
 
         <span class="ident">PoWConfig</span> {
-            <span class="ident">string</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">get_random</span>(<span class="number">32</span>)),
+            <span class="ident">string</span>: <span class="ident">get_random</span>(<span class="number">32</span>),
             <span class="ident">difficulty_factor</span>,
             <span class="ident">salt</span>,
         }
@@ -116,10 +112,10 @@
 <span class="doccomment">/// PoW datatype that clients send to server</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Work</span> {
-    <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">nonce</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Work</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PoW</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {

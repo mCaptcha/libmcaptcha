@@ -418,7 +418,6 @@
 <span id="415">415</span>
 <span id="416">416</span>
 <span id="417">417</span>
-<span id="418">418</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -555,7 +554,6 @@
             <span class="kw">if</span> <span class="ident">i</span>.<span class="ident">visitor_threshold</span> <span class="op">=</span><span class="op">=</span> <span class="ident">level</span>.<span class="ident">visitor_threshold</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">DuplicateVisitorCount</span>);
             }
-            <span class="comment">//TODO check for duplicate difficulty_factor</span>
         }
         <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">push</span>(<span class="ident">level</span>);
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)

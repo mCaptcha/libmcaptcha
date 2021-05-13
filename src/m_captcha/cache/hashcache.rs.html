@@ -286,10 +286,6 @@
 <span id="283">283</span>
 <span id="284">284</span>
 <span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -310,7 +306,6 @@
  */</span>
 <span class="doccomment">//! In-memory cache implementation that uses [HashMap]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
@@ -321,8 +316,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="doccomment">/// cache datastructure implementing [Save]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HashCache</span> {
-    <span class="ident">difficulty_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">CachedPoWConfig</span><span class="op">&gt;</span>,
-    <span class="ident">result_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">difficulty_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">CachedPoWConfig</span><span class="op">&gt;</span>,
+    <span class="ident">result_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">HashCache</span> {
@@ -340,10 +335,7 @@
     }
 
     <span class="comment">// retrive [PoWConfig] from cache. Deletes config post retrival</span>
-    <span class="kw">fn</span> <span class="ident">retrive_pow_config</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">string</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">retrive_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">difficulty_factor</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">difficulty_factor</span>.<span class="ident">to_owned</span>()))
         } <span class="kw">else</span> {
@@ -352,7 +344,7 @@
     }
 
     <span class="comment">// delete [PoWConfig] from cache</span>
-    <span class="kw">fn</span> <span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">remove_pow_config</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CachedPoWConfig</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">difficulty_map</span>.<span class="ident">remove</span>(<span class="ident">string</span>)
     }
 
@@ -376,7 +368,7 @@
     }
 
     <span class="comment">// delete cache result</span>
-    <span class="kw">fn</span> <span class="ident">remove_cache_result</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">remove_cache_result</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">result_map</span>.<span class="ident">remove</span>(<span class="ident">string</span>)
     }
 }
@@ -497,7 +489,7 @@
         <span class="kw">const</span> <span class="ident">DURATION</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">5</span>;
         <span class="kw">const</span> <span class="ident">KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;mcaptchakey&quot;</span>;
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">HashCache</span>::<span class="ident">default</span>().<span class="ident">start</span>();
-        <span class="kw">let</span> <span class="ident">pow</span>: <span class="ident">PoWConfig</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">DIFFICULTY_FACTOR</span>, <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">KEY</span>.<span class="ident">into</span>())); <span class="comment">//salt is dummy here</span>
+        <span class="kw">let</span> <span class="ident">pow</span>: <span class="ident">PoWConfig</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">DIFFICULTY_FACTOR</span>, <span class="ident">KEY</span>.<span class="ident">into</span>()); <span class="comment">//salt is dummy here</span>
         <span class="kw">let</span> <span class="ident">visitor_result</span> <span class="op">=</span> <span class="ident">AddVisitorResult</span> {
             <span class="ident">difficulty_factor</span>: <span class="ident">DIFFICULTY_FACTOR</span>,
             <span class="ident">duration</span>: <span class="ident">DURATION</span>,
@@ -508,7 +500,7 @@
             .<span class="ident">string</span>(<span class="ident">pow</span>.<span class="ident">string</span>.<span class="ident">clone</span>())
             .<span class="ident">difficulty_factor</span>(<span class="ident">DIFFICULTY_FACTOR</span>)
             .<span class="ident">duration</span>(<span class="ident">visitor_result</span>.<span class="ident">duration</span>)
-            .<span class="ident">key</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">KEY</span>.<span class="ident">into</span>()))
+            .<span class="ident">key</span>(<span class="ident">KEY</span>.<span class="ident">into</span>())
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>();
 
@@ -548,16 +540,16 @@
         <span class="comment">// wait for timeout and verify_captcha_result against second value</span>
 
         <span class="kw">let</span> <span class="ident">add_cache</span> <span class="op">=</span> <span class="ident">CacheResult</span> {
-            <span class="ident">key</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">KEY</span>.<span class="ident">into</span>()),
-            <span class="ident">token</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RES</span>.<span class="ident">into</span>()),
+            <span class="ident">key</span>: <span class="ident">KEY</span>.<span class="ident">into</span>(),
+            <span class="ident">token</span>: <span class="ident">RES</span>.<span class="ident">into</span>(),
             <span class="ident">duration</span>: <span class="ident">DURATION</span>,
         };
 
         <span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">add_cache</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">verify_msg</span> <span class="op">=</span> <span class="ident">VerifyCaptchaResult</span> {
-            <span class="ident">key</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">KEY</span>.<span class="ident">into</span>()),
-            <span class="ident">token</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RES</span>.<span class="ident">into</span>()),
+            <span class="ident">key</span>: <span class="ident">KEY</span>.<span class="ident">into</span>(),
+            <span class="ident">token</span>: <span class="ident">RES</span>.<span class="ident">into</span>(),
         };
 
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>.<span class="ident">clone</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
@@ -565,8 +557,8 @@
         <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
 
         <span class="kw">let</span> <span class="ident">verify_msg</span> <span class="op">=</span> <span class="ident">VerifyCaptchaResult</span> {
-            <span class="ident">key</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="string">&quot;cz&quot;</span>.<span class="ident">into</span>()),
-            <span class="ident">token</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RES</span>.<span class="ident">into</span>()),
+            <span class="ident">key</span>: <span class="string">&quot;cz&quot;</span>.<span class="ident">into</span>(),
+            <span class="ident">token</span>: <span class="ident">RES</span>.<span class="ident">into</span>(),
         };
         <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
 
@@ -574,8 +566,8 @@
         <span class="ident">delay_for</span>(<span class="ident">duration</span> <span class="op">+</span> <span class="ident">duration</span>).<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">verify_msg</span> <span class="op">=</span> <span class="ident">VerifyCaptchaResult</span> {
-            <span class="ident">key</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">KEY</span>.<span class="ident">into</span>()),
-            <span class="ident">token</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RES</span>.<span class="ident">into</span>()),
+            <span class="ident">key</span>: <span class="ident">KEY</span>.<span class="ident">into</span>(),
+            <span class="ident">token</span>: <span class="ident">RES</span>.<span class="ident">into</span>(),
         };
         <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">verify_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>());
     }
