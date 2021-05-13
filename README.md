@@ -35,13 +35,21 @@ request.
 
 ## Demo
 
-I'll try to write a dedicated demo server but until then you can try
-[Shuttlecraft/identity](github.com/shuttlecraft/identity)'s sign up page
-available at https://accounts.shuttlecraft.io/signup. Feel free to
-provide bogus information while signing up(project under development,
-database frequently wiped).
+### Demo servers are available at:
 
-Be sure to open dev tools' network tab to witness the magic!
+- https://demo.mcaptcha.org/
+- https://demo2.mcaptcha.org/ (runs on a Raspberry Pi!)
+
+> Core functionality is working but it's still very much
+> work-in-progress.
+
+Feel free to provide bogus information while signing up(project under
+development, database frequently wiped).
+
+### Self-hosted:
+
+Please refer to [mCaptcha/guard](https://github.com/mCaptcha/guard) for
+instructions.
 
 ## Documentation
 
