@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["m_captcha"];
+window.ALL_CRATES = ["libmcaptcha"];
