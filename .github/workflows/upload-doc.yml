@@ -19,14 +19,14 @@ jobs:
           override: true
 
       - name: generate documentation
-        if: github.repository == 'mCaptcha/mCaptcha'
+        if: github.repository == 'mCaptcha/libmcaptcha'
         uses: actions-rs/cargo@v1
         with:
           command: doc
           args: --no-deps --workspace --all-features
 
       - name: Deploy to GitHub Pages
-        if: github.repository == 'mCaptcha/mCaptcha'
+        if: github.repository == 'mCaptcha/libmcaptcha'
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
