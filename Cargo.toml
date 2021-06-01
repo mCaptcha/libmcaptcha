@@ -1,5 +1,5 @@
 [package]
-name = "m_captcha"
+name = "libmcaptcha"
 version = "0.1.3"
 authors = ["realaravinth <realaravinth@batsense.net>"]
 description = "Convenient abstractions for all things credentials"

@@ -23,13 +23,13 @@ use derive_more::{Display, Error};
 #[derive(Debug, PartialEq, Display, Clone, Error)]
 #[cfg(not(tarpaulin_include))]
 pub enum CaptchaError {
-    /// When configuring m_captcha, [DefenseBuilder][crate::defense::DefenseBuilder]
+    /// When configuring libmcaptcha, [DefenseBuilder][crate::defense::DefenseBuilder]
     /// must be passed atleast one `LevelConfig` if not this error will arise
     #[display(fmt = "LevelBuilder should have atleaset one level configured")]
     LevelEmpty,
 
     /// Visitor count must be a whole number(zero and above).
-    /// When configuring m_captcha, [LevelBuilder][crate::defense::LevelBuilder].
+    /// When configuring libmcaptcha, [LevelBuilder][crate::defense::LevelBuilder].
     /// difficulty_factor must be set to greater than zero.
     #[display(fmt = "difficulty factor must be greater than zero")]
     DifficultyFactorZero,
@@ -82,5 +82,5 @@ pub enum CaptchaError {
     PleaseSetValue(#[error(not(source))] String),
 }
 
-/// [Result] datatype for m_captcha
+/// [Result] datatype for libmcaptcha
 pub type CaptchaResult<V> = std::result::Result<V, CaptchaError>;

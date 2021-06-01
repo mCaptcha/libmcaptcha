@@ -617,6 +617,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56d855069fafbb9b344c0f962150cd2c1187975cb1c22c1522c240d8c4986714"
 
 [[package]]
+name = "libmcaptcha"
+version = "0.1.3"
+dependencies = [
+ "actix",
+ "actix-rt",
+ "derive_builder 0.9.0",
+ "derive_more",
+ "log",
+ "pow_sha256",
+ "pretty_env_logger",
+ "rand 0.8.3",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -647,22 +663,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31e24f1ad8321ca0e8a1e0ac13f23cb668e6f5466c2c57319f6a5cf1cc8e3b1c"
 dependencies = [
  "linked-hash-map",
-]
-
-[[package]]
-name = "m_captcha"
-version = "0.1.3"
-dependencies = [
- "actix",
- "actix-rt",
- "derive_builder 0.9.0",
- "derive_more",
- "log",
- "pow_sha256",
- "pretty_env_logger",
- "rand 0.8.3",
- "serde",
- "serde_json",
 ]
 
 [[package]]

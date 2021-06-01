@@ -18,7 +18,7 @@
 
 //! Defense datatypes
 //! ```rust
-//! use m_captcha::{LevelBuilder, DefenseBuilder};
+//! use libmcaptcha::{LevelBuilder, DefenseBuilder};
 //! DefenseBuilder::default()
 //!        .add_level(
 //!            LevelBuilder::default()

@@ -1,4 +1,4 @@
-use m_captcha::{
+use libmcaptcha::{
     cache::{messages::VerifyCaptchaResult, HashCache},
     master::{AddSiteBuilder, Master},
     pow::{ConfigBuilder, Work},
