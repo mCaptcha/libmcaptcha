@@ -2,10 +2,10 @@
 name = "libmcaptcha"
 version = "0.1.3"
 authors = ["realaravinth <realaravinth@batsense.net>"]
-description = "Convenient abstractions for all things credentials"
-keywords = ["credentials", "password"]
-homepage = "https://github.com/realaravinth/argon2-creds"
-repository = "https://github.com/realaravinth/argon2-creds"
+description = "core of mCaptcha captcha system"
+keywords = ["DDoS", "mcaptcha", "captcha", "pow"]
+homepage = "https://mcaptcha.org"
+repository = "https://github.com/realaravinth/libmcaptcha"
 license = "AGPL-3.0"
 edition = "2018"
 readme = "README.md"
