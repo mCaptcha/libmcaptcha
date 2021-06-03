@@ -1,6 +1,6 @@
 [package]
 name = "libmcaptcha"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["realaravinth <realaravinth@batsense.net>"]
 description = "core of mCaptcha captcha system"
 keywords = ["DDoS", "mcaptcha", "captcha", "pow"]

@@ -23,35 +23,39 @@ use pow_sha256::Config;
 use crate::cache::messages::*;
 use crate::cache::Save;
 use crate::errors::*;
-use crate::master::Master;
+use crate::master::Counter;
 use crate::pow::*;
 
 /// struct describing various bits of data required for an mCaptcha system
 #[derive(Clone, Builder)]
-pub struct System<T: Save> {
-    pub master: Addr<Master>,
+pub struct System<T: Save, X: Counter> {
+    pub master: Addr<X>,
     cache: Addr<T>,
     pow: Config,
 }
 
-impl<T> System<T>
+impl<T, X> System<T, X>
 where
     T: Save,
     <T as actix::Actor>::Context: ToEnvelope<T, CachePoW>
         + ToEnvelope<T, RetrivePoW>
         + ToEnvelope<T, CacheResult>
         + ToEnvelope<T, VerifyCaptchaResult>,
+    X: Counter,
+    <X as actix::Actor>::Context: ToEnvelope<X, crate::master::AddVisitor>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        use crate::master::GetSite;
-        use crate::mcaptcha::AddVisitor;
+        use crate::master::AddVisitor;
 
-        let site_addr = self.master.send(GetSite(id.clone())).await.unwrap();
-        if site_addr.is_none() {
+        let rx = self.master.send(AddVisitor(id.clone())).await.unwrap();
+
+        if rx.is_none() {
             return None;
         }
-        let mcaptcha = site_addr.unwrap().send(AddVisitor).await.unwrap();
+
+        let mcaptcha = rx.unwrap().recv().unwrap();
+
         let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
 
         let cache_msg = CachePoWBuilder::default()
@@ -119,12 +123,12 @@ mod tests {
     use super::System;
     use super::*;
     use crate::cache::HashCache;
-    use crate::master::*;
+    use crate::master::embedded::*;
     use crate::mcaptcha::tests::*;
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 
-    async fn boostrap_system(gc: u64) -> System<HashCache> {
+    async fn boostrap_system(gc: u64) -> System<HashCache, Master> {
         let master = Master::new(gc).start();
         let mcaptcha = get_counter().start();
         let pow = get_config();

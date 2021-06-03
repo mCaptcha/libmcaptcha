@@ -17,6 +17,7 @@
  */
 //! [Master] actor module that manages [MCaptcha] actors
 use std::collections::BTreeMap;
+use std::sync::mpsc::channel;
 use std::time::Duration;
 
 //use actix::clock::sleep;
@@ -25,17 +26,20 @@ use actix::dev::*;
 use derive_builder::Builder;
 use log::info;
 
+use super::*;
 use crate::mcaptcha::MCaptcha;
 
 /// This Actor manages the [MCaptcha] actors.
 /// A service can have several [MCaptcha] actors with
 /// varying [Defense][crate::defense::Defense] configurations
 /// so a "master" actor is needed to manage them all
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Master {
     sites: BTreeMap<String, (Option<()>, Addr<MCaptcha>)>,
     gc: u64,
 }
+
+impl Counter for Master {}
 
 impl Master {
     /// add [MCaptcha] actor to [Master]
@@ -79,6 +83,31 @@ impl Actor for Master {
         }
         .into_actor(self);
         ctx.spawn(task);
+    }
+}
+
+impl Handler<AddVisitor> for Master {
+    type Result = MessageResult<AddVisitor>;
+
+    fn handle(&mut self, m: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
+        let addr = self.get_site(&m.0);
+        if addr.is_none() {
+            return MessageResult(None);
+        } else {
+            let (tx, rx) = channel();
+            let fut = async move {
+                let config = addr
+                    .unwrap()
+                    .send(crate::mcaptcha::AddVisitor)
+                    .await
+                    .unwrap();
+
+                tx.send(config).unwrap();
+            }
+            .into_actor(self);
+            ctx.spawn(fut);
+            return MessageResult(Some(rx));
+        }
     }
 }
 

@@ -21,9 +21,10 @@ If someone wants to hammer your site, they will have to do more work to
 send requests than your server will have to do to respond to their
 request.
 
-> **NOTE:** `0.1` is out, expect breaking changes as ergonomics and
+> **NOTE:** `0.1.x` is out, expect breaking changes as ergonomics and
 > performance is improved. Checkout [changelog](./CHANGELOG.md) for
-> changes and migration pointers.
+> changes and migration pointers. Breaking changes will be frequent
+> through `0.1.x`.
 
 ## Why use mCaptcha?
 
