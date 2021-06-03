@@ -1,6 +1,7 @@
 use libmcaptcha::{
     cache::{messages::VerifyCaptchaResult, HashCache},
-    master::embedded::master::{AddSiteBuilder, Master},
+    master::embedded::master::Master,
+    master::AddSiteBuilder,
     pow::{ConfigBuilder, Work},
     system::SystemBuilder,
     DefenseBuilder, LevelBuilder, MCaptchaBuilder,
@@ -75,8 +76,7 @@ async fn main() -> std::io::Result<()> {
         .duration(30)
         //   .cache(cache)
         .build()
-        .unwrap()
-        .start();
+        .unwrap();
 
     // unique value identifying an MCaptcha actor
     let mcaptcha_name = "batsense.net";
@@ -84,7 +84,7 @@ async fn main() -> std::io::Result<()> {
     // add MCaptcha to Master
     let msg = AddSiteBuilder::default()
         .id(mcaptcha_name.into())
-        .addr(mcaptcha.clone())
+        .mcaptcha(mcaptcha)
         .build()
         .unwrap();
     system.master.send(msg).await.unwrap();

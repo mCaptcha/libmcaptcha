@@ -1,5 +1,9 @@
 ## 0.1.4
 
+## Added:
+
+- `Master` trait: provides methods to manage mcaptcha
+
 ## Changed:
 
 - `PoWConfig` has an extra field to send internal `PoW` salt to clients.
@@ -11,8 +15,13 @@
 - `master::Master` is moved to `master::embedded::master` in preparation
   for Redis based implementation.
 
-- `crate::mcaptcha` is moved to `master::embedded::mcaptcha` in preparation
+- `crate::mcaptcha` is moved to `master::embedded::counter` in preparation
   for Redis based implementation.
+
+- `AddSite` message for `Master` now requires an instance of
+  `crate::master::MCaptcha`. In the case of
+  `crate::master::embedded::master`, it automatically starts `Counter`
+  actor.
 
 ## 0.1.3
 

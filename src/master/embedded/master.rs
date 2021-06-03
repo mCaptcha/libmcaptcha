@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//! [Master] actor module that manages [MCaptcha] actors
+//! [Master] actor module that manages [Counter] actors
 use std::collections::BTreeMap;
 use std::sync::mpsc::channel;
 use std::time::Duration;
@@ -23,30 +23,28 @@ use std::time::Duration;
 //use actix::clock::sleep;
 use actix::clock::delay_for;
 use actix::dev::*;
-use derive_builder::Builder;
 use log::info;
 
-use super::mcaptcha::MCaptcha;
-use crate::master::AddVisitor;
+use super::counter::Counter;
 use crate::master::Master as MasterTrait;
+use crate::master::{AddSite, AddVisitor};
 
-/// This Actor manages the [MCaptcha] actors.
-/// A service can have several [MCaptcha] actors with
+/// This Actor manages the [Counter] actors.
+/// A service can have several [Counter] actors with
 /// varying [Defense][crate::defense::Defense] configurations
 /// so a "master" actor is needed to manage them all
 #[derive(Clone, Default)]
 pub struct Master {
-    sites: BTreeMap<String, (Option<()>, Addr<MCaptcha>)>,
+    sites: BTreeMap<String, (Option<()>, Addr<Counter>)>,
     gc: u64,
 }
 
 impl MasterTrait for Master {}
 
 impl Master {
-    /// add [MCaptcha] actor to [Master]
-    pub fn add_site(&mut self, details: AddSite) {
-        self.sites
-            .insert(details.id, (None, details.addr.to_owned()));
+    /// add [Counter] actor to [Master]
+    pub fn add_site(&mut self, addr: Addr<Counter>, id: String) {
+        self.sites.insert(id, (None, addr.to_owned()));
     }
 
     /// create new master
@@ -58,8 +56,8 @@ impl Master {
         }
     }
 
-    /// get [MCaptcha] actor from [Master]
-    pub fn get_site<'a, 'b>(&'a mut self, id: &'b str) -> Option<Addr<MCaptcha>> {
+    /// get [Counter] actor from [Master]
+    pub fn get_site<'a, 'b>(&'a mut self, id: &'b str) -> Option<Addr<Counter>> {
         let mut r = None;
         if let Some((read_val, addr)) = self.sites.get_mut(id) {
             r = Some(addr.clone());
@@ -68,7 +66,7 @@ impl Master {
         r
     }
 
-    /// remvoes [MCaptcha] actor from [Master]
+    /// remvoes [Counter] actor from [Master]
     pub fn rm_site(&mut self, id: &str) {
         self.sites.remove(id);
     }
@@ -99,7 +97,7 @@ impl Handler<AddVisitor> for Master {
             let fut = async move {
                 let config = addr
                     .unwrap()
-                    .send(super::mcaptcha::AddVisitor)
+                    .send(super::counter::AddVisitor)
                     .await
                     .unwrap();
 
@@ -112,9 +110,9 @@ impl Handler<AddVisitor> for Master {
     }
 }
 
-/// Message to get an [MCaptcha] actor from master
+/// Message to get an [Counter] actor from master
 #[derive(Message)]
-#[rtype(result = "Option<Addr<MCaptcha>>")]
+#[rtype(result = "Option<Addr<Counter>>")]
 pub struct GetSite(pub String);
 
 impl Handler<GetSite> for Master {
@@ -130,7 +128,7 @@ impl Handler<GetSite> for Master {
     }
 }
 
-/// Message to clean up master of [MCaptcha] actors with zero visitor count
+/// Message to clean up master of [Counter] actors with zero visitor count
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct CleanUp;
@@ -145,7 +143,7 @@ impl Handler<CleanUp> for Master {
         info!("init master actor cleanup up");
         let task = async move {
             for (id, (new, addr)) in sites.iter() {
-                use super::mcaptcha::{GetCurrentVisitorCount, Stop};
+                use super::counter::{GetCurrentVisitorCount, Stop};
                 let visitor_count = addr.send(GetCurrentVisitorCount).await.unwrap();
                 println!("{}", visitor_count);
                 if visitor_count == 0 && new.is_some() {
@@ -165,7 +163,7 @@ impl Handler<CleanUp> for Master {
     }
 }
 
-/// Message to delete [MCaptcha] actor
+/// Message to delete [Counter] actor
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct RemoveSite(pub String);
@@ -178,43 +176,38 @@ impl Handler<RemoveSite> for Master {
     }
 }
 
-/// Message to add an [MCaptcha] actor to [Master]
-#[derive(Message, Builder)]
-#[rtype(result = "()")]
-pub struct AddSite {
-    pub id: String,
-    pub addr: Addr<MCaptcha>,
-}
-
 impl Handler<AddSite> for Master {
     type Result = ();
 
     fn handle(&mut self, m: AddSite, _ctx: &mut Self::Context) -> Self::Result {
-        self.add_site(m);
+        let counter: Counter = m.mcaptcha.into();
+        let addr = counter.start();
+        self.add_site(addr, m.id);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::master::embedded::mcaptcha::tests::*;
+    use crate::master::embedded::counter::tests::*;
+    use crate::master::AddSiteBuilder;
 
     #[actix_rt::test]
     async fn master_actor_works() {
         let addr = Master::new(1).start();
 
         let id = "yo";
-        let mcaptcha = get_counter().start();
+        let mcaptcha = get_mcaptcha();
         let msg = AddSiteBuilder::default()
             .id(id.into())
-            .addr(mcaptcha.clone())
+            .mcaptcha(mcaptcha.clone())
             .build()
             .unwrap();
 
         addr.send(msg).await.unwrap();
 
         let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
-        assert_eq!(mcaptcha_addr, Some(mcaptcha));
+        assert!(mcaptcha_addr.is_some());
 
         let addr_doesnt_exist = addr.send(GetSite("a".into())).await.unwrap();
         assert!(addr_doesnt_exist.is_none());

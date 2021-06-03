@@ -48,7 +48,8 @@
 //! ```rust
 //! use libmcaptcha::{
 //!     cache::{messages::VerifyCaptchaResult, HashCache},
-//!     master::embedded::master::{AddSiteBuilder, Master},
+//!     master::embedded::master:: Master,
+//!     master::AddSiteBuilder,
 //!     pow::{ConfigBuilder, Work},
 //!     system::SystemBuilder,
 //!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,
@@ -123,8 +124,7 @@
 //!         .duration(30)
 //!         //   .cache(cache)
 //!         .build()
-//!         .unwrap()
-//!         .start();
+//!         .unwrap();
 //!
 //!     // unique value identifying an MCaptcha actor
 //!     let mcaptcha_name = "batsense.net";
@@ -132,7 +132,7 @@
 //!     // add MCaptcha to Master
 //!     let msg = AddSiteBuilder::default()
 //!         .id(mcaptcha_name.into())
-//!         .addr(mcaptcha.clone())
+//!         .mcaptcha(mcaptcha)
 //!         .build()
 //!         .unwrap();
 //!     system.master.send(msg).await.unwrap();
@@ -196,4 +196,5 @@ mod utils;
 pub use crate::cache::hashcache::HashCache;
 
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
-pub use master::embedded::mcaptcha::{MCaptcha, MCaptchaBuilder};
+pub use master::embedded::counter::Counter;
+pub use master::MCaptchaBuilder;

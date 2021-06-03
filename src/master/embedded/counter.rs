@@ -15,11 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//! MCaptcha actor module that manages defense levels
+//! Counter actor module that manages defense levels
 //!
 //! ## Usage:
 //! ```rust
-//! use libmcaptcha::{master::embedded::mcaptcha::AddVisitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
+//! use libmcaptcha::{
+//!     master::embedded::counter::{Counter, AddVisitor},
+//!     master::MCaptchaBuilder,
+//!     cache::HashCache,
+//!     LevelBuilder,
+//!     DefenseBuilder
+//! };
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!
@@ -55,18 +61,20 @@
 //!         .build()
 //!         .unwrap();
 //!
-//!     // create and start MCaptcha actor
+//!     // create and start Counter actor
 //!     //let cache = HashCache::default().start();
 //!     let mcaptcha = MCaptchaBuilder::default()
 //!         .defense(defense)
 //!         // leaky bucket algorithm's emission interval
 //!         .duration(30)
 //!         .build()
-//!         .unwrap()
-//!         .start();
+//!         .unwrap();
+//!
+//!     let counter: Counter = mcaptcha.into();
+//!     let counter = counter.start();
 //!
 //!     // increment count when user visits protected routes
-//!     mcaptcha.send(AddVisitor).await.unwrap();
+//!     counter.send(AddVisitor).await.unwrap();
 //!
 //!     Ok(())
 //! }
@@ -78,72 +86,29 @@ use std::time::Duration;
 use actix::dev::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    defense::Defense,
-    errors::{CaptchaError, CaptchaResult},
-    master::AddVisitorResult,
-};
-
-/// Builder for [MCaptcha]
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct MCaptchaBuilder {
-    visitor_threshold: u32,
-    defense: Option<Defense>,
-    duration: Option<u64>,
-}
-
-impl Default for MCaptchaBuilder {
-    fn default() -> Self {
-        MCaptchaBuilder {
-            visitor_threshold: 0,
-            defense: None,
-            duration: None,
-        }
-    }
-}
+use crate::master::MCaptcha;
+use crate::{defense::Defense, master::AddVisitorResult};
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct MCaptcha {
+pub struct Counter {
     visitor_threshold: u32,
     defense: Defense,
     duration: u64,
 }
-
-impl MCaptchaBuilder {
-    /// set defense
-    pub fn defense(&mut self, d: Defense) -> &mut Self {
-        self.defense = Some(d);
-        self
-    }
-
-    /// set duration
-    pub fn duration(&mut self, d: u64) -> &mut Self {
-        self.duration = Some(d);
-        self
-    }
-
-    /// Builds new [MCaptcha]
-    pub fn build(&mut self) -> CaptchaResult<MCaptcha> {
-        if self.duration.is_none() {
-            Err(CaptchaError::PleaseSetValue("duration".into()))
-        } else if self.defense.is_none() {
-            Err(CaptchaError::PleaseSetValue("defense".into()))
-        } else if self.duration <= Some(0) {
-            Err(CaptchaError::CaptchaDurationZero)
-        } else {
-            let m = MCaptcha {
-                duration: self.duration.unwrap(),
-                defense: self.defense.clone().unwrap(),
-                visitor_threshold: self.visitor_threshold,
-            };
-            Ok(m)
-        }
+impl From<MCaptcha> for Counter {
+    fn from(m: MCaptcha) -> Counter {
+        let m = Counter {
+            duration: m.duration,
+            defense: m.defense,
+            visitor_threshold: m.visitor_threshold,
+        };
+        m
     }
 }
 
-impl MCaptcha {
+impl Counter {
     /// increments the visitor count by one
     pub fn add_visitor(&mut self) {
         self.visitor_threshold += 1;
@@ -166,12 +131,12 @@ impl MCaptcha {
         self.defense.get_difficulty()
     }
 
-    /// get [MCaptcha]'s lifetime
+    /// get [Counter]'s lifetime
     pub fn get_duration(&self) -> u64 {
         self.duration
     }
 }
-impl Actor for MCaptcha {
+impl Actor for Counter {
     type Context = Context<Self>;
 }
 
@@ -180,7 +145,7 @@ impl Actor for MCaptcha {
 #[rtype(result = "()")]
 struct DeleteVisitor;
 
-impl Handler<DeleteVisitor> for MCaptcha {
+impl Handler<DeleteVisitor> for Counter {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
         self.decrement_visitor();
@@ -194,7 +159,7 @@ impl Handler<DeleteVisitor> for MCaptcha {
 pub struct AddVisitor;
 
 impl AddVisitorResult {
-    fn new(m: &MCaptcha) -> Self {
+    fn new(m: &Counter) -> Self {
         AddVisitorResult {
             duration: m.get_duration(),
             difficulty_factor: m.get_difficulty(),
@@ -202,7 +167,7 @@ impl AddVisitorResult {
     }
 }
 
-impl Handler<AddVisitor> for MCaptcha {
+impl Handler<AddVisitor> for Counter {
     type Result = MessageResult<AddVisitor>;
 
     fn handle(&mut self, _: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
@@ -228,7 +193,7 @@ impl Handler<AddVisitor> for MCaptcha {
 #[rtype(result = "u32")]
 pub struct GetCurrentVisitorCount;
 
-impl Handler<GetCurrentVisitorCount> for MCaptcha {
+impl Handler<GetCurrentVisitorCount> for Counter {
     type Result = MessageResult<GetCurrentVisitorCount>;
 
     fn handle(&mut self, _: GetCurrentVisitorCount, _ctx: &mut Self::Context) -> Self::Result {
@@ -236,12 +201,12 @@ impl Handler<GetCurrentVisitorCount> for MCaptcha {
     }
 }
 
-/// Message to stop [MCaptcha]
+/// Message to stop [Counter]
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Stop;
 
-impl Handler<Stop> for MCaptcha {
+impl Handler<Stop> for Counter {
     type Result = ();
 
     fn handle(&mut self, _: Stop, ctx: &mut Self::Context) -> Self::Result {
@@ -253,6 +218,8 @@ impl Handler<Stop> for MCaptcha {
 pub mod tests {
     use super::*;
     use crate::defense::*;
+    use crate::errors::*;
+    use crate::master::MCaptchaBuilder;
 
     // constants for testing
     // (visitor count, level)
@@ -260,7 +227,7 @@ pub mod tests {
     pub const LEVEL_2: (u32, u32) = (500, 500);
     pub const DURATION: u64 = 5;
 
-    type MyActor = Addr<MCaptcha>;
+    type MyActor = Addr<Counter>;
 
     pub fn get_defense() -> Defense {
         DefenseBuilder::default()
@@ -286,13 +253,17 @@ pub mod tests {
             .unwrap()
     }
 
-    async fn race(addr: Addr<MCaptcha>, count: (u32, u32)) {
+    async fn race(addr: Addr<Counter>, count: (u32, u32)) {
         for _ in 0..count.0 as usize - 1 {
             let _ = addr.send(AddVisitor).await.unwrap();
         }
     }
 
-    pub fn get_counter() -> MCaptcha {
+    pub fn get_counter() -> Counter {
+        get_mcaptcha().into()
+    }
+
+    pub fn get_mcaptcha() -> MCaptcha {
         MCaptchaBuilder::default()
             .defense(get_defense())
             .duration(DURATION)

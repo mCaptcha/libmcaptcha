@@ -42,7 +42,8 @@ where
         + ToEnvelope<T, CacheResult>
         + ToEnvelope<T, VerifyCaptchaResult>,
     X: Master,
-    <X as actix::Actor>::Context: ToEnvelope<X, crate::master::AddVisitor>,
+    <X as actix::Actor>::Context:
+        ToEnvelope<X, crate::master::AddVisitor> + ToEnvelope<X, crate::master::AddSite>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
@@ -123,21 +124,21 @@ mod tests {
     use super::System;
     use super::*;
     use crate::cache::HashCache;
+    use crate::master::embedded::counter::tests::*;
     use crate::master::embedded::master::Master;
-    use crate::master::embedded::master::*;
-    use crate::master::embedded::mcaptcha::tests::*;
+    use crate::master::*;
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 
     async fn boostrap_system(gc: u64) -> System<HashCache, Master> {
         let master = Master::new(gc).start();
-        let mcaptcha = get_counter().start();
+        let mcaptcha = get_mcaptcha();
         let pow = get_config();
 
         let cache = HashCache::default().start();
         let msg = AddSiteBuilder::default()
             .id(MCAPTCHA_NAME.into())
-            .addr(mcaptcha.clone())
+            .mcaptcha(mcaptcha)
             .build()
             .unwrap();
 
