@@ -19,7 +19,7 @@
 //!
 //! ## Usage:
 //! ```rust
-//! use libmcaptcha::{mcaptcha::AddVisitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
+//! use libmcaptcha::{master::embedded::mcaptcha::AddVisitor, MCaptchaBuilder, cache::HashCache, LevelBuilder, DefenseBuilder};
 //! // traits from actix needs to be in scope for starting actor
 //! use actix::prelude::*;
 //!
@@ -81,6 +81,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     defense::Defense,
     errors::{CaptchaError, CaptchaResult},
+    master::AddVisitorResult,
 };
 
 /// Builder for [MCaptcha]
@@ -191,15 +192,6 @@ impl Handler<DeleteVisitor> for MCaptcha {
 #[derive(Message)]
 #[rtype(result = "AddVisitorResult")]
 pub struct AddVisitor;
-
-/// Struct representing the return datatime of
-/// [AddVisitor] message. Contains MCaptcha lifetime
-/// and difficulty factor
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AddVisitorResult {
-    pub duration: u64,
-    pub difficulty_factor: u32,
-}
 
 impl AddVisitorResult {
     fn new(m: &MCaptcha) -> Self {

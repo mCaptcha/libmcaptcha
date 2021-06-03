@@ -48,7 +48,7 @@
 //! ```rust
 //! use libmcaptcha::{
 //!     cache::{messages::VerifyCaptchaResult, HashCache},
-//!     master::embedded::{AddSiteBuilder, Master},
+//!     master::embedded::master::{AddSiteBuilder, Master},
 //!     pow::{ConfigBuilder, Work},
 //!     system::SystemBuilder,
 //!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,
@@ -186,7 +186,6 @@
 pub mod defense;
 pub mod errors;
 pub mod master;
-pub mod mcaptcha;
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;
@@ -197,4 +196,4 @@ mod utils;
 pub use crate::cache::hashcache::HashCache;
 
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
-pub use mcaptcha::{MCaptcha, MCaptchaBuilder};
+pub use master::embedded::mcaptcha::{MCaptcha, MCaptchaBuilder};

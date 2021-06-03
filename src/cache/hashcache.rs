@@ -178,7 +178,7 @@ impl Handler<VerifyCaptchaResult> for HashCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mcaptcha::AddVisitorResult;
+    use crate::master::AddVisitorResult;
     use crate::pow::PoWConfig;
 
     //   async fn sleep(time: u64) {

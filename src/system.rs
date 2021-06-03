@@ -23,12 +23,12 @@ use pow_sha256::Config;
 use crate::cache::messages::*;
 use crate::cache::Save;
 use crate::errors::*;
-use crate::master::Counter;
+use crate::master::Master;
 use crate::pow::*;
 
 /// struct describing various bits of data required for an mCaptcha system
 #[derive(Clone, Builder)]
-pub struct System<T: Save, X: Counter> {
+pub struct System<T: Save, X: Master> {
     pub master: Addr<X>,
     cache: Addr<T>,
     pow: Config,
@@ -41,7 +41,7 @@ where
         + ToEnvelope<T, RetrivePoW>
         + ToEnvelope<T, CacheResult>
         + ToEnvelope<T, VerifyCaptchaResult>,
-    X: Counter,
+    X: Master,
     <X as actix::Actor>::Context: ToEnvelope<X, crate::master::AddVisitor>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
@@ -123,8 +123,9 @@ mod tests {
     use super::System;
     use super::*;
     use crate::cache::HashCache;
-    use crate::master::embedded::*;
-    use crate::mcaptcha::tests::*;
+    use crate::master::embedded::master::Master;
+    use crate::master::embedded::master::*;
+    use crate::master::embedded::mcaptcha::tests::*;
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 

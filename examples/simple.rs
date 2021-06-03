@@ -1,6 +1,6 @@
 use libmcaptcha::{
     cache::{messages::VerifyCaptchaResult, HashCache},
-    master::embedded::{AddSiteBuilder, Master},
+    master::embedded::master::{AddSiteBuilder, Master},
     pow::{ConfigBuilder, Work},
     system::SystemBuilder,
     DefenseBuilder, LevelBuilder, MCaptchaBuilder,

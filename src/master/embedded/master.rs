@@ -26,8 +26,9 @@ use actix::dev::*;
 use derive_builder::Builder;
 use log::info;
 
-use super::*;
-use crate::mcaptcha::MCaptcha;
+use super::mcaptcha::MCaptcha;
+use crate::master::AddVisitor;
+use crate::master::Master as MasterTrait;
 
 /// This Actor manages the [MCaptcha] actors.
 /// A service can have several [MCaptcha] actors with
@@ -39,7 +40,7 @@ pub struct Master {
     gc: u64,
 }
 
-impl Counter for Master {}
+impl MasterTrait for Master {}
 
 impl Master {
     /// add [MCaptcha] actor to [Master]
@@ -98,7 +99,7 @@ impl Handler<AddVisitor> for Master {
             let fut = async move {
                 let config = addr
                     .unwrap()
-                    .send(crate::mcaptcha::AddVisitor)
+                    .send(super::mcaptcha::AddVisitor)
                     .await
                     .unwrap();
 
@@ -144,7 +145,7 @@ impl Handler<CleanUp> for Master {
         info!("init master actor cleanup up");
         let task = async move {
             for (id, (new, addr)) in sites.iter() {
-                use crate::mcaptcha::{GetCurrentVisitorCount, Stop};
+                use super::mcaptcha::{GetCurrentVisitorCount, Stop};
                 let visitor_count = addr.send(GetCurrentVisitorCount).await.unwrap();
                 println!("{}", visitor_count);
                 if visitor_count == 0 && new.is_some() {
@@ -196,7 +197,7 @@ impl Handler<AddSite> for Master {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mcaptcha::tests::*;
+    use crate::master::embedded::mcaptcha::tests::*;
 
     #[actix_rt::test]
     async fn master_actor_works() {

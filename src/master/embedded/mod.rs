@@ -15,27 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//! [Master] actor module that manages [MCaptcha] actors
-use std::sync::mpsc::Receiver;
 
-use actix::dev::*;
-use serde::{Deserialize, Serialize};
-
-pub mod embedded;
-
-/// Describes actor handler trait impls that are required by a cache implementation
-pub trait Master: actix::Actor + actix::Handler<AddVisitor> {}
-
-/// Message to add visitor to an [MCaptcha] actor
-#[derive(Message)]
-#[rtype(result = "Option<Receiver<AddVisitorResult>>")]
-pub struct AddVisitor(pub String);
-
-/// Struct representing the return datatime of
-/// [AddVisitor] message. Contains MCaptcha lifetime
-/// and difficulty factor
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AddVisitorResult {
-    pub duration: u64,
-    pub difficulty_factor: u32,
-}
+pub mod master;
+pub mod mcaptcha;
