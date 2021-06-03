@@ -8,7 +8,10 @@
   internet. Ideally `mCaptcha` should automatically generate random
   salt and rotate periodically, maybe in the next version.
 
-- `master::Master` is moved to `master::embedded::Master` in preparation
+- `master::Master` is moved to `master::embedded::master` in preparation
+  for Redis based implementation.
+
+- `crate::mcaptcha` is moved to `master::embedded::mcaptcha` in preparation
   for Redis based implementation.
 
 ## 0.1.3
