@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["master","[Master] actor module that manages [MCaptcha] actors"],["mcaptcha","MCaptcha actor module that manages defense levels"]]});
+initSidebarItems({"mod":[["counter","Counter actor module that manages defense levels"],["master","[Master] actor module that manages [Counter] actors"]]});
