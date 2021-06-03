@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="MCaptcha actor module that manages defense levels"><meta name="keywords" content="rust, rustlang, rust-lang, mcaptcha"><title>libmcaptcha::master::embedded::mcaptcha - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../libmcaptcha/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a><p class="location">Module mcaptcha</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li></ul></div><p class="location"><a href="../../../index.html">libmcaptcha</a>::<wbr><a href="../../index.html">master</a>::<wbr><a href="../index.html">embedded</a></p><div id="sidebar-vars" data-name="mcaptcha" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../../index.html">libmcaptcha</a>::<wbr><a href="../../index.html">master</a>::<wbr><a href="../index.html">embedded</a>::<wbr><a class="mod" href="">mcaptcha</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../../../src/libmcaptcha/master/embedded/mcaptcha.rs.html#18-377" title="goto source code">[src]</a></span></h1><div class="docblock"><p>MCaptcha actor module that manages defense levels</p>
+<h2 id="usage" class="section-header"><a href="#usage">Usage:</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">libmcaptcha</span>::{<span class="ident">master</span>::<span class="ident">embedded</span>::<span class="ident">mcaptcha</span>::<span class="ident">AddVisitor</span>, <span class="ident">MCaptchaBuilder</span>, <span class="ident">cache</span>::<span class="ident">HashCache</span>, <span class="ident">LevelBuilder</span>, <span class="ident">DefenseBuilder</span>};
+<span class="comment">// traits from actix needs to be in scope for starting actor</span>
+<span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// configure defense</span>
+    <span class="kw">let</span> <span class="ident">defense</span> <span class="op">=</span> <span class="ident">DefenseBuilder</span>::<span class="ident">default</span>()
+        <span class="comment">// add as many levels as you see fit</span>
+        .<span class="ident">add_level</span>(
+            <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
+                <span class="comment">// visitor_threshold is the threshold/limit at which</span>
+                <span class="comment">// mCaptcha will adjust difficulty levels</span>
+                <span class="comment">// it is advisable to set small values for the first</span>
+                <span class="comment">// levels visitor_threshold and difficulty_factor</span>
+                <span class="comment">// as this will be the work that clients will be</span>
+                <span class="comment">// computing when there&#39;s no load</span>
+                .<span class="ident">visitor_threshold</span>(<span class="number">50</span>)
+                .<span class="ident">difficulty_factor</span>(<span class="number">500</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">build</span>()
+                .<span class="ident">unwrap</span>(),
+        )
+        .<span class="ident">unwrap</span>()
+        .<span class="ident">add_level</span>(
+            <span class="ident">LevelBuilder</span>::<span class="ident">default</span>()
+                .<span class="ident">visitor_threshold</span>(<span class="number">5000</span>)
+                .<span class="ident">difficulty_factor</span>(<span class="number">50000</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">build</span>()
+                .<span class="ident">unwrap</span>(),
+        )
+        .<span class="ident">unwrap</span>()
+        .<span class="ident">build</span>()
+        .<span class="ident">unwrap</span>();
+
+    <span class="comment">// create and start MCaptcha actor</span>
+    <span class="comment">//let cache = HashCache::default().start();</span>
+    <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>()
+        .<span class="ident">defense</span>(<span class="ident">defense</span>)
+        <span class="comment">// leaky bucket algorithm&#39;s emission interval</span>
+        .<span class="ident">duration</span>(<span class="number">30</span>)
+        .<span class="ident">build</span>()
+        .<span class="ident">unwrap</span>()
+        .<span class="ident">start</span>();
+
+    <span class="comment">// increment count when user visits protected routes</span>
+    <span class="ident">mcaptcha</span>.<span class="ident">send</span>(<span class="ident">AddVisitor</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+
+    <span class="prelude-val">Ok</span>(())
+}</pre></div>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.AddVisitor.html" title="libmcaptcha::master::embedded::mcaptcha::AddVisitor struct">AddVisitor</a></td><td class="docblock-short"><p>Message to increment the visitor count
+returns difficulty factor and lifetime</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.GetCurrentVisitorCount.html" title="libmcaptcha::master::embedded::mcaptcha::GetCurrentVisitorCount struct">GetCurrentVisitorCount</a></td><td class="docblock-short"><p>Message to get the visitor count</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.MCaptcha.html" title="libmcaptcha::master::embedded::mcaptcha::MCaptcha struct">MCaptcha</a></td><td class="docblock-short"><p>This struct represents the mCaptcha state and is used
+to configure leaky-bucket lifetime and manage defense</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.MCaptchaBuilder.html" title="libmcaptcha::master::embedded::mcaptcha::MCaptchaBuilder struct">MCaptchaBuilder</a></td><td class="docblock-short"><p>Builder for <a href="../../../../libmcaptcha/master/embedded/mcaptcha/struct.MCaptcha.html" title="MCaptcha">MCaptcha</a></p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Stop.html" title="libmcaptcha::master::embedded::mcaptcha::Stop struct">Stop</a></td><td class="docblock-short"><p>Message to stop <a href="../../../../libmcaptcha/master/embedded/mcaptcha/struct.MCaptcha.html" title="MCaptcha">MCaptcha</a></p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="libmcaptcha" data-search-js="../../../../search-index.js"></div>
+    <script src="../../../../main.js"></script></body></html>

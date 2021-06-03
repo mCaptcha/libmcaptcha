@@ -200,7 +200,6 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
-<span id="200">200</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -252,7 +251,7 @@
 <span class="doccomment">//! ```rust</span>
 <span class="doccomment">//! use libmcaptcha::{</span>
 <span class="doccomment">//!     cache::{messages::VerifyCaptchaResult, HashCache},</span>
-<span class="doccomment">//!     master::embedded::{AddSiteBuilder, Master},</span>
+<span class="doccomment">//!     master::embedded::master::{AddSiteBuilder, Master},</span>
 <span class="doccomment">//!     pow::{ConfigBuilder, Work},</span>
 <span class="doccomment">//!     system::SystemBuilder,</span>
 <span class="doccomment">//!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,</span>
@@ -390,7 +389,6 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defense</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcaptcha</span>;
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span>;
@@ -401,7 +399,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">defense</span>::{<span class="ident">Defense</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">LevelBuilder</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">mcaptcha</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">master</span>::<span class="ident">embedded</span>::<span class="ident">mcaptcha</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="libmcaptcha" data-search-js="../../search-index.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
