@@ -189,6 +189,7 @@ pub mod master;
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;
+pub mod mcaptcha;
 pub mod pow;
 pub mod system;
 mod utils;
@@ -197,4 +198,4 @@ pub use crate::cache::hashcache::HashCache;
 
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
 pub use master::embedded::counter::Counter;
-pub use master::MCaptchaBuilder;
+pub use mcaptcha::{MCaptcha, MCaptchaBuilder};

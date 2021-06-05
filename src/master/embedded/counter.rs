@@ -21,7 +21,7 @@
 //! ```rust
 //! use libmcaptcha::{
 //!     master::embedded::counter::{Counter, AddVisitor},
-//!     master::MCaptchaBuilder,
+//!     MCaptchaBuilder,
 //!     cache::HashCache,
 //!     LevelBuilder,
 //!     DefenseBuilder
@@ -86,56 +86,49 @@ use std::time::Duration;
 use actix::dev::*;
 use serde::{Deserialize, Serialize};
 
-use crate::master::MCaptcha;
-use crate::{defense::Defense, master::AddVisitorResult};
+use crate::master::AddVisitorResult;
+use crate::mcaptcha::MCaptcha;
 
 /// This struct represents the mCaptcha state and is used
 /// to configure leaky-bucket lifetime and manage defense
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Counter {
-    visitor_threshold: u32,
-    defense: Defense,
-    duration: u64,
-}
+pub struct Counter(MCaptcha);
+
 impl From<MCaptcha> for Counter {
     fn from(m: MCaptcha) -> Counter {
-        let m = Counter {
-            duration: m.duration,
-            defense: m.defense,
-            visitor_threshold: m.visitor_threshold,
-        };
-        m
+        Counter(m)
     }
 }
 
-impl Counter {
-    /// increments the visitor count by one
-    pub fn add_visitor(&mut self) {
-        self.visitor_threshold += 1;
-        if self.visitor_threshold > self.defense.visitor_threshold() {
-            self.defense.tighten_up();
-        } else {
-            self.defense.loosen_up();
-        }
-    }
+// impl Counter {
+//     /// increments the visitor count by one
+//     pub fn add_visitor(&mut self) {
+//         self.visitor_threshold += 1;
+//         if self.visitor_threshold > self.defense.visitor_threshold() {
+//             self.defense.tighten_up();
+//         } else {
+//             self.defense.loosen_up();
+//         }
+//     }
+//
+//     /// decrements the visitor count by one
+//     pub fn decrement_visitor(&mut self) {
+//         if self.visitor_threshold > 0 {
+//             self.visitor_threshold -= 1;
+//         }
+//     }
+//
+//     /// get current difficulty factor
+//     pub fn get_difficulty(&self) -> u32 {
+//         self.defense.get_difficulty()
+//     }
+//
+//     /// get [Counter]'s lifetime
+//     pub fn get_duration(&self) -> u64 {
+//         self.duration
+//     }
+// }
 
-    /// decrements the visitor count by one
-    pub fn decrement_visitor(&mut self) {
-        if self.visitor_threshold > 0 {
-            self.visitor_threshold -= 1;
-        }
-    }
-
-    /// get current difficulty factor
-    pub fn get_difficulty(&self) -> u32 {
-        self.defense.get_difficulty()
-    }
-
-    /// get [Counter]'s lifetime
-    pub fn get_duration(&self) -> u64 {
-        self.duration
-    }
-}
 impl Actor for Counter {
     type Context = Context<Self>;
 }
@@ -148,7 +141,7 @@ struct DeleteVisitor;
 impl Handler<DeleteVisitor> for Counter {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
-        self.decrement_visitor();
+        self.0.decrement_visitor();
     }
 }
 
@@ -161,8 +154,8 @@ pub struct AddVisitor;
 impl AddVisitorResult {
     fn new(m: &Counter) -> Self {
         AddVisitorResult {
-            duration: m.get_duration(),
-            difficulty_factor: m.get_difficulty(),
+            duration: m.0.get_duration(),
+            difficulty_factor: m.0.get_difficulty(),
         }
     }
 }
@@ -174,7 +167,7 @@ impl Handler<AddVisitor> for Counter {
         let addr = ctx.address();
         use actix::clock::delay_for;
 
-        let duration: Duration = Duration::new(self.duration.clone(), 0);
+        let duration: Duration = Duration::new(self.0.get_duration(), 0);
         let wait_for = async move {
             //sleep(duration).await;
             delay_for(duration).await;
@@ -183,7 +176,7 @@ impl Handler<AddVisitor> for Counter {
         .into_actor(self);
         ctx.spawn(wait_for);
 
-        self.add_visitor();
+        self.0.add_visitor();
         MessageResult(AddVisitorResult::new(&self))
     }
 }
@@ -197,7 +190,7 @@ impl Handler<GetCurrentVisitorCount> for Counter {
     type Result = MessageResult<GetCurrentVisitorCount>;
 
     fn handle(&mut self, _: GetCurrentVisitorCount, _ctx: &mut Self::Context) -> Self::Result {
-        MessageResult(self.visitor_threshold)
+        MessageResult(self.0.get_visitors())
     }
 }
 

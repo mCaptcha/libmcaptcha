@@ -23,9 +23,14 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 pub mod embedded;
-
-use crate::defense::Defense;
-use crate::errors::*;
+#[allow(
+    unused_variables,
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_macros
+)]
+use crate::mcaptcha::*;
 
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<AddSite> {}
@@ -52,61 +57,4 @@ pub struct AddVisitorResult {
 pub struct AddSite {
     pub id: String,
     pub mcaptcha: MCaptcha,
-}
-
-/// Builder for [MCaptcha]
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct MCaptchaBuilder {
-    visitor_threshold: u32,
-    defense: Option<Defense>,
-    duration: Option<u64>,
-}
-
-impl Default for MCaptchaBuilder {
-    fn default() -> Self {
-        MCaptchaBuilder {
-            visitor_threshold: 0,
-            defense: None,
-            duration: None,
-        }
-    }
-}
-
-impl MCaptchaBuilder {
-    /// set defense
-    pub fn defense(&mut self, d: Defense) -> &mut Self {
-        self.defense = Some(d);
-        self
-    }
-
-    /// set duration
-    pub fn duration(&mut self, d: u64) -> &mut Self {
-        self.duration = Some(d);
-        self
-    }
-
-    /// Builds new [MCaptcha]
-    pub fn build(self: &mut MCaptchaBuilder) -> CaptchaResult<MCaptcha> {
-        if self.duration.is_none() {
-            Err(CaptchaError::PleaseSetValue("duration".into()))
-        } else if self.defense.is_none() {
-            Err(CaptchaError::PleaseSetValue("defense".into()))
-        } else if self.duration <= Some(0) {
-            Err(CaptchaError::CaptchaDurationZero)
-        } else {
-            let m = MCaptcha {
-                duration: self.duration.unwrap(),
-                defense: self.defense.clone().unwrap(),
-                visitor_threshold: self.visitor_threshold,
-            };
-            Ok(m)
-        }
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct MCaptcha {
-    visitor_threshold: u32,
-    defense: Defense,
-    duration: u64,
 }

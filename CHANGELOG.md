@@ -15,11 +15,8 @@
 - `master::Master` is moved to `master::embedded::master` in preparation
   for Redis based implementation.
 
-- `crate::mcaptcha` is moved to `master::embedded::counter` in preparation
-  for Redis based implementation.
-
 - `AddSite` message for `Master` now requires an instance of
-  `crate::master::MCaptcha`. In the case of
+  `crate::mcaptcha::MCaptcha`. In the case of
   `crate::master::embedded::master`, it automatically starts `Counter`
   actor.
 
@@ -54,7 +51,7 @@
 
 ## Changed
 
-- actix upgraded to `0.11`
+- `actix` upgraded to `0.11`
 
 ## 0.1.1
 
