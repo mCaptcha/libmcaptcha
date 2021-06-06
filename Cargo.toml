@@ -11,20 +11,36 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-actix = "0.10"
+actix = { version =  "0.10", optional = true}
 
 serde = "1.0.114"
 serde_json = "1"
 
-pretty_env_logger = "0.4"
-log = "0.4"
+pretty_env_logger = {version = "0.4",  optional = true }
+log = {version = "0.4",  optional = true }
 
 derive_builder = "0.9"
 derive_more = "0.99"
 
-rand = "0.8"
-pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256" }
-redis = { version = "0.20.1", features = ["tokio-comp","aio", "cluster"]  }
+rand = {version = "0.8",  optional = true }
+
+
+pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256", optional=true }
+redis = { version = "0.20.1", features = ["tokio-comp","aio", "cluster"], optional=true }
 
 [dev-dependencies]
 actix-rt = "1"
+
+[features]
+default = [
+	"minimal",
+	"full",
+	"actix",
+	"rand",
+	"log",
+	"pretty_env_logger",
+	"pow_sha256",
+	"redis"
+]
+minimal = []
+full = []

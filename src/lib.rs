@@ -183,19 +183,30 @@
 //! }
 //! ```
 #![forbid(unsafe_code)]
+#[cfg(feature = "minimal")]
 pub mod defense;
 pub mod errors;
+#[cfg(feature = "full")]
 pub mod master;
 
 /// message datatypes to interact with [MCaptcha] actor
+#[cfg(feature = "full")]
 pub mod cache;
+#[cfg(feature = "minimal")]
 pub mod mcaptcha;
+#[cfg(feature = "full")]
 pub mod pow;
+#[cfg(feature = "full")]
 pub mod system;
+#[cfg(feature = "full")]
 mod utils;
 
+#[cfg(feature = "full")]
 pub use crate::cache::hashcache::HashCache;
 
+#[cfg(feature = "minimal")]
 pub use defense::{Defense, DefenseBuilder, LevelBuilder};
+#[cfg(feature = "full")]
 pub use master::embedded::counter::Counter;
+#[cfg(feature = "minimal")]
 pub use mcaptcha::{MCaptcha, MCaptchaBuilder};
