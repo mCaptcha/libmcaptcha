@@ -4,7 +4,7 @@
     <strong>mCaptcha - PoW based DoS protection</strong>
   </p>
 
-[![Documentation](https://img.shields.io/badge/docs-master-yellow)](https://mcaptcha.github.io/mCaptcha/libmcaptcha/index.html)
+[![Documentation](https://img.shields.io/badge/docs-master-yellow)](https://mcaptcha.github.io/libmcaptcha/libmcaptcha/index.html)
 [![Documentation](https://img.shields.io/badge/docs-0.1.3-blue)](https://mcaptcha.org/docs/api/mcaptcha-system)
 [![dependency status](https://deps.rs/repo/github/mCaptcha/libmcaptcha/status.svg)](https://deps.rs/repo/github/mCaptcha/libmcaptcha)
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
