@@ -264,6 +264,18 @@ pub mod tests {
             .unwrap()
     }
 
+    #[test]
+    fn mcaptcha_decrement_by_works() {
+        let mut m = get_mcaptcha();
+        for _ in 0..100 {
+            m.add_visitor();
+        }
+        m.decrement_visitor_by(50);
+        assert_eq!(m.get_visitors(), 50);
+        m.decrement_visitor_by(500);
+        assert_eq!(m.get_visitors(), 0);
+    }
+
     #[actix_rt::test]
     async fn counter_defense_tightenup_works() {
         let addr: MyActor = get_counter().start();

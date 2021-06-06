@@ -98,6 +98,18 @@ impl MCaptcha {
         }
     }
 
+    /// decrements the visitor count by specified count
+    #[inline]
+    pub fn decrement_visitor_by(&mut self, count: u32) {
+        if self.visitor_threshold > 0 {
+            if self.visitor_threshold >= count {
+                self.visitor_threshold -= count;
+            } else {
+                self.visitor_threshold = 0;
+            }
+        }
+    }
+
     /// get current difficulty factor
     #[inline]
     pub fn get_difficulty(&self) -> u32 {
