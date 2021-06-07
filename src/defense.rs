@@ -206,12 +206,8 @@ impl Defense {
     }
 
     /// Get current level's  visitor threshold
-    pub fn visitor_threshold(&self) -> Option<u32> {
-        if let Some(level) = self.levels.get(self.current_visitor_threshold) {
-            Some(level.visitor_threshold)
-        } else {
-            None
-        }
+    pub fn visitor_threshold(&self) -> u32 {
+        self.levels[self.current_visitor_threshold].difficulty_factor
     }
 }
 
@@ -297,6 +293,60 @@ mod tests {
             .unwrap()
             .build();
         assert_eq!(err, Err(CaptchaError::DecreaseingDifficultyFactor));
+    }
+
+    #[test]
+    fn checking_for_integer_overflow() {
+        let mut defense = DefenseBuilder::default()
+            .add_level(
+                LevelBuilder::default()
+                    .visitor_threshold(5)
+                    .difficulty_factor(5)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .add_level(
+                LevelBuilder::default()
+                    .visitor_threshold(10)
+                    .difficulty_factor(50)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .add_level(
+                LevelBuilder::default()
+                    .visitor_threshold(20)
+                    .difficulty_factor(60)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .add_level(
+                LevelBuilder::default()
+                    .visitor_threshold(30)
+                    .difficulty_factor(65)
+                    .unwrap()
+                    .build()
+                    .unwrap(),
+            )
+            .unwrap()
+            .build()
+            .unwrap();
+
+        for _ in 0..500 {
+            defense.tighten_up();
+        }
+
+        defense.get_difficulty();
+        for _ in 0..500000 {
+            defense.tighten_up();
+        }
+
+        defense.get_difficulty();
     }
 
     fn get_defense() -> Defense {
