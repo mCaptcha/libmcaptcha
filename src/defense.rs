@@ -183,14 +183,14 @@ impl Defense {
     /// tighten up defense. Increases defense level by a factor of one.
     /// When defense is at max level, calling this method will have no effect
     pub fn tighten_up(&mut self) {
-        if self.current_visitor_threshold != self.levels.len() - 1 {
+        if self.current_visitor_threshold < self.levels.len() - 1 {
             self.current_visitor_threshold += 1;
         }
     }
     /// Loosen up defense. Decreases defense level by a factor of one.
     /// When defense is at the lowest level, calling this method will have no effect.
     pub fn loosen_up(&mut self) {
-        if self.current_visitor_threshold != 0 {
+        if self.current_visitor_threshold > 0 {
             self.current_visitor_threshold -= 1;
         }
     }
@@ -206,8 +206,12 @@ impl Defense {
     }
 
     /// Get current level's  visitor threshold
-    pub fn visitor_threshold(&self) -> u32 {
-        self.levels[self.current_visitor_threshold].visitor_threshold
+    pub fn visitor_threshold(&self) -> Option<u32> {
+        if let Some(level) = self.levels.get(self.current_visitor_threshold) {
+            Some(level.visitor_threshold)
+        } else {
+            None
+        }
     }
 }
 
