@@ -418,6 +418,10 @@
 <span id="415">415</span>
 <span id="416">416</span>
 <span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -604,14 +608,14 @@
     <span class="doccomment">/// tighten up defense. Increases defense level by a factor of one.</span>
     <span class="doccomment">/// When defense is at max level, calling this method will have no effect</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tighten_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
             <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
     <span class="doccomment">/// Loosen up defense. Decreases defense level by a factor of one.</span>
     <span class="doccomment">/// When defense is at the lowest level, calling this method will have no effect.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">loosen_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="self">self</span>.<span class="ident">current_visitor_threshold</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
@@ -627,8 +631,12 @@
     }
 
     <span class="doccomment">/// Get current level&#39;s  visitor threshold</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visitor_threshold</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="ident">levels</span>[<span class="self">self</span>.<span class="ident">current_visitor_threshold</span>].<span class="ident">visitor_threshold</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visitor_threshold</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">level</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">levels</span>.<span class="ident">get</span>(<span class="self">self</span>.<span class="ident">current_visitor_threshold</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">level</span>.<span class="ident">visitor_threshold</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        }
     }
 }
 

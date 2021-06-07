@@ -217,7 +217,7 @@
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">visitor_threshold</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">visitor_threshold</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">visitor_threshold</span>() {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">visitor_threshold</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">visitor_threshold</span>().<span class="ident">unwrap</span>() {
             <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">tighten_up</span>();
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">defense</span>.<span class="ident">loosen_up</span>();
