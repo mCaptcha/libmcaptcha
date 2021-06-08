@@ -114,6 +114,7 @@ pub enum CaptchaError {
 }
 
 #[cfg(feature = "full")]
+#[cfg(not(tarpaulin_include))]
 impl From<RedisError> for CaptchaError {
     fn from(e: RedisError) -> Self {
         Self::RedisError(e)
@@ -121,6 +122,7 @@ impl From<RedisError> for CaptchaError {
 }
 
 #[cfg(feature = "full")]
+#[cfg(not(tarpaulin_include))]
 impl From<actix::MailboxError> for CaptchaError {
     fn from(_: actix::MailboxError) -> Self {
         Self::MailboxError

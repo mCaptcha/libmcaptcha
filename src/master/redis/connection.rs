@@ -132,13 +132,13 @@ impl RedisConnection {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::defense::{Level, LevelBuilder};
     use crate::master::embedded::counter::tests::get_mcaptcha;
     use crate::master::redis::master::{Master, Redis};
 
-    async fn connect(redis: &Redis) -> RedisConnection {
+    pub async fn connect(redis: &Redis) -> RedisConnection {
         match &redis {
             Redis::Single(c) => {
                 let con = c.get_async_connection().await.unwrap();

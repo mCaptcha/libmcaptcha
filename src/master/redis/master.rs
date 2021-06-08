@@ -50,12 +50,12 @@ pub struct Master {
 }
 
 impl Master {
-    pub async fn new(redis: Redis) -> Self {
+    pub async fn new(redis: Redis) -> CaptchaResult<Self> {
         let con = Self::connect(&redis).await;
-        con.is_module_loaded().await.unwrap();
+        con.is_module_loaded().await?;
         let con = Rc::new(con);
         let master = Self { redis, con };
-        master
+        Ok(master)
     }
 
     async fn connect(redis: &Redis) -> RedisConnection {
@@ -99,14 +99,53 @@ impl Handler<AddSite> for Master {
     type Result = ();
 
     fn handle(&mut self, m: AddSite, ctx: &mut Self::Context) -> Self::Result {
-        let (tx, rx) = mpsc::channel();
+        //let (tx, rx) = mpsc::channel();
 
         let con = Rc::clone(&self.con);
         let fut = async move {
             let res = con.add_mcaptcha(m).await;
-            tx.send(res).unwrap();
+            //tx.send(res).unwrap();
         }
         .into_actor(self);
         ctx.wait(fut);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::defense::{Level, LevelBuilder};
+    use crate::master::embedded::counter::tests::get_mcaptcha;
+    use crate::master::redis::connection::tests::connect;
+    use crate::master::redis::master::{Master, Redis};
+
+    const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
+    const DURATION: usize = 10;
+
+    #[actix_rt::test]
+    async fn redis_master_works() {
+        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+        let master = Master::new(Redis::Single(client)).await;
+        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+        let r = connect(&Redis::Single(client)).await;
+
+        assert!(master.is_ok());
+        let master = master.unwrap();
+        {
+            let _ = r.delete_captcha(CAPTCHA_NAME).await;
+        }
+
+        let addr = master.start();
+
+        let add_mcaptcha_msg = AddSite {
+            id: CAPTCHA_NAME.into(),
+            mcaptcha: get_mcaptcha(),
+        };
+        addr.send(add_mcaptcha_msg).await.unwrap();
+
+        let add_visitor_msg = AddVisitor(CAPTCHA_NAME.into());
+        addr.send(add_visitor_msg).await.unwrap();
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 1);
     }
 }
