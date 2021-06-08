@@ -61,6 +61,16 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -86,6 +96,8 @@
 <span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="ident">CaptchaResult</span>;
+
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">embedded</span>;
 <span class="attribute">#[<span class="ident">allow</span>(
     <span class="ident">unused_variables</span>,
@@ -95,6 +107,14 @@
     <span class="ident">unused_macros</span>
 )]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">allow</span>(
+    <span class="ident">unused_variables</span>,
+    <span class="ident">unused_imports</span>,
+    <span class="ident">unused_variables</span>,
+    <span class="ident">dead_code</span>,
+    <span class="ident">unused_macros</span>
+)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">redis</span>;
 
 <span class="doccomment">/// Describes actor handler trait impls that are required by a cache implementation</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Master</span>: <span class="ident">actix</span>::<span class="ident">Actor</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">AddVisitor</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">AddSite</span><span class="op">&gt;</span> {}
@@ -103,7 +123,7 @@
 
 <span class="doccomment">/// Message to add visitor to an [MCaptcha] actor</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
-<span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;Option&lt;Receiver&lt;AddVisitorResult&gt;&gt;&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;Receiver&lt;CaptchaResult&lt;Option&lt;AddVisitorResult&gt;&gt;&gt;&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddVisitor</span>(<span class="kw">pub</span> <span class="ident">String</span>);
 
 <span class="doccomment">/// Struct representing the return datatime of</span>

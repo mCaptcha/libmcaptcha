@@ -245,6 +245,10 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -297,26 +301,30 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_pow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PoWConfig</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">AddVisitor</span>;
 
-        <span class="kw">let</span> <span class="ident">rx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">master</span>.<span class="ident">send</span>(<span class="ident">AddVisitor</span>(<span class="ident">id</span>.<span class="ident">clone</span>())).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="kw">match</span> <span class="self">self</span>
+            .<span class="ident">master</span>
+            .<span class="ident">send</span>(<span class="ident">AddVisitor</span>(<span class="ident">id</span>.<span class="ident">clone</span>()))
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>()
+            .<span class="ident">recv</span>()
+            .<span class="ident">unwrap</span>()
+        {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">mcaptcha</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">pow_config</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>, <span class="self">self</span>.<span class="ident">pow</span>.<span class="ident">salt</span>.<span class="ident">clone</span>());
 
-        <span class="kw">if</span> <span class="ident">rx</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">let</span> <span class="ident">cache_msg</span> <span class="op">=</span> <span class="ident">CachePoWBuilder</span>::<span class="ident">default</span>()
+                    .<span class="ident">string</span>(<span class="ident">pow_config</span>.<span class="ident">string</span>.<span class="ident">clone</span>())
+                    .<span class="ident">difficulty_factor</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>)
+                    .<span class="ident">duration</span>(<span class="ident">mcaptcha</span>.<span class="ident">duration</span>)
+                    .<span class="ident">key</span>(<span class="ident">id</span>)
+                    .<span class="ident">build</span>()
+                    .<span class="ident">unwrap</span>();
+
+                <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">cache_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
+                <span class="prelude-val">Some</span>(<span class="ident">pow_config</span>)
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
-
-        <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">unwrap</span>().<span class="ident">recv</span>().<span class="ident">unwrap</span>();
-
-        <span class="kw">let</span> <span class="ident">pow_config</span> <span class="op">=</span> <span class="ident">PoWConfig</span>::<span class="ident">new</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>, <span class="self">self</span>.<span class="ident">pow</span>.<span class="ident">salt</span>.<span class="ident">clone</span>());
-
-        <span class="kw">let</span> <span class="ident">cache_msg</span> <span class="op">=</span> <span class="ident">CachePoWBuilder</span>::<span class="ident">default</span>()
-            .<span class="ident">string</span>(<span class="ident">pow_config</span>.<span class="ident">string</span>.<span class="ident">clone</span>())
-            .<span class="ident">difficulty_factor</span>(<span class="ident">mcaptcha</span>.<span class="ident">difficulty_factor</span>)
-            .<span class="ident">duration</span>(<span class="ident">mcaptcha</span>.<span class="ident">duration</span>)
-            .<span class="ident">key</span>(<span class="ident">id</span>)
-            .<span class="ident">build</span>()
-            .<span class="ident">unwrap</span>();
-
-        <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">cache_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
-        <span class="prelude-val">Some</span>(<span class="ident">pow_config</span>)
     }
 
     <span class="doccomment">/// utility function to verify [Work]</span>

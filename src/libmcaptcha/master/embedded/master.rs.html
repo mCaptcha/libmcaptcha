@@ -225,6 +225,7 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -254,6 +255,7 @@
 <span class="kw">use</span> <span class="ident">log</span>::<span class="ident">info</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">counter</span>::<span class="ident">Counter</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">Master</span> <span class="kw">as</span> <span class="ident">MasterTrait</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>};
 
@@ -317,24 +319,24 @@
     <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">MessageResult</span><span class="op">&lt;</span><span class="ident">AddVisitor</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">AddVisitor</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_site</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="number">0</span>);
-        <span class="kw">if</span> <span class="ident">addr</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="prelude-val">None</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">channel</span>();
-            <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">addr</span>
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">send</span>(<span class="kw">super</span>::<span class="ident">counter</span>::<span class="ident">AddVisitor</span>)
-                    .<span class="kw">await</span>
-                    .<span class="ident">unwrap</span>();
-
-                <span class="ident">tx</span>.<span class="ident">send</span>(<span class="ident">config</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">channel</span>();
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_site</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="number">0</span>) {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)).<span class="ident">unwrap</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
+                    <span class="kw">match</span> <span class="ident">addr</span>.<span class="ident">send</span>(<span class="kw">super</span>::<span class="ident">counter</span>::<span class="ident">AddVisitor</span>).<span class="kw">await</span> {
+                        <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">val</span>))).<span class="ident">unwrap</span>(),
+                        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">err</span>: <span class="ident">CaptchaError</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">into</span>();
+                            <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)).<span class="ident">unwrap</span>();
+                        }
+                    }
+                }
+                .<span class="ident">into_actor</span>(<span class="self">self</span>);
+                <span class="ident">ctx</span>.<span class="ident">spawn</span>(<span class="ident">fut</span>);
             }
-            .<span class="ident">into_actor</span>(<span class="self">self</span>);
-            <span class="ident">ctx</span>.<span class="ident">spawn</span>(<span class="ident">fut</span>);
-            <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="prelude-val">Some</span>(<span class="ident">rx</span>));
         }
+        <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="ident">rx</span>);
     }
 }
 
