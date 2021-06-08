@@ -151,14 +151,14 @@ impl Handler<DeleteVisitor> for Counter {
 #[rtype(result = "AddVisitorResult")]
 pub struct AddVisitor;
 
-impl AddVisitorResult {
-    fn new(m: &Counter) -> Self {
-        AddVisitorResult {
-            duration: m.0.get_duration(),
-            difficulty_factor: m.0.get_difficulty(),
-        }
-    }
-}
+//impl AddVisitorResult {
+//    fn new(m: &Counter) -> Self {
+//        AddVisitorResult {
+//            duration: m.0.get_duration(),
+//            difficulty_factor: m.0.get_difficulty(),
+//        }
+//    }
+//}
 
 impl Handler<AddVisitor> for Counter {
     type Result = MessageResult<AddVisitor>;
@@ -177,7 +177,7 @@ impl Handler<AddVisitor> for Counter {
         ctx.spawn(wait_for);
 
         self.0.add_visitor();
-        MessageResult(AddVisitorResult::new(&self))
+        MessageResult(AddVisitorResult::new(&self.0))
     }
 }
 

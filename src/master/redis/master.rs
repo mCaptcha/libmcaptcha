@@ -38,7 +38,6 @@ use crate::master::{AddSite, AddVisitor, Master as MasterTrait};
 
 use super::connection::RedisConnection;
 
-
 #[derive(Clone)]
 pub enum Redis {
     Single(Client),

@@ -68,3 +68,12 @@ pub struct AddSite {
     pub id: String,
     pub mcaptcha: MCaptcha,
 }
+
+impl AddVisitorResult {
+    fn new(m: &MCaptcha) -> Self {
+        AddVisitorResult {
+            duration: m.get_duration(),
+            difficulty_factor: m.get_difficulty(),
+        }
+    }
+}
