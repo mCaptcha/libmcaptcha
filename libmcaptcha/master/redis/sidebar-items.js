@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Redis",""]],"struct":[["CreateMCaptcha",""],["Master",""]]});
+initSidebarItems({"enum":[["Redis",""]],"struct":[["Master",""]]});

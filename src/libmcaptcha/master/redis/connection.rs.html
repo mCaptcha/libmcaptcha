@@ -128,7 +128,6 @@
 <span id="125">125</span>
 <span id="126">126</span>
 <span id="127">127</span>
-<span id="128">128</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -160,9 +159,8 @@
 <span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Value</span>;
 <span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio</span>::<span class="ident">Connection</span>, <span class="ident">cluster</span>::<span class="ident">ClusterConnection</span>};
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CreateMCaptcha</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>, <span class="ident">AddVisitorResult</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>, <span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>};
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisConnection</span> {
     <span class="ident">Single</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Connection</span><span class="op">&gt;</span><span class="op">&gt;</span>),

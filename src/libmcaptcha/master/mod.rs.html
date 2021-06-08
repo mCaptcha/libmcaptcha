@@ -80,6 +80,22 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -99,14 +115,19 @@
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
 <span class="doccomment">//! [Master] actor module that manages [MCaptcha] actors</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="ident">CaptchaResult</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">embedded</span>;
 <span class="attribute">#[<span class="ident">allow</span>(
     <span class="ident">unused_variables</span>,
@@ -123,8 +144,10 @@
     <span class="ident">dead_code</span>,
     <span class="ident">unused_macros</span>
 )]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">redis</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="doccomment">/// Describes actor handler trait impls that are required by a cache implementation</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Master</span>: <span class="ident">actix</span>::<span class="ident">Actor</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">AddVisitor</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">AddSite</span><span class="op">&gt;</span> {}
 
@@ -132,6 +155,7 @@
 
 <span class="doccomment">/// Message to add visitor to an [MCaptcha] actor</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;Receiver&lt;CaptchaResult&lt;Option&lt;AddVisitorResult&gt;&gt;&gt;&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddVisitor</span>(<span class="kw">pub</span> <span class="ident">String</span>);
 
@@ -147,18 +171,26 @@
 <span class="doccomment">/// Message to add an [Counter] actor to [Master]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Builder</span>)]</span>
 <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;()&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddSite</span> {
     <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">mcaptcha</span>: <span class="ident">MCaptcha</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AddVisitorResult</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">MCaptcha</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">MCaptcha</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">AddVisitorResult</span> {
             <span class="ident">duration</span>: <span class="ident">m</span>.<span class="ident">get_duration</span>(),
             <span class="ident">difficulty_factor</span>: <span class="ident">m</span>.<span class="ident">get_difficulty</span>(),
         }
     }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;minimal&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CreateMCaptcha</span> {
+    <span class="kw">pub</span> <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">defense</span>::<span class="ident">Level</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="libmcaptcha" data-search-js="../../../search-index.js"></div>

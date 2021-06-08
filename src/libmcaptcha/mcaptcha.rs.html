@@ -221,7 +221,7 @@
     <span class="ident">duration</span>: <span class="ident">u64</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">redis</span>::<span class="ident">CreateMCaptcha</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MCaptcha</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">CreateMCaptcha</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">MCaptcha</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">levels</span>: <span class="ident">m</span>.<span class="ident">defense</span>.<span class="ident">into</span>(),
