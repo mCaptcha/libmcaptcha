@@ -16,14 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! [Master] actor module that manages [MCaptcha] actors
+#[cfg(feature = "full")]
 use std::sync::mpsc::Receiver;
 
+#[cfg(feature = "full")]
 use actix::dev::*;
+#[cfg(feature = "full")]
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "full")]
 use crate::errors::CaptchaResult;
 
+#[cfg(feature = "full")]
 pub mod embedded;
 #[allow(
     unused_variables,
@@ -40,8 +45,10 @@ use crate::mcaptcha::*;
     dead_code,
     unused_macros
 )]
+#[cfg(feature = "full")]
 pub mod redis;
 
+#[cfg(feature = "full")]
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<AddSite> {}
 
@@ -49,6 +56,7 @@ pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<Add
 
 /// Message to add visitor to an [MCaptcha] actor
 #[derive(Message)]
+#[cfg(feature = "full")]
 #[rtype(result = "Receiver<CaptchaResult<Option<AddVisitorResult>>>")]
 pub struct AddVisitor(pub String);
 
@@ -64,16 +72,24 @@ pub struct AddVisitorResult {
 /// Message to add an [Counter] actor to [Master]
 #[derive(Message, Builder)]
 #[rtype(result = "()")]
+#[cfg(feature = "full")]
 pub struct AddSite {
     pub id: String,
     pub mcaptcha: MCaptcha,
 }
 
 impl AddVisitorResult {
-    fn new(m: &MCaptcha) -> Self {
+    pub fn new(m: &MCaptcha) -> Self {
         AddVisitorResult {
             duration: m.get_duration(),
             difficulty_factor: m.get_difficulty(),
         }
     }
+}
+
+#[cfg(feature = "minimal")]
+#[derive(Serialize, Deserialize)]
+pub struct CreateMCaptcha {
+    pub levels: Vec<crate::defense::Level>,
+    pub duration: u64,
 }

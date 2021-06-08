@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 use crate::defense::Level;
 use crate::errors::*;
 use crate::master::AddVisitorResult;
-use crate::master::{AddSite, AddVisitor, Master as MasterTrait};
+use crate::master::{AddSite, AddVisitor, CreateMCaptcha, Master as MasterTrait};
 
 use super::connection::RedisConnection;
 
@@ -44,11 +44,6 @@ pub enum Redis {
     Cluster(ClusterClient),
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct CreateMCaptcha {
-    pub levels: Vec<Level>,
-    pub duration: u64,
-}
 pub struct Master {
     pub redis: Redis,
     pub con: Rc<RedisConnection>,

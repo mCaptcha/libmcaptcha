@@ -78,7 +78,7 @@ pub struct MCaptcha {
     duration: u64,
 }
 
-impl From<MCaptcha> for crate::master::redis::CreateMCaptcha {
+impl From<MCaptcha> for crate::master::CreateMCaptcha {
     fn from(m: MCaptcha) -> Self {
         Self {
             levels: m.defense.into(),

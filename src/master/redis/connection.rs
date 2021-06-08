@@ -28,9 +28,8 @@ use redis::RedisResult;
 use redis::Value;
 use redis::{aio::Connection, cluster::ClusterConnection};
 
-use super::CreateMCaptcha;
 use crate::errors::*;
-use crate::master::{AddSite, AddVisitor, AddVisitorResult};
+use crate::master::{AddSite, AddVisitor, AddVisitorResult, CreateMCaptcha};
 
 pub enum RedisConnection {
     Single(Rc<RefCell<Connection>>),

@@ -183,16 +183,13 @@
 //! }
 //! ```
 #![forbid(unsafe_code)]
-#[cfg(feature = "minimal")]
 pub mod defense;
 pub mod errors;
-#[cfg(feature = "full")]
 pub mod master;
 
 /// message datatypes to interact with [MCaptcha] actor
 #[cfg(feature = "full")]
 pub mod cache;
-#[cfg(feature = "minimal")]
 pub mod mcaptcha;
 #[cfg(feature = "full")]
 pub mod pow;
@@ -204,9 +201,17 @@ mod utils;
 #[cfg(feature = "full")]
 pub use crate::cache::hashcache::HashCache;
 
-#[cfg(feature = "minimal")]
-pub use defense::{Defense, DefenseBuilder, LevelBuilder};
+pub use crate::defense::{Defense, DefenseBuilder, LevelBuilder};
+pub use crate::master::{AddVisitorResult, CreateMCaptcha};
+pub use crate::mcaptcha::{MCaptcha, MCaptchaBuilder};
 #[cfg(feature = "full")]
 pub use master::embedded::counter::Counter;
+
 #[cfg(feature = "minimal")]
-pub use mcaptcha::{MCaptcha, MCaptchaBuilder};
+pub mod dev {
+    pub use crate::defense;
+    pub use crate::defense::{Defense, DefenseBuilder, LevelBuilder};
+    pub use crate::master::{AddVisitorResult, CreateMCaptcha};
+    pub use crate::mcaptcha;
+    pub use crate::mcaptcha::{MCaptcha, MCaptchaBuilder};
+}

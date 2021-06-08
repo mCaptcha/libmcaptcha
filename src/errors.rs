@@ -18,6 +18,7 @@
 
 //! Errors and Result module
 use derive_more::{Display, Error};
+#[cfg(feature = "full")]
 use redis::RedisError;
 
 /// Error datatype
@@ -84,6 +85,7 @@ pub enum CaptchaError {
 
     /// RedisError
     #[display(fmt = "{}", _0)]
+    #[cfg(feature = "full")]
     RedisError(RedisError),
 
     /// Weird behaviour from mcaptcha redis module
@@ -93,12 +95,14 @@ pub enum CaptchaError {
     MCaptchaRedisModuleError,
 }
 
+#[cfg(feature = "full")]
 impl From<RedisError> for CaptchaError {
     fn from(e: RedisError) -> Self {
         Self::RedisError(e)
     }
 }
 
+#[cfg(feature = "full")]
 impl From<actix::MailboxError> for CaptchaError {
     fn from(_: actix::MailboxError) -> Self {
         Self::MailboxError
