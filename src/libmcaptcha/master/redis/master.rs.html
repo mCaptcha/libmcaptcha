@@ -166,9 +166,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Master</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">redis</span>: <span class="ident">Redis</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">redis</span>: <span class="ident">Redis</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">con</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="ident">redis</span>).<span class="kw">await</span>;
-        <span class="ident">con</span>.<span class="ident">is_module_loaded</span>().<span class="kw">await</span>;
+        <span class="ident">con</span>.<span class="ident">is_module_loaded</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">con</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">con</span>);
         <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="self">Self</span> { <span class="ident">redis</span>, <span class="ident">con</span> };
         <span class="ident">master</span>

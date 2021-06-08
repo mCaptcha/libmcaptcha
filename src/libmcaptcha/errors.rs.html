@@ -114,6 +114,24 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -210,6 +228,24 @@
         <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Something weird happening with mCaptcha redis module. Please file bug report&quot;</span>
     )]</span>
     <span class="ident">MCaptchaRedisModuleError</span>,
+
+    <span class="doccomment">/// When libmcaptcha is ordered to connect to a Redis instance that doesn&#39;t have mCaptcha</span>
+    <span class="doccomment">/// Redis module loaded</span>
+    <span class="attribute">#[<span class="ident">display</span>(
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;You are trying to connect to a Redis instance that doesn&#39;t have mCaptcha redis module loaded.
+        Please see https://github.com/mCaptcha/cache for details on how to install mCaptcha redis module moudle&quot;</span>
+    )]</span>
+    <span class="ident">MCaptchaRedisModuleIsNotLoaded</span>,
+
+    <span class="doccomment">/// MCaptcha redis module is loaded but it doesn&#39;t have the necessary Redis commands.</span>
+    <span class="doccomment">/// Usually a version mismatch</span>
+    <span class="attribute">#[<span class="ident">display</span>(
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;The Redis instance that libmcaptcha is trying to connect to has mCaptcha Redis module loaded,
+        but it&#39;s probably outdated and as a result, we are not able to find all required commands to operate mCaptcha
+        Command {} is not found&quot;</span>,
+        <span class="ident">_0</span>
+    )]</span>
+    <span class="ident">MCaptchaRediSModuleCommandNotFound</span>(<span class="attribute">#[<span class="ident">error</span>(<span class="ident">not</span>(<span class="ident">source</span>))]</span> <span class="ident">String</span>),
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
