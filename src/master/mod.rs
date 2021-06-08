@@ -22,6 +22,8 @@ use actix::dev::*;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+use crate::errors::CaptchaResult;
+
 pub mod embedded;
 #[allow(
     unused_variables,
@@ -31,6 +33,14 @@ pub mod embedded;
     unused_macros
 )]
 use crate::mcaptcha::*;
+#[allow(
+    unused_variables,
+    unused_imports,
+    unused_variables,
+    dead_code,
+    unused_macros
+)]
+pub mod redis;
 
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<AddSite> {}
@@ -39,7 +49,7 @@ pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<Add
 
 /// Message to add visitor to an [MCaptcha] actor
 #[derive(Message)]
-#[rtype(result = "Option<Receiver<AddVisitorResult>>")]
+#[rtype(result = "Receiver<CaptchaResult<Option<AddVisitorResult>>>")]
 pub struct AddVisitor(pub String);
 
 /// Struct representing the return datatime of

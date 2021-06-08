@@ -18,9 +18,10 @@
 
 //! Errors and Result module
 use derive_more::{Display, Error};
+use redis::RedisError;
 
 /// Error datatype
-#[derive(Debug, PartialEq, Display, Clone, Error)]
+#[derive(Debug, PartialEq, Display, Error)]
 #[cfg(not(tarpaulin_include))]
 pub enum CaptchaError {
     /// When configuring libmcaptcha, [DefenseBuilder][crate::defense::DefenseBuilder]
@@ -80,6 +81,28 @@ pub enum CaptchaError {
     /// Used in builder structs when a value is not set
     #[display(fmt = "Please set value: {}", _0)]
     PleaseSetValue(#[error(not(source))] String),
+
+    /// RedisError
+    #[display(fmt = "{}", _0)]
+    RedisError(RedisError),
+
+    /// Weird behaviour from mcaptcha redis module
+    #[display(
+        fmt = "Something weird happening with mCaptcha redis module. Please file bug report"
+    )]
+    MCaptchaRedisModuleError,
+}
+
+impl From<RedisError> for CaptchaError {
+    fn from(e: RedisError) -> Self {
+        Self::RedisError(e)
+    }
+}
+
+impl From<actix::MailboxError> for CaptchaError {
+    fn from(_: actix::MailboxError) -> Self {
+        Self::MailboxError
+    }
 }
 
 /// [Result] datatype for libmcaptcha

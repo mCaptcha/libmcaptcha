@@ -78,6 +78,15 @@ pub struct MCaptcha {
     duration: u64,
 }
 
+impl From<MCaptcha> for crate::master::redis::CreateMCaptcha {
+    fn from(m: MCaptcha) -> Self {
+        Self {
+            levels: m.defense.into(),
+            duration: m.duration,
+        }
+    }
+}
+
 impl MCaptcha {
     /// increments the visitor count by one
     #[inline]

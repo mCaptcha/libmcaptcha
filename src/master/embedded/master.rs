@@ -26,6 +26,7 @@ use actix::dev::*;
 use log::info;
 
 use super::counter::Counter;
+use crate::errors::*;
 use crate::master::Master as MasterTrait;
 use crate::master::{AddSite, AddVisitor};
 
@@ -89,24 +90,24 @@ impl Handler<AddVisitor> for Master {
     type Result = MessageResult<AddVisitor>;
 
     fn handle(&mut self, m: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
-        let addr = self.get_site(&m.0);
-        if addr.is_none() {
-            return MessageResult(None);
-        } else {
-            let (tx, rx) = channel();
-            let fut = async move {
-                let config = addr
-                    .unwrap()
-                    .send(super::counter::AddVisitor)
-                    .await
-                    .unwrap();
-
-                tx.send(config).unwrap();
+        let (tx, rx) = channel();
+        match self.get_site(&m.0) {
+            None => tx.send(Ok(None)).unwrap(),
+            Some(addr) => {
+                let fut = async move {
+                    match addr.send(super::counter::AddVisitor).await {
+                        Ok(val) => tx.send(Ok(Some(val))).unwrap(),
+                        Err(e) => {
+                            let err: CaptchaError = e.into();
+                            tx.send(Err(err)).unwrap();
+                        }
+                    }
+                }
+                .into_actor(self);
+                ctx.spawn(fut);
             }
-            .into_actor(self);
-            ctx.spawn(fut);
-            return MessageResult(Some(rx));
         }
+        return MessageResult(rx);
     }
 }
 

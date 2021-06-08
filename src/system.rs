@@ -49,26 +49,30 @@ where
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
         use crate::master::AddVisitor;
 
-        let rx = self.master.send(AddVisitor(id.clone())).await.unwrap();
+        match self
+            .master
+            .send(AddVisitor(id.clone()))
+            .await
+            .unwrap()
+            .recv()
+            .unwrap()
+        {
+            Ok(Some(mcaptcha)) => {
+                let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
 
-        if rx.is_none() {
-            return None;
+                let cache_msg = CachePoWBuilder::default()
+                    .string(pow_config.string.clone())
+                    .difficulty_factor(mcaptcha.difficulty_factor)
+                    .duration(mcaptcha.duration)
+                    .key(id)
+                    .build()
+                    .unwrap();
+
+                self.cache.send(cache_msg).await.unwrap().unwrap();
+                Some(pow_config)
+            }
+            _ => None,
         }
-
-        let mcaptcha = rx.unwrap().recv().unwrap();
-
-        let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
-
-        let cache_msg = CachePoWBuilder::default()
-            .string(pow_config.string.clone())
-            .difficulty_factor(mcaptcha.difficulty_factor)
-            .duration(mcaptcha.duration)
-            .key(id)
-            .build()
-            .unwrap();
-
-        self.cache.send(cache_msg).await.unwrap().unwrap();
-        Some(pow_config)
     }
 
     /// utility function to verify [Work]

@@ -114,6 +114,12 @@ pub struct Defense {
     current_visitor_threshold: usize,
 }
 
+impl From<Defense> for Vec<Level> {
+    fn from(d: Defense) -> Self {
+        d.levels
+    }
+}
+
 /// Builder struct for [Defense]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefenseBuilder {
