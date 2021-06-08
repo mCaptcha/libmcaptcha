@@ -26,7 +26,8 @@ rand = {version = "0.8",  optional = true }
 
 
 pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256", optional=true }
-redis = { version = "0.20.1", features = ["tokio-comp","aio", "cluster"], optional=true }
+#redis = { version = "0.20.1", features = ["tokio-comp","aio", "cluster"], optional=true }
+redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
 
 [dev-dependencies]
 actix-rt = "1"

@@ -93,6 +93,24 @@ pub enum CaptchaError {
         fmt = "Something weird happening with mCaptcha redis module. Please file bug report"
     )]
     MCaptchaRedisModuleError,
+
+    /// When libmcaptcha is ordered to connect to a Redis instance that doesn't have mCaptcha
+    /// Redis module loaded
+    #[display(
+        fmt = "You are trying to connect to a Redis instance that doesn't have mCaptcha redis module loaded.
+        Please see https://github.com/mCaptcha/cache for details on how to install mCaptcha redis module moudle"
+    )]
+    MCaptchaRedisModuleIsNotLoaded,
+
+    /// MCaptcha redis module is loaded but it doesn't have the necessary Redis commands.
+    /// Usually a version mismatch
+    #[display(
+        fmt = "The Redis instance that libmcaptcha is trying to connect to has mCaptcha Redis module loaded,
+        but it's probably outdated and as a result, we are not able to find all required commands to operate mCaptcha
+        Command {} is not found",
+        _0
+    )]
+    MCaptchaRediSModuleCommandNotFound(#[error(not(source))] String),
 }
 
 #[cfg(feature = "full")]

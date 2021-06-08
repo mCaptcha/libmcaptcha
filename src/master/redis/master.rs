@@ -50,9 +50,9 @@ pub struct Master {
 }
 
 impl Master {
-    async fn new(redis: Redis) -> Self {
+    pub async fn new(redis: Redis) -> Self {
         let con = Self::connect(&redis).await;
-        con.is_module_loaded().await;
+        con.is_module_loaded().await.unwrap();
         let con = Rc::new(con);
         let master = Self { redis, con };
         master

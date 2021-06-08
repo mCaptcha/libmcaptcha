@@ -58,13 +58,13 @@ macro_rules! exec {
 }
 
 impl RedisConnection {
-    pub async fn is_module_loaded(&self) {
+    pub async fn is_module_loaded(&self) -> CaptchaResult<()> {
         let modules: Vec<Vec<String>> = exec!(redis::cmd("MODULE").arg(&["LIST"]), &self).unwrap();
 
         for list in modules.iter() {
             match list.iter().find(|module| module.as_str() == MODULE_NAME) {
-                Some(_) => println!("module exists"),
-                None => println!("Module doesn't exist"),
+                Some(_) => (),
+                None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
             }
         }
 
@@ -73,16 +73,21 @@ impl RedisConnection {
         for cmd in commands.iter() {
             match exec!(redis::cmd("COMMAND").arg(&["INFO", cmd]), &self).unwrap() {
                 Value::Bulk(mut val) => {
-                    let x = val.pop();
-                    match x {
-                        Some(Value::Nil) => println!("Command: {} doesn't exist", &cmd),
-                        _ => println!("commands {} exists", &cmd),
+                    match val.pop() {
+                        Some(Value::Nil) => {
+                            return Err(CaptchaError::MCaptchaRediSModuleCommandNotFound(
+                                cmd.to_string(),
+                            ))
+                        }
+                        _ => (),
                     };
                 }
 
-                _ => println!("commands exists"),
+                _ => (),
             };
         }
+
+        Ok(())
     }
 
     pub async fn add_visitor(&self, msg: AddVisitor) -> CaptchaResult<Option<AddVisitorResult>> {
@@ -123,5 +128,59 @@ impl RedisConnection {
     pub async fn get_visitors(&self, captcha: &str) -> CaptchaResult<usize> {
         let visitors: usize = exec!(redis::cmd(GET).arg(&[captcha]), &self)?;
         Ok(visitors)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::defense::{Level, LevelBuilder};
+    use crate::master::embedded::counter::tests::get_mcaptcha;
+    use crate::master::redis::master::{Master, Redis};
+
+    async fn connect(redis: &Redis) -> RedisConnection {
+        match &redis {
+            Redis::Single(c) => {
+                let con = c.get_async_connection().await.unwrap();
+                RedisConnection::Single(Rc::new(RefCell::new(con)))
+            }
+            Redis::Cluster(c) => {
+                let con = c.get_connection().unwrap();
+                RedisConnection::Cluster(Rc::new(RefCell::new(con)))
+            }
+        }
+    }
+
+    const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
+    const DURATION: usize = 10;
+
+    #[actix_rt::test]
+    async fn redis_master_works() {
+        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+        let r = connect(&Redis::Single(client)).await;
+        {
+            let _ = r.delete_captcha(CAPTCHA_NAME).await;
+        }
+        assert!(r.is_module_loaded().await.is_ok());
+        assert!(!r.check_captcha_exists(CAPTCHA_NAME).await.unwrap());
+        let add_mcaptcha_msg = AddSite {
+            id: CAPTCHA_NAME.into(),
+            mcaptcha: get_mcaptcha(),
+        };
+
+        assert!(r.add_mcaptcha(add_mcaptcha_msg).await.is_ok());
+        assert!(r.check_captcha_exists(CAPTCHA_NAME).await.unwrap());
+
+        let add_visitor_msg = AddVisitor(CAPTCHA_NAME.into());
+        assert!(r.add_visitor(add_visitor_msg).await.is_ok());
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 1);
+
+        let add_visitor_msg = AddVisitor(CAPTCHA_NAME.into());
+        assert!(r.add_visitor(add_visitor_msg).await.is_ok());
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 2);
+
+        assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
     }
 }
