@@ -40,35 +40,58 @@ use super::connection::RedisConnection;
 
 #[derive(Clone)]
 pub enum Redis {
+    Single(String),
+    Cluster(Vec<String>),
+}
+
+impl Redis {
+    pub fn connect(&self) -> RedisClient {
+        match self {
+            Self::Single(url) => {
+                let client = Client::open("redis://127.0.0.1/").unwrap();
+                RedisClient::Single(client)
+            }
+            Self::Cluster(nodes) => {
+                let cluster_client = ClusterClient::open(nodes.to_owned()).unwrap();
+                RedisClient::Cluster(cluster_client)
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum RedisClient {
     Single(Client),
     Cluster(ClusterClient),
 }
 
 pub struct Master {
-    pub redis: Redis,
+    pub redis: RedisClient,
     pub con: Rc<RedisConnection>,
 }
 
 impl Master {
     pub async fn new(redis: Redis) -> CaptchaResult<Self> {
-        let con = Self::connect(&redis).await;
+        let (redis, con) = Self::connect(redis).await;
         con.is_module_loaded().await?;
         let con = Rc::new(con);
         let master = Self { redis, con };
         Ok(master)
     }
 
-    async fn connect(redis: &Redis) -> RedisConnection {
-        match &redis {
-            Redis::Single(c) => {
+    async fn connect(redis: Redis) -> (RedisClient, RedisConnection) {
+        let redis = redis.connect();
+        let client = match &redis {
+            RedisClient::Single(c) => {
                 let con = c.get_async_connection().await.unwrap();
                 RedisConnection::Single(Rc::new(RefCell::new(con)))
             }
-            Redis::Cluster(c) => {
+            RedisClient::Cluster(c) => {
                 let con = c.get_connection().unwrap();
                 RedisConnection::Cluster(Rc::new(RefCell::new(con)))
             }
-        }
+        };
+        (redis, client)
     }
 }
 
@@ -122,12 +145,13 @@ mod tests {
     const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
     const DURATION: usize = 10;
 
+    const REDIS_URL: &str = "redis://127.0.1.1/";
+
     #[actix_rt::test]
     async fn redis_master_works() {
+        let master = Master::new(Redis::Single(REDIS_URL.into())).await;
         let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-        let master = Master::new(Redis::Single(client)).await;
-        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-        let r = connect(&Redis::Single(client)).await;
+        let r = connect(&Redis::Single(REDIS_URL.into())).await;
 
         assert!(master.is_ok());
         let master = master.unwrap();

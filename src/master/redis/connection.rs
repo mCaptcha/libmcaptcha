@@ -136,15 +136,16 @@ pub mod tests {
     use super::*;
     use crate::defense::{Level, LevelBuilder};
     use crate::master::embedded::counter::tests::get_mcaptcha;
-    use crate::master::redis::master::{Master, Redis};
+    use crate::master::redis::master::{Master, Redis, RedisClient};
 
     pub async fn connect(redis: &Redis) -> RedisConnection {
+        let redis = redis.connect();
         match &redis {
-            Redis::Single(c) => {
+            RedisClient::Single(c) => {
                 let con = c.get_async_connection().await.unwrap();
                 RedisConnection::Single(Rc::new(RefCell::new(con)))
             }
-            Redis::Cluster(c) => {
+            RedisClient::Cluster(c) => {
                 let con = c.get_connection().unwrap();
                 RedisConnection::Cluster(Rc::new(RefCell::new(con)))
             }
@@ -153,11 +154,12 @@ pub mod tests {
 
     const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
     const DURATION: usize = 10;
+    const REDIS_URL: &str = "redis://127.0.1.1/";
 
     #[actix_rt::test]
     async fn redis_master_works() {
         let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-        let r = connect(&Redis::Single(client)).await;
+        let r = connect(&Redis::Single(REDIS_URL.into())).await;
         {
             let _ = r.delete_captcha(CAPTCHA_NAME).await;
         }
