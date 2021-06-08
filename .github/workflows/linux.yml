@@ -45,7 +45,7 @@ jobs:
           args: --all --bins --examples --tests
 
       - name: run mcaptcha cache redis instance
-        run: docker run -p 6379:6379 mcaptcha/cache
+        run: docker run -d -p 6379:6379 mcaptcha/cache
 
       - name: tests
         uses: actions-rs/cargo@v1
