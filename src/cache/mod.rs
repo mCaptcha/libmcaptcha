@@ -17,22 +17,32 @@
  */
 //! Cache is used to save proofof work details and nonces to prevent replay attacks
 //! and rainbow/dictionary attacks
-pub use hashcache::HashCache;
-use messages::*;
+use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "full")]
 pub mod hashcache;
 
+#[derive(Serialize, Deserialize)]
+pub struct AddChallenge {
+    pub difficulty: usize,
+    pub duration: u64,
+    pub challenge: String,
+}
+
 /// Describes actor handler trait impls that are required by a cache implementation
+#[cfg(feature = "full")]
 pub trait Save:
     actix::Actor
-    + actix::Handler<RetrivePoW>
-    + actix::Handler<CachePoW>
-    + actix::Handler<DeletePoW>
-    + actix::Handler<CacheResult>
-    + actix::Handler<VerifyCaptchaResult>
-    + actix::Handler<DeleteCaptchaResult>
+    + actix::Handler<messages::RetrivePoW>
+    + actix::Handler<messages::CachePoW>
+    + actix::Handler<messages::DeletePoW>
+    + actix::Handler<messages::CacheResult>
+    + actix::Handler<messages::VerifyCaptchaResult>
+    + actix::Handler<messages::DeleteCaptchaResult>
 {
 }
+
+#[cfg(feature = "full")]
 pub mod messages {
     //! Messages that can be sent to cache data structures implementing [Save][super::Save]
     use actix::dev::*;
@@ -45,22 +55,15 @@ pub mod messages {
     #[derive(Message, Serialize, Deserialize, Builder, Clone)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CachePoW {
+        /// challenge string
         pub string: String,
+        /// Difficulty factor of mCaptcha at the time of minting this config
         pub difficulty_factor: u32,
+        /// mCaptcha TTL
         pub duration: u64,
+        /// Key is mCaptcha name
         pub key: String,
     }
-
-    //    pub fn new(p: &PoWConfig, k: String, v: &AddVisitorResult) -> Self {
-    //        CachePoWBuilder::default()
-    //            .string(p.string.clone())
-    //            .difficulty_factor(v.difficulty_factor)
-    //            .duration(v.duration)
-    //            .key(k)
-    //            .build()
-    //            .unwrap()
-    //    }
-    //}
 
     /// Message to retrive the the difficulty factor for the specified
     /// string from the cache
@@ -70,6 +73,7 @@ pub mod messages {
 
     #[derive(Clone, PartialEq, Debug, Default, Deserialize, Serialize)]
     pub struct CachedPoWConfig {
+        /// mCaptcha name
         pub key: String,
         pub difficulty_factor: u32,
         pub duration: u64,
@@ -87,7 +91,7 @@ pub mod messages {
     #[rtype(result = "CaptchaResult<()>")]
     pub struct CacheResult {
         pub token: String,
-        // key is Captcha identifier
+        /// key is mCaptcha identifier
         pub key: String,
         pub duration: u64,
     }

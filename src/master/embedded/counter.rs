@@ -22,7 +22,7 @@
 //! use libmcaptcha::{
 //!     master::embedded::counter::{Counter, AddVisitor},
 //!     MCaptchaBuilder,
-//!     cache::HashCache,
+//!     cache::hashcache::HashCache,
 //!     LevelBuilder,
 //!     DefenseBuilder
 //! };

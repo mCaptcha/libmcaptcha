@@ -125,7 +125,7 @@ mod tests {
 
     use super::System;
     use super::*;
-    use crate::cache::HashCache;
+    use crate::cache::hashcache::HashCache;
     use crate::master::embedded::counter::tests::*;
     use crate::master::embedded::master::Master;
 

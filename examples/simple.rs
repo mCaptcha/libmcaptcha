@@ -1,5 +1,5 @@
 use libmcaptcha::{
-    cache::{messages::VerifyCaptchaResult, HashCache},
+    cache::{hashcache::HashCache, messages::VerifyCaptchaResult},
     master::embedded::master::Master,
     master::messages::AddSiteBuilder,
     pow::{ConfigBuilder, Work},

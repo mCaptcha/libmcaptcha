@@ -47,7 +47,7 @@
 //!
 //! ```rust
 //! use libmcaptcha::{
-//!     cache::{messages::VerifyCaptchaResult, HashCache},
+//!     cache::{messages::VerifyCaptchaResult, hashcache::HashCache},
 //!     master::embedded::master:: Master,
 //!     master::messages::AddSiteBuilder,
 //!     pow::{ConfigBuilder, Work},
@@ -191,7 +191,6 @@ pub mod master;
 mod redis;
 
 /// message datatypes to interact with [MCaptcha] actor
-#[cfg(feature = "full")]
 pub mod cache;
 pub mod mcaptcha;
 #[cfg(feature = "full")]
