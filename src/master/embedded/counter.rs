@@ -284,7 +284,7 @@ pub mod tests {
             Some(CaptchaError::PleaseSetValue("defense".into()))
         );
 
-        let m = MCaptchaBuilder::default().defense(defense.clone()).build();
+        let m = MCaptchaBuilder::default().defense(defense).build();
         assert_eq!(
             m.err(),
             Some(CaptchaError::PleaseSetValue("duration".into()))

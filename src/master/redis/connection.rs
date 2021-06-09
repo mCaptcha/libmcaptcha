@@ -77,24 +77,17 @@ impl MCaptchaRedisConnection {
         let commands = vec![ADD_VISITOR, ADD_CAPTCHA, DEL, CAPTCHA_EXISTS, GET];
 
         for cmd in commands.iter() {
-            match self
+            if let Value::Bulk(mut val) = self
                 .0
                 .exec(redis::cmd("COMMAND").arg(&["INFO", cmd]))
                 .await
                 .unwrap()
             {
-                Value::Bulk(mut val) => {
-                    match val.pop() {
-                        Some(Value::Nil) => {
-                            return Err(CaptchaError::MCaptchaRediSModuleCommandNotFound(
-                                cmd.to_string(),
-                            ))
-                        }
-                        _ => (),
-                    };
-                }
-
-                _ => (),
+                if let Some(Value::Nil) = val.pop() {
+                    return Err(CaptchaError::MCaptchaRediSModuleCommandNotFound(
+                        cmd.to_string(),
+                    ));
+                };
             };
         }
 

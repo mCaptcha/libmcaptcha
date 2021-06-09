@@ -48,7 +48,7 @@ impl HashCache {
     // retrive [PoWConfig] from cache. Deletes config post retrival
     fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<CachedPoWConfig>> {
         if let Some(difficulty_factor) = self.remove_pow_config(&string) {
-            Ok(Some(difficulty_factor.to_owned()))
+            Ok(Some(difficulty_factor))
         } else {
             Ok(None)
         }
@@ -69,9 +69,9 @@ impl HashCache {
     fn verify_captcha_result(&mut self, challenge: VerifyCaptchaResult) -> CaptchaResult<bool> {
         if let Some(captcha_id) = self.remove_cache_result(&challenge.token) {
             if captcha_id == challenge.key {
-                return Ok(true);
+                Ok(true)
             } else {
-                return Ok(false);
+                Ok(false)
             }
         } else {
             Ok(false)
@@ -101,7 +101,7 @@ impl Handler<CachePoW> for HashCache {
         let addr = ctx.address();
         let del_msg = DeletePoW(msg.string.clone());
 
-        let duration: Duration = Duration::new(msg.duration.clone(), 0);
+        let duration: Duration = Duration::new(msg.duration, 0);
         let wait_for = async move {
             //sleep(duration).await;
             delay_for(duration).await;
@@ -144,7 +144,7 @@ impl Handler<CacheResult> for HashCache {
             token: msg.token.clone(),
         };
 
-        let duration: Duration = Duration::new(msg.duration.clone(), 0);
+        let duration: Duration = Duration::new(msg.duration, 0);
         let wait_for = async move {
             //sleep(duration).await;
             delay_for(duration).await;

@@ -45,7 +45,7 @@ impl MasterTrait for Master {}
 impl Master {
     /// add [Counter] actor to [Master]
     pub fn add_site(&mut self, addr: Addr<Counter>, id: String) {
-        self.sites.insert(id, (None, addr.to_owned()));
+        self.sites.insert(id, (None, addr));
     }
 
     /// create new master
@@ -58,7 +58,7 @@ impl Master {
     }
 
     /// get [Counter] actor from [Master]
-    pub fn get_site<'a, 'b>(&'a mut self, id: &'b str) -> Option<Addr<Counter>> {
+    pub fn get_site(&mut self, id: &str) -> Option<Addr<Counter>> {
         let mut r = None;
         if let Some((read_val, addr)) = self.sites.get_mut(id) {
             r = Some(addr.clone());
@@ -111,7 +111,7 @@ impl Handler<AddVisitor> for Master {
                 ctx.spawn(fut);
             }
         }
-        return MessageResult(rx);
+        MessageResult(rx)
     }
 }
 
@@ -125,10 +125,9 @@ impl Handler<GetSite> for Master {
 
     fn handle(&mut self, m: GetSite, _ctx: &mut Self::Context) -> Self::Result {
         let addr = self.get_site(&m.0);
-        if addr.is_none() {
-            return MessageResult(None);
-        } else {
-            return MessageResult(Some(addr.unwrap().clone()));
+        match addr {
+            None => MessageResult(None),
+            Some(addr) => MessageResult(Some(addr)),
         }
     }
 }
