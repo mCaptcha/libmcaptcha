@@ -15,25 +15,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+//! Redis Client/Connection manager that can handle both single and clustered Redis Instances
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use redis::cluster::ClusterClient;
-use redis::FromRedisValue;
-//use redis::cluster::ClusterConnection;
 use redis::Client;
-//use redis::Connection;
+use redis::FromRedisValue;
 use redis::{aio::Connection, cluster::ClusterConnection};
 
 use crate::errors::*;
 
+/// Client configuration
 #[derive(Clone)]
 pub enum RedisConfig {
+    /// Redis server URL
     Single(String),
+    /// List of URL of Redis nodes in cluster mode
     Cluster(Vec<String>),
 }
 
 impl RedisConfig {
+    /// Create Redis connection
     pub fn connect(&self) -> RedisClient {
         match self {
             Self::Single(url) => {
@@ -48,6 +51,7 @@ impl RedisConfig {
     }
 }
 
+/// Redis connection - manages both single and clustered deployments
 pub enum RedisConnection {
     Single(Rc<RefCell<Connection>>),
     Cluster(Rc<RefCell<ClusterConnection>>),
@@ -55,6 +59,7 @@ pub enum RedisConnection {
 
 impl RedisConnection {
     #[inline]
+    /// Get client. Uses interior mutability, so lookout for panics
     pub fn get_client(&self) -> Self {
         match self {
             Self::Single(con) => Self::Single(Rc::clone(&con)),
@@ -62,6 +67,7 @@ impl RedisConnection {
         }
     }
     #[inline]
+    /// execute a redis command against a [Self]
     pub async fn exec<T: FromRedisValue>(&self, cmd: &mut redis::Cmd) -> redis::RedisResult<T> {
         match self {
             RedisConnection::Single(con) => cmd.query_async(&mut *con.borrow_mut()).await,
@@ -71,17 +77,21 @@ impl RedisConnection {
 }
 
 #[derive(Clone)]
+/// Client Configuration that can be used to get new connection shuld [RedisConnection] fail
 pub enum RedisClient {
     Single(Client),
     Cluster(ClusterClient),
 }
 
+/// A Redis Client Object that encapsulates [RedisClient] and [RedisConnection].
+/// Use this when you need a Redis Client
 pub struct Redis {
     _client: RedisClient,
     connection: RedisConnection,
 }
 
 impl Redis {
+    /// create new [Redis]. Will try to connect to Redis instance specified in [RedisConfig]
     pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
         let (_client, connection) = Self::connect(redis).await;
         let master = Self {
@@ -91,6 +101,9 @@ impl Redis {
         Ok(master)
     }
 
+    /// Get client to do interact with Redis server.
+    ///
+    /// Uses Interior mutability so look out for panics
     pub fn get_client(&self) -> RedisConnection {
         self.connection.get_client()
     }

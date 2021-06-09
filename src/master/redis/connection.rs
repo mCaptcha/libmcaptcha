@@ -28,7 +28,7 @@ use crate::redis::RedisConnection;
 /// Redis instance with mCaptcha Redis module loaded
 pub struct MCaptchaRedis(Redis);
 
-/// Redis instance with mCaptcha Redis module loaded
+/// Connection to Redis instance with mCaptcha Redis module loaded
 pub struct MCaptchaRedisConnection(RedisConnection);
 
 const GET: &str = "MCAPTCHA_CACHE.GET";
@@ -40,6 +40,10 @@ const CAPTCHA_EXISTS: &str = "MCAPTCHA_CACHE.CAPTCHA_EXISTS";
 const MODULE_NAME: &str = "mcaptcha_cahce";
 
 impl MCaptchaRedis {
+    /// Get new [MCaptchaRedis]. Use this when executing commands that are
+    /// only supported by mCaptcha Redis module. Internally, when object
+    /// is created, checks are performed to check if the module is loaded and if
+    /// the required commands are available
     pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
         let redis = Redis::new(redis).await?;
         let m = MCaptchaRedis(redis);
@@ -47,13 +51,16 @@ impl MCaptchaRedis {
         Ok(m)
     }
 
+    /// Get connection to a Redis instance with mCaptcha Redis module loaded
+    ///
+    /// Uses interior mutability so look out for panics!
     pub fn get_client(&self) -> MCaptchaRedisConnection {
         MCaptchaRedisConnection(self.0.get_client())
     }
 }
 
 impl MCaptchaRedisConnection {
-    pub async fn is_module_loaded(&self) -> CaptchaResult<()> {
+    async fn is_module_loaded(&self) -> CaptchaResult<()> {
         let modules: Vec<Vec<String>> = self
             .0
             .exec(redis::cmd("MODULE").arg(&["LIST"]))
@@ -94,12 +101,14 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
+    /// Add visitor
     pub async fn add_visitor(&self, msg: AddVisitor) -> CaptchaResult<Option<AddVisitorResult>> {
         let res: String = self.0.exec(redis::cmd(ADD_VISITOR).arg(&[msg.0])).await?;
         let res: AddVisitorResult = serde_json::from_str(&res).unwrap();
         Ok(Some(res))
     }
 
+    /// Register new mCaptcha with Redis
     pub async fn add_mcaptcha(&self, msg: AddSite) -> CaptchaResult<()> {
         let name = msg.id;
         let captcha: CreateMCaptcha = msg.mcaptcha.into();
@@ -110,6 +119,7 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
+    /// Check if an mCaptcha object is available in Redis
     pub async fn check_captcha_exists(&self, captcha: &str) -> CaptchaResult<bool> {
         let exists: usize = self
             .0
@@ -129,11 +139,13 @@ impl MCaptchaRedisConnection {
         }
     }
 
+    /// Delete an mCaptcha object from Redis
     pub async fn delete_captcha(&self, captcha: &str) -> CaptchaResult<()> {
         self.0.exec(redis::cmd(DEL).arg(&[captcha])).await?;
         Ok(())
     }
 
+    /// Get number of visitors of an mCaptcha object from Redis
     pub async fn get_visitors(&self, captcha: &str) -> CaptchaResult<usize> {
         let visitors: usize = self.0.exec(redis::cmd(GET).arg(&[captcha])).await?;
         Ok(visitors)

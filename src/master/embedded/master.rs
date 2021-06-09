@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//! [Master] actor module that manages [Counter] actors
+//! Embedded [Master] actor module that manages [Counter] actors
 use std::collections::BTreeMap;
 use std::sync::mpsc::channel;
 use std::time::Duration;

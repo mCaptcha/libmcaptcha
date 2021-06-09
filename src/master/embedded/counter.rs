@@ -99,36 +99,6 @@ impl From<MCaptcha> for Counter {
         Counter(m)
     }
 }
-
-// impl Counter {
-//     /// increments the visitor count by one
-//     pub fn add_visitor(&mut self) {
-//         self.visitor_threshold += 1;
-//         if self.visitor_threshold > self.defense.visitor_threshold() {
-//             self.defense.tighten_up();
-//         } else {
-//             self.defense.loosen_up();
-//         }
-//     }
-//
-//     /// decrements the visitor count by one
-//     pub fn decrement_visitor(&mut self) {
-//         if self.visitor_threshold > 0 {
-//             self.visitor_threshold -= 1;
-//         }
-//     }
-//
-//     /// get current difficulty factor
-//     pub fn get_difficulty(&self) -> u32 {
-//         self.defense.get_difficulty()
-//     }
-//
-//     /// get [Counter]'s lifetime
-//     pub fn get_duration(&self) -> u64 {
-//         self.duration
-//     }
-// }
-
 impl Actor for Counter {
     type Context = Context<Self>;
 }
@@ -150,15 +120,6 @@ impl Handler<DeleteVisitor> for Counter {
 #[derive(Message)]
 #[rtype(result = "AddVisitorResult")]
 pub struct AddVisitor;
-
-//impl AddVisitorResult {
-//    fn new(m: &Counter) -> Self {
-//        AddVisitorResult {
-//            duration: m.0.get_duration(),
-//            difficulty_factor: m.0.get_difficulty(),
-//        }
-//    }
-//}
 
 impl Handler<AddVisitor> for Counter {
     type Result = MessageResult<AddVisitor>;

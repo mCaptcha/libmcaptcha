@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! [Master] actor module that manages [MCaptcha] actors
-
 use serde::{Deserialize, Serialize};
 
 use crate::mcaptcha::*;
@@ -34,6 +33,8 @@ pub trait Master:
 }
 
 #[derive(Serialize, Deserialize)]
+/// [mCaptcha Redis module](https://github.com/mCaptcha/cache) uses this datatype for CAPTCHA
+/// registration
 pub struct CreateMCaptcha {
     pub levels: Vec<crate::defense::Level>,
     pub duration: u64,
@@ -49,6 +50,7 @@ pub struct AddVisitorResult {
 }
 
 impl AddVisitorResult {
+    /// create new [AddVisitorResult] from [MCaptcha]
     pub fn new(m: &MCaptcha) -> Self {
         AddVisitorResult {
             duration: m.get_duration(),
@@ -59,6 +61,7 @@ impl AddVisitorResult {
 
 #[cfg(feature = "full")]
 pub mod messages {
+    //! Messages that a [super::Master] should respond to
     use std::sync::mpsc::Receiver;
 
     use actix::dev::*;
