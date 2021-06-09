@@ -218,6 +218,11 @@
 <span id="215">215</span>
 <span id="216">216</span>
 <span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -270,7 +275,7 @@
 <span class="doccomment">//! use libmcaptcha::{</span>
 <span class="doccomment">//!     cache::{messages::VerifyCaptchaResult, HashCache},</span>
 <span class="doccomment">//!     master::embedded::master:: Master,</span>
-<span class="doccomment">//!     master::AddSiteBuilder,</span>
+<span class="doccomment">//!     master::messages::AddSiteBuilder,</span>
 <span class="doccomment">//!     pow::{ConfigBuilder, Work},</span>
 <span class="doccomment">//!     system::SystemBuilder,</span>
 <span class="doccomment">//!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,</span>
@@ -408,6 +413,9 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+<span class="kw">mod</span> <span class="ident">redis</span>;
+
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span>;
@@ -421,18 +429,20 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cache</span>::<span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
-
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::{<span class="ident">Defense</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">LevelBuilder</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">master</span>::<span class="ident">embedded</span>::<span class="ident">counter</span>::<span class="ident">Counter</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::{<span class="ident">Defense</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">LevelBuilder</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">AddVisitorResult</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">CreateMCaptcha</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;minimal&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dev</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">AddVisitorResult</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">CreateMCaptcha</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::{<span class="ident">Defense</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">LevelBuilder</span>};
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::{<span class="ident">MCaptcha</span>, <span class="ident">MCaptchaBuilder</span>};
 }

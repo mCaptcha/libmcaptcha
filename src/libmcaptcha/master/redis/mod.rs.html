@@ -21,23 +21,6 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
-<span id="21">21</span>
-<span id="22">22</span>
-<span id="23">23</span>
-<span id="24">24</span>
-<span id="25">25</span>
-<span id="26">26</span>
-<span id="27">27</span>
-<span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
-<span id="35">35</span>
-<span id="36">36</span>
-<span id="37">37</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -56,26 +39,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefMut</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>;
 
-<span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">cluster</span>::<span class="ident">ClusterClient</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">RedisError</span>;
-<span class="comment">//use redis::cluster::ClusterConnection;</span>
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Client</span>;
-<span class="comment">//use redis::Connection;</span>
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">RedisResult</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Value</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio</span>::<span class="ident">Connection</span>, <span class="ident">cluster</span>::<span class="ident">ClusterConnection</span>};
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-
-<span class="kw">mod</span> <span class="ident">connection</span>;
-<span class="kw">mod</span> <span class="ident">master</span>;
-
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">master</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">connection</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="libmcaptcha" data-search-js="../../../../search-index.js"></div>
     <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

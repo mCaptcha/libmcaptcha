@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Redis",""],["RedisClient",""]],"struct":[["Master",""]]});
+initSidebarItems({"mod":[["connection",""],["master",""]]});

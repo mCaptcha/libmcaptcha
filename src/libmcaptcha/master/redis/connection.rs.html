@@ -186,9 +186,6 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -207,51 +204,50 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefMut</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
-
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">cluster</span>::<span class="ident">ClusterClient</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">RedisError</span>;
-<span class="comment">//use redis::cluster::ClusterConnection;</span>
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Client</span>;
-<span class="comment">//use redis::Connection;</span>
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">RedisResult</span>;
 <span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Value</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio</span>::<span class="ident">Connection</span>, <span class="ident">cluster</span>::<span class="ident">ClusterConnection</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>, <span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">messages</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">AddVisitorResult</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">CreateMCaptcha</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">Redis</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">RedisConfig</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">RedisConnection</span>;
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisConnection</span> {
-    <span class="ident">Single</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Connection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
-    <span class="ident">Cluster</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">ClusterConnection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
-}
+<span class="doccomment">/// Redis instance with mCaptcha Redis module loaded</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptchaRedis</span>(<span class="ident">Redis</span>);
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="doccomment">/// Redis instance with mCaptcha Redis module loaded</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptchaRedisConnection</span>(<span class="ident">RedisConnection</span>);
+
 <span class="kw">const</span> <span class="ident">GET</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.GET&quot;</span>;
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">const</span> <span class="ident">ADD_VISITOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.ADD_VISITOR&quot;</span>;
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">const</span> <span class="ident">DEL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.DELETE_CAPTCHA&quot;</span>;
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">const</span> <span class="ident">ADD_CAPTCHA</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.ADD_CAPTCHA&quot;</span>;
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="kw">const</span> <span class="ident">CAPTCHA_EXISTS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.CAPTCHA_EXISTS&quot;</span>;
 
 <span class="kw">const</span> <span class="ident">MODULE_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;mcaptcha_cahce&quot;</span>;
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">exec</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">cmd</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">con</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">con</span> {
-            <span class="ident">RedisConnection</span>::<span class="ident">Single</span>(<span class="ident">con</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cmd</span>.<span class="ident">query_async</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">con</span>.<span class="ident">borrow_mut</span>()).<span class="kw">await</span>,
-            <span class="ident">RedisConnection</span>::<span class="ident">Cluster</span>(<span class="ident">con</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">cmd</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">con</span>.<span class="ident">borrow_mut</span>()),
-        }
-    };
+
+<span class="kw">impl</span> <span class="ident">MCaptchaRedis</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">redis</span>: <span class="ident">RedisConfig</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">redis</span> <span class="op">=</span> <span class="ident">Redis</span>::<span class="ident">new</span>(<span class="ident">redis</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaRedis</span>(<span class="ident">redis</span>);
+        <span class="ident">m</span>.<span class="ident">get_client</span>().<span class="ident">is_module_loaded</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">m</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MCaptchaRedisConnection</span> {
+        <span class="ident">MCaptchaRedisConnection</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get_client</span>())
+    }
 }
 
-<span class="kw">impl</span> <span class="ident">RedisConnection</span> {
+<span class="kw">impl</span> <span class="ident">MCaptchaRedisConnection</span> {
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">is_module_loaded</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="string">&quot;MODULE&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;LIST&quot;</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">modules</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="number">0</span>
+            .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="string">&quot;MODULE&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;LIST&quot;</span>]))
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
 
         <span class="kw">for</span> <span class="ident">list</span> <span class="kw">in</span> <span class="ident">modules</span>.<span class="ident">iter</span>() {
             <span class="kw">match</span> <span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">module</span><span class="op">|</span> <span class="ident">module</span>.<span class="ident">as_str</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">MODULE_NAME</span>) {
@@ -263,7 +259,12 @@
         <span class="kw">let</span> <span class="ident">commands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">ADD_VISITOR</span>, <span class="ident">ADD_CAPTCHA</span>, <span class="ident">DEL</span>, <span class="ident">CAPTCHA_EXISTS</span>, <span class="ident">GET</span>];
 
         <span class="kw">for</span> <span class="ident">cmd</span> <span class="kw">in</span> <span class="ident">commands</span>.<span class="ident">iter</span>() {
-            <span class="kw">match</span> <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="string">&quot;COMMAND&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;INFO&quot;</span>, <span class="ident">cmd</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>() {
+            <span class="kw">match</span> <span class="self">self</span>
+                .<span class="number">0</span>
+                .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="string">&quot;COMMAND&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;INFO&quot;</span>, <span class="ident">cmd</span>]))
+                .<span class="kw">await</span>
+                .<span class="ident">unwrap</span>()
+            {
                 <span class="ident">Value</span>::<span class="ident">Bulk</span>(<span class="kw-2">mut</span> <span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">pop</span>() {
                         <span class="prelude-val">Some</span>(<span class="ident">Value</span>::<span class="ident">Nil</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -283,7 +284,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_visitor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">AddVisitor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AddVisitorResult</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span>: <span class="ident">String</span> <span class="op">=</span> <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">ADD_VISITOR</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">msg</span>.<span class="number">0</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">res</span>: <span class="ident">String</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">ADD_VISITOR</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">msg</span>.<span class="number">0</span>])).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">res</span>: <span class="ident">AddVisitorResult</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>).<span class="ident">unwrap</span>();
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">res</span>))
     }
@@ -292,12 +293,17 @@
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">id</span>;
         <span class="kw">let</span> <span class="ident">captcha</span>: <span class="ident">CreateMCaptcha</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">mcaptcha</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">captcha</span>).<span class="ident">unwrap</span>();
-        <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">ADD_CAPTCHA</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">name</span>, <span class="ident">payload</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="number">0</span>
+            .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">ADD_CAPTCHA</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">name</span>, <span class="ident">payload</span>]))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">check_captcha_exists</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">captcha</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">exists</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">CAPTCHA_EXISTS</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">exists</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="number">0</span>
+            .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">CAPTCHA_EXISTS</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>]))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">exists</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">exists</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
@@ -313,12 +319,12 @@
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete_captcha</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">captcha</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">DEL</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">DEL</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>])).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_visitors</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">captcha</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">visitors</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="macro">exec</span><span class="macro">!</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">GET</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>]), <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">visitors</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">GET</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">captcha</span>])).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">visitors</span>)
     }
 }
@@ -326,32 +332,20 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">defense</span>::{<span class="ident">Level</span>, <span class="ident">LevelBuilder</span>};
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">embedded</span>::<span class="ident">counter</span>::<span class="ident">tests</span>::<span class="ident">get_mcaptcha</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">redis</span>::<span class="ident">master</span>::{<span class="ident">Master</span>, <span class="ident">Redis</span>, <span class="ident">RedisClient</span>};
-
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">connect</span>(<span class="ident">redis</span>: <span class="kw-2">&amp;</span><span class="ident">Redis</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisConnection</span> {
-        <span class="kw">let</span> <span class="ident">redis</span> <span class="op">=</span> <span class="ident">redis</span>.<span class="ident">connect</span>();
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">redis</span> {
-            <span class="ident">RedisClient</span>::<span class="ident">Single</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">con</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">get_async_connection</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
-                <span class="ident">RedisConnection</span>::<span class="ident">Single</span>(<span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="ident">con</span>)))
-            }
-            <span class="ident">RedisClient</span>::<span class="ident">Cluster</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">con</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">get_connection</span>().<span class="ident">unwrap</span>();
-                <span class="ident">RedisConnection</span>::<span class="ident">Cluster</span>(<span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="ident">con</span>)))
-            }
-        }
-    }
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="kw-2">*</span>;
 
     <span class="kw">const</span> <span class="ident">CAPTCHA_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;REDIS_CAPTCHA_TEST&quot;</span>;
-    <span class="kw">const</span> <span class="ident">DURATION</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">10</span>;
     <span class="kw">const</span> <span class="ident">REDIS_URL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.1.1/&quot;</span>;
 
     <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">redis_master_works</span>() {
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">redis</span>::<span class="ident">Client</span>::<span class="ident">open</span>(<span class="string">&quot;redis://127.0.0.1/&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="ident">Redis</span>::<span class="ident">Single</span>(<span class="ident">REDIS_URL</span>.<span class="ident">into</span>())).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">redis</span> <span class="op">=</span> <span class="ident">Redis</span>::<span class="ident">new</span>(<span class="ident">RedisConfig</span>::<span class="ident">Single</span>(<span class="ident">REDIS_URL</span>.<span class="ident">into</span>()))
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">MCaptchaRedis</span>(<span class="ident">redis</span>);
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">get_client</span>();
         {
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">delete_captcha</span>(<span class="ident">CAPTCHA_NAME</span>).<span class="kw">await</span>;
         }

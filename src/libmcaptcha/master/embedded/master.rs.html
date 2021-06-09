@@ -256,8 +256,8 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">counter</span>::<span class="ident">Counter</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">messages</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">Master</span> <span class="kw">as</span> <span class="ident">MasterTrait</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>};
 
 <span class="doccomment">/// This Actor manages the [Counter] actors.</span>
 <span class="doccomment">/// A service can have several [Counter] actors with</span>
@@ -420,7 +420,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">embedded</span>::<span class="ident">counter</span>::<span class="ident">tests</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">AddSiteBuilder</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">messages</span>::<span class="ident">AddSiteBuilder</span>;
 
     <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">master_actor_works</span>() {
