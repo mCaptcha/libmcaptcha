@@ -92,14 +92,18 @@ impl Handler<AddVisitor> for Master {
     fn handle(&mut self, m: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
         let (tx, rx) = channel();
         match self.get_site(&m.0) {
-            None => tx.send(Ok(None)).unwrap(),
+            None => {
+                let _ = tx.send(Ok(None));
+            }
             Some(addr) => {
                 let fut = async move {
                     match addr.send(super::counter::AddVisitor).await {
-                        Ok(val) => tx.send(Ok(Some(val))).unwrap(),
+                        Ok(val) => {
+                            let _ = tx.send(Ok(Some(val)));
+                        }
                         Err(e) => {
                             let err: CaptchaError = e.into();
-                            tx.send(Err(err)).unwrap();
+                            let _ = tx.send(Err(err));
                         }
                     }
                 }

@@ -71,7 +71,7 @@ pub mod messages {
     use crate::mcaptcha::MCaptcha;
 
     /// Message to add visitor to an [MCaptcha] actor
-    #[derive(Message)]
+    #[derive(Message, Clone)]
     #[rtype(result = "Receiver<CaptchaResult<Option<super::AddVisitorResult>>>")]
     pub struct AddVisitor(pub String);
 

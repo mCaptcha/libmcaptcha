@@ -52,7 +52,7 @@ impl Handler<AddVisitor> for Master {
         let con = self.redis.get_client();
         let fut = async move {
             let res = con.add_visitor(m).await;
-            tx.send(res).unwrap()
+            let _ = tx.send(res);
         }
         .into_actor(self);
         ctx.wait(fut);
@@ -82,12 +82,11 @@ mod tests {
     use crate::master::redis::master::Master;
     use crate::redis::RedisConfig;
 
-    const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
-
     const REDIS_URL: &str = "redis://127.0.1.1/";
 
     #[actix_rt::test]
     async fn redis_master_works() {
+        const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
         let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
         let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
         let r = sec_master.unwrap().redis.get_client();
@@ -116,5 +115,45 @@ mod tests {
 
         let timer_expire = std::time::Duration::new(duration, 0);
         actix::clock::delay_for(timer_expire).await;
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 0);
+    }
+
+    #[actix_rt::test]
+    async fn race_redis_master() {
+        const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_RACE";
+
+        let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let r = sec_master.unwrap().redis.get_client();
+
+        assert!(master.is_ok());
+        let master = master.unwrap();
+        {
+            let _ = master.redis.get_client().delete_captcha(CAPTCHA_NAME).await;
+        }
+
+        let addr = master.start();
+
+        let mcaptcha = get_mcaptcha();
+        let duration = mcaptcha.get_duration();
+
+        let add_mcaptcha_msg = AddSite {
+            id: CAPTCHA_NAME.into(),
+            mcaptcha,
+        };
+        addr.send(add_mcaptcha_msg).await.unwrap();
+
+        let add_visitor_msg = AddVisitor(CAPTCHA_NAME.into());
+        for _ in 0..500 {
+            addr.send(add_visitor_msg.clone()).await.unwrap();
+        }
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 500);
+
+        let timer_expire = std::time::Duration::new(duration, 0);
+        actix::clock::delay_for(timer_expire).await;
+        let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
+        assert_eq!(visitors, 0);
     }
 }
