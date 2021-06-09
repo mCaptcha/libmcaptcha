@@ -124,6 +124,10 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -144,22 +148,32 @@
  */</span>
 <span class="doccomment">//! Cache is used to save proofof work details and nonces to prevent replay attacks</span>
 <span class="doccomment">//! and rainbow/dictionary attacks</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">hashcache</span>::<span class="ident">HashCache</span>;
-<span class="kw">use</span> <span class="ident">messages</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hashcache</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddChallenge</span> {
+    <span class="kw">pub</span> <span class="ident">difficulty</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">challenge</span>: <span class="ident">String</span>,
+}
+
 <span class="doccomment">/// Describes actor handler trait impls that are required by a cache implementation</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Save</span>:
     <span class="ident">actix</span>::<span class="ident">Actor</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">RetrivePoW</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">CachePoW</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">DeletePoW</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">CacheResult</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">VerifyCaptchaResult</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">DeleteCaptchaResult</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">RetrivePoW</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">CachePoW</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">DeletePoW</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">CacheResult</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">VerifyCaptchaResult</span><span class="op">&gt;</span>
+    <span class="op">+</span> <span class="ident">actix</span>::<span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">messages</span>::<span class="ident">DeleteCaptchaResult</span><span class="op">&gt;</span>
 {
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span> {
     <span class="doccomment">//! Messages that can be sent to cache data structures implementing [Save][super::Save]</span>
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
@@ -172,22 +186,15 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Builder</span>, <span class="ident">Clone</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CachePoW</span> {
+        <span class="doccomment">/// challenge string</span>
         <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
+        <span class="doccomment">/// Difficulty factor of mCaptcha at the time of minting this config</span>
         <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
+        <span class="doccomment">/// mCaptcha TTL</span>
         <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
+        <span class="doccomment">/// Key is mCaptcha name</span>
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
     }
-
-    <span class="comment">//    pub fn new(p: &amp;PoWConfig, k: String, v: &amp;AddVisitorResult) -&gt; Self {</span>
-    <span class="comment">//        CachePoWBuilder::default()</span>
-    <span class="comment">//            .string(p.string.clone())</span>
-    <span class="comment">//            .difficulty_factor(v.difficulty_factor)</span>
-    <span class="comment">//            .duration(v.duration)</span>
-    <span class="comment">//            .key(k)</span>
-    <span class="comment">//            .build()</span>
-    <span class="comment">//            .unwrap()</span>
-    <span class="comment">//    }</span>
-    <span class="comment">//}</span>
 
     <span class="doccomment">/// Message to retrive the the difficulty factor for the specified</span>
     <span class="doccomment">/// string from the cache</span>
@@ -197,6 +204,7 @@
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CachedPoWConfig</span> {
+        <span class="doccomment">/// mCaptcha name</span>
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
         <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
@@ -214,7 +222,7 @@
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;CaptchaResult&lt;()&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CacheResult</span> {
         <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">String</span>,
-        <span class="comment">// key is Captcha identifier</span>
+        <span class="doccomment">/// key is mCaptcha identifier</span>
         <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
     }

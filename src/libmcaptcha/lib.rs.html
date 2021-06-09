@@ -222,7 +222,6 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
-<span id="222">222</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -273,7 +272,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```rust</span>
 <span class="doccomment">//! use libmcaptcha::{</span>
-<span class="doccomment">//!     cache::{messages::VerifyCaptchaResult, HashCache},</span>
+<span class="doccomment">//!     cache::{messages::VerifyCaptchaResult, hashcache::HashCache},</span>
 <span class="doccomment">//!     master::embedded::master:: Master,</span>
 <span class="doccomment">//!     master::messages::AddSiteBuilder,</span>
 <span class="doccomment">//!     pow::{ConfigBuilder, Work},</span>
@@ -417,7 +416,6 @@
 <span class="kw">mod</span> <span class="ident">redis</span>;
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcaptcha</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
