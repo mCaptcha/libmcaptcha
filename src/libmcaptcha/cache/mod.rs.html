@@ -128,6 +128,8 @@
 <span id="125">125</span>
 <span id="126">126</span>
 <span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -152,10 +154,12 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hashcache</span>;
+<span class="comment">//#[cfg(feature = &quot;full&quot;)]</span>
+<span class="comment">//pub mod redis;</span>
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddChallenge</span> {
-    <span class="kw">pub</span> <span class="ident">difficulty</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">difficulty</span>: <span class="ident">u32</span>,
     <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">challenge</span>: <span class="ident">String</span>,
 }

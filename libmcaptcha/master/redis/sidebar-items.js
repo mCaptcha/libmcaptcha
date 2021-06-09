@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["connection",""],["master",""]]});
+initSidebarItems({"mod":[["master",""]]});

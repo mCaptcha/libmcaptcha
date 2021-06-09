@@ -182,10 +182,10 @@
 
 <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">connection</span>::<span class="ident">MCaptchaRedis</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">messages</span>::{<span class="ident">AddSite</span>, <span class="ident">AddVisitor</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">master</span>::<span class="ident">Master</span> <span class="kw">as</span> <span class="ident">MasterTrait</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">mcaptcha_redis</span>::<span class="ident">MCaptchaRedis</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">RedisConfig</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Master</span> {
