@@ -21,10 +21,12 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "full")]
 pub mod hashcache;
+//#[cfg(feature = "full")]
+//pub mod redis;
 
 #[derive(Serialize, Deserialize)]
 pub struct AddChallenge {
-    pub difficulty: usize,
+    pub difficulty: u32,
     pub duration: u64,
     pub challenge: String,
 }

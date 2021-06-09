@@ -24,6 +24,7 @@ use redis::Client;
 use redis::FromRedisValue;
 use redis::{aio::Connection, cluster::ClusterConnection};
 
+pub mod mcaptcha_redis;
 use crate::errors::*;
 
 /// Client configuration

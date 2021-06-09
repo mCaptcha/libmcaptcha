@@ -17,6 +17,8 @@
  */
 use redis::Value;
 
+use crate::cache::messages::VerifyCaptchaResult;
+use crate::cache::AddChallenge;
 use crate::errors::*;
 use crate::master::messages::{AddSite, AddVisitor};
 use crate::master::AddVisitorResult;
@@ -36,6 +38,8 @@ const ADD_VISITOR: &str = "MCAPTCHA_CACHE.ADD_VISITOR";
 const DEL: &str = "MCAPTCHA_CACHE.DELETE_CAPTCHA";
 const ADD_CAPTCHA: &str = "MCAPTCHA_CACHE.ADD_CAPTCHA";
 const CAPTCHA_EXISTS: &str = "MCAPTCHA_CACHE.CAPTCHA_EXISTS";
+const ADD_CHALLENGE: &str = "MCAPTCHA_CACHE.ADD_CHALLENGE";
+const GET_CHALLENGE: &str = "MCAPTCHA_CACHE.GET_CHALLENGE";
 
 const MODULE_NAME: &str = "mcaptcha_cahce";
 
@@ -74,7 +78,15 @@ impl MCaptchaRedisConnection {
             }
         }
 
-        let commands = vec![ADD_VISITOR, ADD_CAPTCHA, DEL, CAPTCHA_EXISTS, GET];
+        let commands = vec![
+            ADD_VISITOR,
+            ADD_CAPTCHA,
+            DEL,
+            CAPTCHA_EXISTS,
+            GET,
+            ADD_CHALLENGE,
+            GET_CHALLENGE,
+        ];
 
         for cmd in commands.iter() {
             if let Value::Bulk(mut val) = self
@@ -138,6 +150,31 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
+    /// Delete an mCaptcha object from Redis
+    pub async fn add_challenge(
+        &self,
+        captcha: &str,
+        challlenge: &AddChallenge,
+    ) -> CaptchaResult<()> {
+        let payload = serde_json::to_string(challlenge).unwrap();
+        self.0
+            .exec(redis::cmd(ADD_CHALLENGE).arg(&[captcha, &payload]))
+            .await?;
+        Ok(())
+    }
+
+    /// Delete an mCaptcha object from Redis
+    pub async fn get_challenge(
+        &self,
+        msg: &VerifyCaptchaResult,
+    ) -> CaptchaResult<AddVisitorResult> {
+        let challege: String = self
+            .0
+            .exec(redis::cmd(GET_CHALLENGE).arg(&[&msg.key, &msg.token]))
+            .await?;
+        Ok(serde_json::from_str(&challege).unwrap())
+    }
+
     /// Get number of visitors of an mCaptcha object from Redis
     pub async fn get_visitors(&self, captcha: &str) -> CaptchaResult<usize> {
         let visitors: usize = self.0.exec(redis::cmd(GET).arg(&[captcha])).await?;
@@ -153,6 +190,7 @@ pub mod tests {
 
     const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
     const REDIS_URL: &str = "redis://127.0.1.1/";
+    const CHALLENGE: &str = "randomchallengestring";
 
     #[actix_rt::test]
     async fn redis_master_works() {
@@ -165,11 +203,15 @@ pub mod tests {
         {
             let _ = r.delete_captcha(CAPTCHA_NAME).await;
         }
+
+        let mcaptcha = get_mcaptcha();
+        // let duration = mcaptcha.get_duration();
+
         assert!(r.is_module_loaded().await.is_ok());
         assert!(!r.check_captcha_exists(CAPTCHA_NAME).await.unwrap());
         let add_mcaptcha_msg = AddSite {
             id: CAPTCHA_NAME.into(),
-            mcaptcha: get_mcaptcha(),
+            mcaptcha,
         };
 
         assert!(r.add_mcaptcha(add_mcaptcha_msg).await.is_ok());
@@ -181,9 +223,31 @@ pub mod tests {
         assert_eq!(visitors, 1);
 
         let add_visitor_msg = AddVisitor(CAPTCHA_NAME.into());
-        assert!(r.add_visitor(add_visitor_msg).await.is_ok());
+        let resp = r.add_visitor(add_visitor_msg.clone()).await;
+        assert!(resp.is_ok());
+        assert!(resp.unwrap().is_some());
         let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
         assert_eq!(visitors, 2);
+
+        let add_visitor_res = r.add_visitor(add_visitor_msg).await.unwrap().unwrap();
+        let add_challenge_msg = AddChallenge {
+            difficulty: add_visitor_res.difficulty_factor,
+            duration: add_visitor_res.duration,
+            challenge: CHALLENGE.into(),
+        };
+
+        assert!(r
+            .add_challenge(CAPTCHA_NAME, &add_challenge_msg)
+            .await
+            .is_ok());
+
+        let verify_msg = VerifyCaptchaResult {
+            token: CHALLENGE.into(),
+            key: CAPTCHA_NAME.into(),
+        };
+        let x = r.get_challenge(&verify_msg).await.unwrap();
+        assert_eq!(x.duration, add_challenge_msg.duration);
+        assert_eq!(x.difficulty_factor, add_challenge_msg.difficulty);
 
         assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
     }

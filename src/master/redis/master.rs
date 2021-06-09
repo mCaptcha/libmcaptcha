@@ -19,10 +19,10 @@ use std::sync::mpsc;
 
 use actix::dev::*;
 
-use super::connection::MCaptchaRedis;
 use crate::errors::*;
 use crate::master::messages::{AddSite, AddVisitor};
 use crate::master::Master as MasterTrait;
+use crate::redis::mcaptcha_redis::MCaptchaRedis;
 use crate::redis::RedisConfig;
 
 pub struct Master {

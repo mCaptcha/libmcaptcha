@@ -16,16 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! Cache implementation that uses Redis
-use crate::redis::Redis;
+use crate::redis::mcaptcha_redis::MCaptchaRedis;
+use crate::redis::RedisConfig;
 use std::collections::HashMap;
 
 use actix::prelude::*;
 
 use super::messages::*;
+use super::AddChallenge;
 use super::Save;
 use crate::errors::*;
 
-pub struct RedisCache(Redis);
+pub struct RedisCache(MCaptchaRedis);
 
 #[derive(Clone, Default)]
 /// cache datastructure implementing [Save]
@@ -35,14 +37,25 @@ pub struct HashCache {
 }
 
 impl RedisCache {
+    /// Get new [MCaptchaRedis]. Use this when executing commands that are
+    /// only supported by mCaptcha Redis module. Internally, when object
+    /// is created, checks are performed to check if the module is loaded and if
+    /// the required commands are available
+    pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
+        let m = MCaptchaRedis::new(redis).await?;
+        Ok(Self(m))
+    }
+
     // save [PoWConfig] to cache
     async fn save_pow_config(&mut self, config: CachePoW) -> CaptchaResult<()> {
         let challenge = config.string;
-        let config: CachedPoWConfig = CachedPoWConfig {
-            key: config.key,
-            difficulty_factor: config.difficulty_factor,
+        let payload: AddChallenge = AddChallenge {
+            challenge: config.string,
+            difficulty: config.difficulty_factor as usize,
             duration: config.duration,
         };
+
+        let payload = serde_json::to_string(&payload).unwrap();
 
         // {MCAPTCHA_NAME}:difficulty_map:challenge (difficulty_factor -> duration) EX duration
 
