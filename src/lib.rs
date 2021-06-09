@@ -49,7 +49,7 @@
 //! use libmcaptcha::{
 //!     cache::{messages::VerifyCaptchaResult, HashCache},
 //!     master::embedded::master:: Master,
-//!     master::AddSiteBuilder,
+//!     master::messages::AddSiteBuilder,
 //!     pow::{ConfigBuilder, Work},
 //!     system::SystemBuilder,
 //!     DefenseBuilder, LevelBuilder, MCaptchaBuilder,
@@ -187,6 +187,9 @@ pub mod defense;
 pub mod errors;
 pub mod master;
 
+#[cfg(feature = "full")]
+mod redis;
+
 /// message datatypes to interact with [MCaptcha] actor
 #[cfg(feature = "full")]
 pub mod cache;
@@ -200,18 +203,20 @@ mod utils;
 
 #[cfg(feature = "full")]
 pub use crate::cache::hashcache::HashCache;
-
-pub use crate::defense::{Defense, DefenseBuilder, LevelBuilder};
-pub use crate::master::{AddVisitorResult, CreateMCaptcha};
-pub use crate::mcaptcha::{MCaptcha, MCaptchaBuilder};
 #[cfg(feature = "full")]
 pub use master::embedded::counter::Counter;
 
+pub use crate::defense::{Defense, DefenseBuilder, LevelBuilder};
+pub use crate::master::AddVisitorResult;
+pub use crate::master::CreateMCaptcha;
+pub use crate::mcaptcha::{MCaptcha, MCaptchaBuilder};
+
 #[cfg(feature = "minimal")]
 pub mod dev {
+    pub use super::AddVisitorResult;
+    pub use super::CreateMCaptcha;
     pub use crate::defense;
     pub use crate::defense::{Defense, DefenseBuilder, LevelBuilder};
-    pub use crate::master::{AddVisitorResult, CreateMCaptcha};
     pub use crate::mcaptcha;
     pub use crate::mcaptcha::{MCaptcha, MCaptchaBuilder};
 }

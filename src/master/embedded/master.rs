@@ -27,8 +27,8 @@ use log::info;
 
 use super::counter::Counter;
 use crate::errors::*;
+use crate::master::messages::{AddSite, AddVisitor};
 use crate::master::Master as MasterTrait;
-use crate::master::{AddSite, AddVisitor};
 
 /// This Actor manages the [Counter] actors.
 /// A service can have several [Counter] actors with
@@ -191,7 +191,7 @@ impl Handler<AddSite> for Master {
 mod tests {
     use super::*;
     use crate::master::embedded::counter::tests::*;
-    use crate::master::AddSiteBuilder;
+    use crate::master::messages::AddSiteBuilder;
 
     #[actix_rt::test]
     async fn master_actor_works() {

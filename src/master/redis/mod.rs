@@ -15,23 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-use std::cell::RefCell;
-use std::cell::RefMut;
-use std::rc::Rc;
-use std::sync::mpsc;
 
-use actix::dev::*;
-use redis::cluster::ClusterClient;
-use redis::RedisError;
-//use redis::cluster::ClusterConnection;
-use redis::Client;
-//use redis::Connection;
-use redis::RedisResult;
-use redis::Value;
-use redis::{aio::Connection, cluster::ClusterConnection};
-use serde::{Deserialize, Serialize};
-
-mod connection;
-mod master;
-
-pub use master::*;
+pub mod connection;
+pub mod master;

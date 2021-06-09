@@ -212,7 +212,7 @@ pub mod tests {
     use super::*;
     use crate::defense::*;
     use crate::errors::*;
-    use crate::master::MCaptchaBuilder;
+    use crate::mcaptcha::MCaptchaBuilder;
 
     // constants for testing
     // (visitor count, level)

@@ -15,83 +15,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-use std::cell::RefCell;
-use std::cell::RefMut;
-use std::rc::Rc;
 use std::sync::mpsc;
 
 use actix::dev::*;
-use redis::cluster::ClusterClient;
-use redis::RedisError;
-//use redis::cluster::ClusterConnection;
-use redis::Client;
-//use redis::Connection;
-use redis::RedisResult;
-use redis::Value;
-use redis::{aio::Connection, cluster::ClusterConnection};
-use serde::{Deserialize, Serialize};
 
-use crate::defense::Level;
+use super::connection::MCaptchaRedis;
 use crate::errors::*;
-use crate::master::AddVisitorResult;
-use crate::master::{AddSite, AddVisitor, CreateMCaptcha, Master as MasterTrait};
-
-use super::connection::RedisConnection;
-
-#[derive(Clone)]
-pub enum Redis {
-    Single(String),
-    Cluster(Vec<String>),
-}
-
-impl Redis {
-    pub fn connect(&self) -> RedisClient {
-        match self {
-            Self::Single(url) => {
-                let client = Client::open("redis://127.0.0.1/").unwrap();
-                RedisClient::Single(client)
-            }
-            Self::Cluster(nodes) => {
-                let cluster_client = ClusterClient::open(nodes.to_owned()).unwrap();
-                RedisClient::Cluster(cluster_client)
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub enum RedisClient {
-    Single(Client),
-    Cluster(ClusterClient),
-}
+use crate::master::messages::{AddSite, AddVisitor};
+use crate::master::Master as MasterTrait;
+use crate::redis::RedisConfig;
 
 pub struct Master {
-    pub redis: RedisClient,
-    pub con: Rc<RedisConnection>,
+    pub redis: MCaptchaRedis,
 }
 
 impl Master {
-    pub async fn new(redis: Redis) -> CaptchaResult<Self> {
-        let (redis, con) = Self::connect(redis).await;
-        con.is_module_loaded().await?;
-        let con = Rc::new(con);
-        let master = Self { redis, con };
+    pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
+        let redis = MCaptchaRedis::new(redis).await?;
+        let master = Self { redis };
         Ok(master)
-    }
-
-    async fn connect(redis: Redis) -> (RedisClient, RedisConnection) {
-        let redis = redis.connect();
-        let client = match &redis {
-            RedisClient::Single(c) => {
-                let con = c.get_async_connection().await.unwrap();
-                RedisConnection::Single(Rc::new(RefCell::new(con)))
-            }
-            RedisClient::Cluster(c) => {
-                let con = c.get_connection().unwrap();
-                RedisConnection::Cluster(Rc::new(RefCell::new(con)))
-            }
-        };
-        (redis, client)
     }
 }
 
@@ -107,7 +49,7 @@ impl Handler<AddVisitor> for Master {
     fn handle(&mut self, m: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
         let (tx, rx) = mpsc::channel();
 
-        let con = Rc::clone(&self.con);
+        let con = self.redis.get_client();
         let fut = async move {
             let res = con.add_visitor(m).await;
             tx.send(res).unwrap()
@@ -123,10 +65,9 @@ impl Handler<AddSite> for Master {
 
     fn handle(&mut self, m: AddSite, ctx: &mut Self::Context) -> Self::Result {
         //let (tx, rx) = mpsc::channel();
-
-        let con = Rc::clone(&self.con);
+        let con = self.redis.get_client();
         let fut = async move {
-            let res = con.add_mcaptcha(m).await;
+            let _res = con.add_mcaptcha(m).await;
             //tx.send(res).unwrap();
         }
         .into_actor(self);
@@ -137,33 +78,34 @@ impl Handler<AddSite> for Master {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::defense::{Level, LevelBuilder};
     use crate::master::embedded::counter::tests::get_mcaptcha;
-    use crate::master::redis::connection::tests::connect;
-    use crate::master::redis::master::{Master, Redis};
+    use crate::master::redis::master::Master;
+    use crate::redis::RedisConfig;
 
     const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
-    const DURATION: usize = 10;
 
     const REDIS_URL: &str = "redis://127.0.1.1/";
 
     #[actix_rt::test]
     async fn redis_master_works() {
-        let master = Master::new(Redis::Single(REDIS_URL.into())).await;
-        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-        let r = connect(&Redis::Single(REDIS_URL.into())).await;
+        let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let r = sec_master.unwrap().redis.get_client();
 
         assert!(master.is_ok());
         let master = master.unwrap();
         {
-            let _ = r.delete_captcha(CAPTCHA_NAME).await;
+            let _ = master.redis.get_client().delete_captcha(CAPTCHA_NAME).await;
         }
 
         let addr = master.start();
 
+        let mcaptcha = get_mcaptcha();
+        let duration = mcaptcha.get_duration();
+
         let add_mcaptcha_msg = AddSite {
             id: CAPTCHA_NAME.into(),
-            mcaptcha: get_mcaptcha(),
+            mcaptcha,
         };
         addr.send(add_mcaptcha_msg).await.unwrap();
 
@@ -171,5 +113,8 @@ mod tests {
         addr.send(add_visitor_msg).await.unwrap();
         let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
         assert_eq!(visitors, 1);
+
+        let timer_expire = std::time::Duration::new(duration, 0);
+        actix::clock::delay_for(timer_expire).await;
     }
 }

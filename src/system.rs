@@ -23,6 +23,7 @@ use pow_sha256::Config;
 use crate::cache::messages::*;
 use crate::cache::Save;
 use crate::errors::*;
+use crate::master::messages::*;
 use crate::master::Master;
 use crate::pow::*;
 
@@ -42,13 +43,10 @@ where
         + ToEnvelope<T, CacheResult>
         + ToEnvelope<T, VerifyCaptchaResult>,
     X: Master,
-    <X as actix::Actor>::Context:
-        ToEnvelope<X, crate::master::AddVisitor> + ToEnvelope<X, crate::master::AddSite>,
+    <X as actix::Actor>::Context: ToEnvelope<X, AddVisitor> + ToEnvelope<X, AddSite>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
     pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        use crate::master::AddVisitor;
-
         match self
             .master
             .send(AddVisitor(id.clone()))
@@ -130,7 +128,6 @@ mod tests {
     use crate::cache::HashCache;
     use crate::master::embedded::counter::tests::*;
     use crate::master::embedded::master::Master;
-    use crate::master::*;
 
     const MCAPTCHA_NAME: &str = "batsense.net";
 

@@ -16,49 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! [Master] actor module that manages [MCaptcha] actors
-#[cfg(feature = "full")]
-use std::sync::mpsc::Receiver;
 
-#[cfg(feature = "full")]
-use actix::dev::*;
-#[cfg(feature = "full")]
-use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "full")]
-use crate::errors::CaptchaResult;
+use crate::mcaptcha::*;
 
 #[cfg(feature = "full")]
 pub mod embedded;
-#[allow(
-    unused_variables,
-    unused_imports,
-    unused_variables,
-    dead_code,
-    unused_macros
-)]
-use crate::mcaptcha::*;
-#[allow(
-    unused_variables,
-    unused_imports,
-    unused_variables,
-    dead_code,
-    unused_macros
-)]
 #[cfg(feature = "full")]
 pub mod redis;
 
 #[cfg(feature = "full")]
 /// Describes actor handler trait impls that are required by a cache implementation
-pub trait Master: actix::Actor + actix::Handler<AddVisitor> + actix::Handler<AddSite> {}
+pub trait Master:
+    actix::Actor + actix::Handler<messages::AddVisitor> + actix::Handler<messages::AddSite>
+{
+}
 
-//+ actix::Handler<AddSite>
-
-/// Message to add visitor to an [MCaptcha] actor
-#[derive(Message)]
-#[cfg(feature = "full")]
-#[rtype(result = "Receiver<CaptchaResult<Option<AddVisitorResult>>>")]
-pub struct AddVisitor(pub String);
+#[derive(Serialize, Deserialize)]
+pub struct CreateMCaptcha {
+    pub levels: Vec<crate::defense::Level>,
+    pub duration: u64,
+}
 
 /// Struct representing the return datatime of
 /// [AddVisitor] message. Contains MCaptcha lifetime
@@ -67,15 +46,6 @@ pub struct AddVisitor(pub String);
 pub struct AddVisitorResult {
     pub duration: u64,
     pub difficulty_factor: u32,
-}
-
-/// Message to add an [Counter] actor to [Master]
-#[derive(Message, Builder)]
-#[rtype(result = "()")]
-#[cfg(feature = "full")]
-pub struct AddSite {
-    pub id: String,
-    pub mcaptcha: MCaptcha,
 }
 
 impl AddVisitorResult {
@@ -87,9 +57,26 @@ impl AddVisitorResult {
     }
 }
 
-#[cfg(feature = "minimal")]
-#[derive(Serialize, Deserialize)]
-pub struct CreateMCaptcha {
-    pub levels: Vec<crate::defense::Level>,
-    pub duration: u64,
+#[cfg(feature = "full")]
+pub mod messages {
+    use std::sync::mpsc::Receiver;
+
+    use actix::dev::*;
+    use derive_builder::Builder;
+
+    use crate::errors::CaptchaResult;
+    use crate::mcaptcha::MCaptcha;
+
+    /// Message to add visitor to an [MCaptcha] actor
+    #[derive(Message)]
+    #[rtype(result = "Receiver<CaptchaResult<Option<super::AddVisitorResult>>>")]
+    pub struct AddVisitor(pub String);
+
+    /// Message to add an [Counter] actor to [Master]
+    #[derive(Message, Builder)]
+    #[rtype(result = "()")]
+    pub struct AddSite {
+        pub id: String,
+        pub mcaptcha: MCaptcha,
+    }
 }

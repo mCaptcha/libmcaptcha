@@ -15,51 +15,50 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-use std::cell::RefCell;
-use std::cell::RefMut;
-use std::rc::Rc;
-
-use redis::cluster::ClusterClient;
-use redis::RedisError;
-//use redis::cluster::ClusterConnection;
-use redis::Client;
-//use redis::Connection;
-use redis::RedisResult;
 use redis::Value;
-use redis::{aio::Connection, cluster::ClusterConnection};
 
 use crate::errors::*;
-use crate::master::{AddSite, AddVisitor, AddVisitorResult, CreateMCaptcha};
+use crate::master::messages::{AddSite, AddVisitor};
+use crate::master::AddVisitorResult;
+use crate::master::CreateMCaptcha;
+use crate::redis::Redis;
+use crate::redis::RedisConfig;
+use crate::redis::RedisConnection;
 
-pub enum RedisConnection {
-    Single(Rc<RefCell<Connection>>),
-    Cluster(Rc<RefCell<ClusterConnection>>),
-}
+/// Redis instance with mCaptcha Redis module loaded
+pub struct MCaptchaRedis(Redis);
 
-#[allow(dead_code)]
+/// Redis instance with mCaptcha Redis module loaded
+pub struct MCaptchaRedisConnection(RedisConnection);
+
 const GET: &str = "MCAPTCHA_CACHE.GET";
-#[allow(dead_code)]
 const ADD_VISITOR: &str = "MCAPTCHA_CACHE.ADD_VISITOR";
-#[allow(dead_code)]
 const DEL: &str = "MCAPTCHA_CACHE.DELETE_CAPTCHA";
-#[allow(dead_code)]
 const ADD_CAPTCHA: &str = "MCAPTCHA_CACHE.ADD_CAPTCHA";
-#[allow(dead_code)]
 const CAPTCHA_EXISTS: &str = "MCAPTCHA_CACHE.CAPTCHA_EXISTS";
 
 const MODULE_NAME: &str = "mcaptcha_cahce";
-macro_rules! exec {
-    ($cmd:expr, $con:expr) => {
-        match *$con {
-            RedisConnection::Single(con) => $cmd.query_async(&mut *con.borrow_mut()).await,
-            RedisConnection::Cluster(con) => $cmd.query(&mut *con.borrow_mut()),
-        }
-    };
+
+impl MCaptchaRedis {
+    pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
+        let redis = Redis::new(redis).await?;
+        let m = MCaptchaRedis(redis);
+        m.get_client().is_module_loaded().await?;
+        Ok(m)
+    }
+
+    pub fn get_client(&self) -> MCaptchaRedisConnection {
+        MCaptchaRedisConnection(self.0.get_client())
+    }
 }
 
-impl RedisConnection {
+impl MCaptchaRedisConnection {
     pub async fn is_module_loaded(&self) -> CaptchaResult<()> {
-        let modules: Vec<Vec<String>> = exec!(redis::cmd("MODULE").arg(&["LIST"]), &self).unwrap();
+        let modules: Vec<Vec<String>> = self
+            .0
+            .exec(redis::cmd("MODULE").arg(&["LIST"]))
+            .await
+            .unwrap();
 
         for list in modules.iter() {
             match list.iter().find(|module| module.as_str() == MODULE_NAME) {
@@ -71,7 +70,12 @@ impl RedisConnection {
         let commands = vec![ADD_VISITOR, ADD_CAPTCHA, DEL, CAPTCHA_EXISTS, GET];
 
         for cmd in commands.iter() {
-            match exec!(redis::cmd("COMMAND").arg(&["INFO", cmd]), &self).unwrap() {
+            match self
+                .0
+                .exec(redis::cmd("COMMAND").arg(&["INFO", cmd]))
+                .await
+                .unwrap()
+            {
                 Value::Bulk(mut val) => {
                     match val.pop() {
                         Some(Value::Nil) => {
@@ -91,7 +95,7 @@ impl RedisConnection {
     }
 
     pub async fn add_visitor(&self, msg: AddVisitor) -> CaptchaResult<Option<AddVisitorResult>> {
-        let res: String = exec!(redis::cmd(ADD_VISITOR).arg(&[msg.0]), &self)?;
+        let res: String = self.0.exec(redis::cmd(ADD_VISITOR).arg(&[msg.0])).await?;
         let res: AddVisitorResult = serde_json::from_str(&res).unwrap();
         Ok(Some(res))
     }
@@ -100,12 +104,17 @@ impl RedisConnection {
         let name = msg.id;
         let captcha: CreateMCaptcha = msg.mcaptcha.into();
         let payload = serde_json::to_string(&captcha).unwrap();
-        exec!(redis::cmd(ADD_CAPTCHA).arg(&[name, payload]), &self)?;
+        self.0
+            .exec(redis::cmd(ADD_CAPTCHA).arg(&[name, payload]))
+            .await?;
         Ok(())
     }
 
     pub async fn check_captcha_exists(&self, captcha: &str) -> CaptchaResult<bool> {
-        let exists: usize = exec!(redis::cmd(CAPTCHA_EXISTS).arg(&[captcha]), &self)?;
+        let exists: usize = self
+            .0
+            .exec(redis::cmd(CAPTCHA_EXISTS).arg(&[captcha]))
+            .await?;
         if exists == 1 {
             Ok(false)
         } else if exists == 0 {
@@ -121,12 +130,12 @@ impl RedisConnection {
     }
 
     pub async fn delete_captcha(&self, captcha: &str) -> CaptchaResult<()> {
-        exec!(redis::cmd(DEL).arg(&[captcha]), &self)?;
+        self.0.exec(redis::cmd(DEL).arg(&[captcha])).await?;
         Ok(())
     }
 
     pub async fn get_visitors(&self, captcha: &str) -> CaptchaResult<usize> {
-        let visitors: usize = exec!(redis::cmd(GET).arg(&[captcha]), &self)?;
+        let visitors: usize = self.0.exec(redis::cmd(GET).arg(&[captcha])).await?;
         Ok(visitors)
     }
 }
@@ -134,32 +143,20 @@ impl RedisConnection {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::defense::{Level, LevelBuilder};
     use crate::master::embedded::counter::tests::get_mcaptcha;
-    use crate::master::redis::master::{Master, Redis, RedisClient};
-
-    pub async fn connect(redis: &Redis) -> RedisConnection {
-        let redis = redis.connect();
-        match &redis {
-            RedisClient::Single(c) => {
-                let con = c.get_async_connection().await.unwrap();
-                RedisConnection::Single(Rc::new(RefCell::new(con)))
-            }
-            RedisClient::Cluster(c) => {
-                let con = c.get_connection().unwrap();
-                RedisConnection::Cluster(Rc::new(RefCell::new(con)))
-            }
-        }
-    }
+    use crate::redis::*;
 
     const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
-    const DURATION: usize = 10;
     const REDIS_URL: &str = "redis://127.0.1.1/";
 
     #[actix_rt::test]
     async fn redis_master_works() {
-        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-        let r = connect(&Redis::Single(REDIS_URL.into())).await;
+        let redis = Redis::new(RedisConfig::Single(REDIS_URL.into()))
+            .await
+            .unwrap();
+
+        let r = MCaptchaRedis(redis);
+        let r = r.get_client();
         {
             let _ = r.delete_captcha(CAPTCHA_NAME).await;
         }
