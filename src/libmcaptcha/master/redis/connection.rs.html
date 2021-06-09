@@ -191,13 +191,6 @@
 <span id="188">188</span>
 <span id="189">189</span>
 <span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -278,24 +271,17 @@
         <span class="kw">let</span> <span class="ident">commands</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">ADD_VISITOR</span>, <span class="ident">ADD_CAPTCHA</span>, <span class="ident">DEL</span>, <span class="ident">CAPTCHA_EXISTS</span>, <span class="ident">GET</span>];
 
         <span class="kw">for</span> <span class="ident">cmd</span> <span class="kw">in</span> <span class="ident">commands</span>.<span class="ident">iter</span>() {
-            <span class="kw">match</span> <span class="self">self</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Value</span>::<span class="ident">Bulk</span>(<span class="kw-2">mut</span> <span class="ident">val</span>) <span class="op">=</span> <span class="self">self</span>
                 .<span class="number">0</span>
                 .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="string">&quot;COMMAND&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;INFO&quot;</span>, <span class="ident">cmd</span>]))
                 .<span class="kw">await</span>
                 .<span class="ident">unwrap</span>()
             {
-                <span class="ident">Value</span>::<span class="ident">Bulk</span>(<span class="kw-2">mut</span> <span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">pop</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">Value</span>::<span class="ident">Nil</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">MCaptchaRediSModuleCommandNotFound</span>(
-                                <span class="ident">cmd</span>.<span class="ident">to_string</span>(),
-                            ))
-                        }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
-                    };
-                }
-
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Value</span>::<span class="ident">Nil</span>) <span class="op">=</span> <span class="ident">val</span>.<span class="ident">pop</span>() {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">MCaptchaRediSModuleCommandNotFound</span>(
+                        <span class="ident">cmd</span>.<span class="ident">to_string</span>(),
+                    ));
+                };
             };
         }
 

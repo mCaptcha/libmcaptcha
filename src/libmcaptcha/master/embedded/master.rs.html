@@ -229,7 +229,6 @@
 <span id="226">226</span>
 <span id="227">227</span>
 <span id="228">228</span>
-<span id="229">229</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -278,7 +277,7 @@
 <span class="kw">impl</span> <span class="ident">Master</span> {
     <span class="doccomment">/// add [Counter] actor to [Master]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_site</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">Counter</span><span class="op">&gt;</span>, <span class="ident">id</span>: <span class="ident">String</span>) {
-        <span class="self">self</span>.<span class="ident">sites</span>.<span class="ident">insert</span>(<span class="ident">id</span>, (<span class="prelude-val">None</span>, <span class="ident">addr</span>.<span class="ident">to_owned</span>()));
+        <span class="self">self</span>.<span class="ident">sites</span>.<span class="ident">insert</span>(<span class="ident">id</span>, (<span class="prelude-val">None</span>, <span class="ident">addr</span>));
     }
 
     <span class="doccomment">/// create new master</span>
@@ -291,7 +290,7 @@
     }
 
     <span class="doccomment">/// get [Counter] actor from [Master]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_site</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">Counter</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_site</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">Counter</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">read_val</span>, <span class="ident">addr</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">sites</span>.<span class="ident">get_mut</span>(<span class="ident">id</span>) {
             <span class="ident">r</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">addr</span>.<span class="ident">clone</span>());
@@ -344,7 +343,7 @@
                 <span class="ident">ctx</span>.<span class="ident">spawn</span>(<span class="ident">fut</span>);
             }
         }
-        <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="ident">rx</span>);
+        <span class="ident">MessageResult</span>(<span class="ident">rx</span>)
     }
 }
 
@@ -358,10 +357,9 @@
 
     <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">GetSite</span>, <span class="ident">_ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_site</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="number">0</span>);
-        <span class="kw">if</span> <span class="ident">addr</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="prelude-val">None</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="ident">MessageResult</span>(<span class="prelude-val">Some</span>(<span class="ident">addr</span>.<span class="ident">unwrap</span>().<span class="ident">clone</span>()));
+        <span class="kw">match</span> <span class="ident">addr</span> {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageResult</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageResult</span>(<span class="prelude-val">Some</span>(<span class="ident">addr</span>)),
         }
     }
 }

@@ -602,7 +602,7 @@
             <span class="prelude-val">Some</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;defense&quot;</span>.<span class="ident">into</span>()))
         );
 
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>().<span class="ident">defense</span>(<span class="ident">defense</span>.<span class="ident">clone</span>()).<span class="ident">build</span>();
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">MCaptchaBuilder</span>::<span class="ident">default</span>().<span class="ident">defense</span>(<span class="ident">defense</span>).<span class="ident">build</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">m</span>.<span class="ident">err</span>(),
             <span class="prelude-val">Some</span>(<span class="ident">CaptchaError</span>::<span class="ident">PleaseSetValue</span>(<span class="string">&quot;duration&quot;</span>.<span class="ident">into</span>()))
