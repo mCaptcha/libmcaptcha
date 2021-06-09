@@ -315,45 +315,6 @@
 <span id="312">312</span>
 <span id="313">313</span>
 <span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
-<span id="347">347</span>
-<span id="348">348</span>
-<span id="349">349</span>
-<span id="350">350</span>
-<span id="351">351</span>
-<span id="352">352</span>
-<span id="353">353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -456,36 +417,6 @@
         <span class="ident">Counter</span>(<span class="ident">m</span>)
     }
 }
-
-<span class="comment">// impl Counter {</span>
-<span class="comment">//     /// increments the visitor count by one</span>
-<span class="comment">//     pub fn add_visitor(&amp;mut self) {</span>
-<span class="comment">//         self.visitor_threshold += 1;</span>
-<span class="comment">//         if self.visitor_threshold &gt; self.defense.visitor_threshold() {</span>
-<span class="comment">//             self.defense.tighten_up();</span>
-<span class="comment">//         } else {</span>
-<span class="comment">//             self.defense.loosen_up();</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">//</span>
-<span class="comment">//     /// decrements the visitor count by one</span>
-<span class="comment">//     pub fn decrement_visitor(&amp;mut self) {</span>
-<span class="comment">//         if self.visitor_threshold &gt; 0 {</span>
-<span class="comment">//             self.visitor_threshold -= 1;</span>
-<span class="comment">//         }</span>
-<span class="comment">//     }</span>
-<span class="comment">//</span>
-<span class="comment">//     /// get current difficulty factor</span>
-<span class="comment">//     pub fn get_difficulty(&amp;self) -&gt; u32 {</span>
-<span class="comment">//         self.defense.get_difficulty()</span>
-<span class="comment">//     }</span>
-<span class="comment">//</span>
-<span class="comment">//     /// get [Counter]&#39;s lifetime</span>
-<span class="comment">//     pub fn get_duration(&amp;self) -&gt; u64 {</span>
-<span class="comment">//         self.duration</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
 <span class="kw">impl</span> <span class="ident">Actor</span> <span class="kw">for</span> <span class="ident">Counter</span> {
     <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 }
@@ -507,15 +438,6 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
 <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;AddVisitorResult&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddVisitor</span>;
-
-<span class="comment">//impl AddVisitorResult {</span>
-<span class="comment">//    fn new(m: &amp;Counter) -&gt; Self {</span>
-<span class="comment">//        AddVisitorResult {</span>
-<span class="comment">//            duration: m.0.get_duration(),</span>
-<span class="comment">//            difficulty_factor: m.0.get_difficulty(),</span>
-<span class="comment">//        }</span>
-<span class="comment">//    }</span>
-<span class="comment">//}</span>
 
 <span class="kw">impl</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">AddVisitor</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Counter</span> {
     <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">MessageResult</span><span class="op">&lt;</span><span class="ident">AddVisitor</span><span class="op">&gt;</span>;

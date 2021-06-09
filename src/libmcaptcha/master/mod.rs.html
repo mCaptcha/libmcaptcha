@@ -83,6 +83,9 @@
 <span id="80">80</span>
 <span id="81">81</span>
 <span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -102,7 +105,6 @@
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
 <span class="doccomment">//! [Master] actor module that manages [MCaptcha] actors</span>
-
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="kw-2">*</span>;
@@ -120,6 +122,8 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="doccomment">/// [mCaptcha Redis module](https://github.com/mCaptcha/cache) uses this datatype for CAPTCHA</span>
+<span class="doccomment">/// registration</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CreateMCaptcha</span> {
     <span class="kw">pub</span> <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">defense</span>::<span class="ident">Level</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">duration</span>: <span class="ident">u64</span>,
@@ -135,6 +139,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">AddVisitorResult</span> {
+    <span class="doccomment">/// create new [AddVisitorResult] from [MCaptcha]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">MCaptcha</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">AddVisitorResult</span> {
             <span class="ident">duration</span>: <span class="ident">m</span>.<span class="ident">get_duration</span>(),
@@ -145,6 +150,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span> {
+    <span class="doccomment">//! Messages that a [super::Master] should respond to</span>
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;

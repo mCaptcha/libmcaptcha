@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["MCaptchaRedis","Redis instance with mCaptcha Redis module loaded"],["MCaptchaRedisConnection","Redis instance with mCaptcha Redis module loaded"]]});
+initSidebarItems({"struct":[["MCaptchaRedis","Redis instance with mCaptcha Redis module loaded"],["MCaptchaRedisConnection","Connection to Redis instance with mCaptcha Redis module loaded"]]});

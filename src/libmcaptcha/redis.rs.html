@@ -113,6 +113,19 @@
 <span id="110">110</span>
 <span id="111">111</span>
 <span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -131,25 +144,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
  */</span>
+<span class="doccomment">//! Redis Client/Connection manager that can handle both single and clustered Redis Instances</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
 
 <span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">cluster</span>::<span class="ident">ClusterClient</span>;
-<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">FromRedisValue</span>;
-<span class="comment">//use redis::cluster::ClusterConnection;</span>
 <span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">Client</span>;
-<span class="comment">//use redis::Connection;</span>
+<span class="kw">use</span> <span class="ident">redis</span>::<span class="ident">FromRedisValue</span>;
 <span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio</span>::<span class="ident">Connection</span>, <span class="ident">cluster</span>::<span class="ident">ClusterConnection</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// Client configuration</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisConfig</span> {
+    <span class="doccomment">/// Redis server URL</span>
     <span class="ident">Single</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// List of URL of Redis nodes in cluster mode</span>
     <span class="ident">Cluster</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">RedisConfig</span> {
+    <span class="doccomment">/// Create Redis connection</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisClient</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Single</span>(<span class="ident">url</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -164,6 +180,7 @@
     }
 }
 
+<span class="doccomment">/// Redis connection - manages both single and clustered deployments</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisConnection</span> {
     <span class="ident">Single</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Connection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
     <span class="ident">Cluster</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">ClusterConnection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
@@ -171,6 +188,7 @@
 
 <span class="kw">impl</span> <span class="ident">RedisConnection</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="doccomment">/// Get client. Uses interior mutability, so lookout for panics</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Single</span>(<span class="ident">con</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Single</span>(<span class="ident">Rc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">con</span>)),
@@ -178,6 +196,7 @@
         }
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="doccomment">/// execute a redis command against a [Self]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">exec</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">FromRedisValue</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cmd</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">redis</span>::<span class="ident">Cmd</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">redis</span>::<span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">RedisConnection</span>::<span class="ident">Single</span>(<span class="ident">con</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cmd</span>.<span class="ident">query_async</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">con</span>.<span class="ident">borrow_mut</span>()).<span class="kw">await</span>,
@@ -187,17 +206,21 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// Client Configuration that can be used to get new connection shuld [RedisConnection] fail</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisClient</span> {
     <span class="ident">Single</span>(<span class="ident">Client</span>),
     <span class="ident">Cluster</span>(<span class="ident">ClusterClient</span>),
 }
 
+<span class="doccomment">/// A Redis Client Object that encapsulates [RedisClient] and [RedisConnection].</span>
+<span class="doccomment">/// Use this when you need a Redis Client</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Redis</span> {
     <span class="ident">_client</span>: <span class="ident">RedisClient</span>,
     <span class="ident">connection</span>: <span class="ident">RedisConnection</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Redis</span> {
+    <span class="doccomment">/// create new [Redis]. Will try to connect to Redis instance specified in [RedisConfig]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">redis</span>: <span class="ident">RedisConfig</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">_client</span>, <span class="ident">connection</span>) <span class="op">=</span> <span class="self">Self</span>::<span class="ident">connect</span>(<span class="ident">redis</span>).<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="self">Self</span> {
@@ -207,6 +230,9 @@
         <span class="prelude-val">Ok</span>(<span class="ident">master</span>)
     }
 
+    <span class="doccomment">/// Get client to do interact with Redis server.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Uses Interior mutability so look out for panics</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisConnection</span> {
         <span class="self">self</span>.<span class="ident">connection</span>.<span class="ident">get_client</span>()
     }
