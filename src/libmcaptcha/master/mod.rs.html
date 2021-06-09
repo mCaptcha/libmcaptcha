@@ -160,7 +160,7 @@
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>;
 
     <span class="doccomment">/// Message to add visitor to an [MCaptcha] actor</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Clone</span>)]</span>
     <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;Receiver&lt;CaptchaResult&lt;Option&lt;super::AddVisitorResult&gt;&gt;&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddVisitor</span>(<span class="kw">pub</span> <span class="ident">String</span>);
 
