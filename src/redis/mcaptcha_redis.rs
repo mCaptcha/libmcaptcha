@@ -17,6 +17,7 @@
  */
 use redis::Value;
 
+use crate::cache::messages::CacheResult;
 use crate::cache::messages::VerifyCaptchaResult;
 use crate::cache::AddChallenge;
 use crate::errors::*;
@@ -150,7 +151,7 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
-    /// Delete an mCaptcha object from Redis
+    /// Add PoW Challenge object to Redis
     pub async fn add_challenge(
         &self,
         captcha: &str,
@@ -163,7 +164,7 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
-    /// Delete an mCaptcha object from Redis
+    /// Get PoW Challenge object from Redis
     pub async fn get_challenge(
         &self,
         msg: &VerifyCaptchaResult,
@@ -179,6 +180,35 @@ impl MCaptchaRedisConnection {
     pub async fn get_visitors(&self, captcha: &str) -> CaptchaResult<usize> {
         let visitors: usize = self.0.exec(redis::cmd(GET).arg(&[captcha])).await?;
         Ok(visitors)
+    }
+
+    /// Add PoW Token object to Redis
+    pub async fn add_token(&self, msg: &CacheResult) -> CaptchaResult<()> {
+        use redis::RedisResult;
+        // mcaptcha:token:captcha::token
+        let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
+        let e: RedisResult<()> = self
+            .0
+            .exec(redis::cmd("SET").arg(&[&key, &msg.key, "EX", msg.duration.to_string().as_str()]))
+            .await;
+        if let Err(e) = e {
+            panic!("{}", e);
+        }
+        Ok(())
+    }
+
+    /// Get PoW Token object to Redis
+    pub async fn get_token(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<bool> {
+        //use redis::RedisResult;
+        // mcaptcha:token:captcha::token
+        let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
+        let res = self.0.exec(redis::cmd("DEL").arg(&[&key])).await?;
+        println!("{}", res);
+        match res {
+            1 => Ok(true),
+            0 => Ok(false),
+            _ => Err(CaptchaError::MCaptchaRedisModuleError),
+        }
     }
 }
 
@@ -248,6 +278,25 @@ pub mod tests {
         let x = r.get_challenge(&verify_msg).await.unwrap();
         assert_eq!(x.duration, add_challenge_msg.duration);
         assert_eq!(x.difficulty_factor, add_challenge_msg.difficulty);
+
+        let add_challenge_msg = CacheResult {
+            key: CAPTCHA_NAME.into(),
+            token: CHALLENGE.into(),
+            duration: 10,
+        };
+
+        r.add_token(&add_challenge_msg).await.unwrap();
+
+        let mut challenge_msg = VerifyCaptchaResult {
+            key: CAPTCHA_NAME.into(),
+            token: CHALLENGE.into(),
+        };
+
+        challenge_msg.token = CAPTCHA_NAME.into();
+        assert!(!r.get_token(&challenge_msg).await.unwrap());
+
+        challenge_msg.token = CHALLENGE.into();
+        assert!(r.get_token(&challenge_msg).await.unwrap());
 
         assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
     }
