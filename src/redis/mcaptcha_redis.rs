@@ -178,7 +178,7 @@ impl MCaptchaRedisConnection {
         Ok(serde_json::from_str(&challege).unwrap())
     }
 
-    /// Get PoW Challenge object from Redis
+    /// Delete PoW Challenge object from Redis
     pub async fn delete_challenge(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<()> {
         let _: () = self
             .0
@@ -220,6 +220,15 @@ impl MCaptchaRedisConnection {
             0 => Ok(false),
             _ => Err(CaptchaError::MCaptchaRedisModuleError),
         }
+    }
+
+    /// Delete PoW Token object from Redis
+    pub async fn delete_token(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<()> {
+        //use redis::RedisResult;
+        // mcaptcha:token:captcha::token
+        let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
+        self.0.exec(redis::cmd("DEL").arg(&[&key])).await?;
+        Ok(())
     }
 }
 
@@ -315,6 +324,9 @@ pub mod tests {
 
         challenge_msg.token = CHALLENGE.into();
         assert!(r.get_token(&challenge_msg).await.unwrap());
+
+        r.add_token(&add_challenge_msg).await.unwrap();
+        assert!(r.delete_token(&challenge_msg).await.is_ok());
 
         assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
     }
