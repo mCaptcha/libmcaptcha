@@ -41,6 +41,7 @@ const ADD_CAPTCHA: &str = "MCAPTCHA_CACHE.ADD_CAPTCHA";
 const CAPTCHA_EXISTS: &str = "MCAPTCHA_CACHE.CAPTCHA_EXISTS";
 const ADD_CHALLENGE: &str = "MCAPTCHA_CACHE.ADD_CHALLENGE";
 const GET_CHALLENGE: &str = "MCAPTCHA_CACHE.GET_CHALLENGE";
+const DELETE_CHALLENGE: &str = "MCAPTCHA_CACHE.DELETE_CHALLENGE";
 
 const MODULE_NAME: &str = "mcaptcha_cahce";
 
@@ -87,6 +88,7 @@ impl MCaptchaRedisConnection {
             GET,
             ADD_CHALLENGE,
             GET_CHALLENGE,
+            DELETE_CHALLENGE,
         ];
 
         for cmd in commands.iter() {
@@ -174,6 +176,15 @@ impl MCaptchaRedisConnection {
             .exec(redis::cmd(GET_CHALLENGE).arg(&[&msg.key, &msg.token]))
             .await?;
         Ok(serde_json::from_str(&challege).unwrap())
+    }
+
+    /// Get PoW Challenge object from Redis
+    pub async fn delete_challenge(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<()> {
+        let _: () = self
+            .0
+            .exec(redis::cmd(DELETE_CHALLENGE).arg(&[&msg.key, &msg.token]))
+            .await?;
+        Ok(())
     }
 
     /// Get number of visitors of an mCaptcha object from Redis
@@ -278,6 +289,13 @@ pub mod tests {
         let x = r.get_challenge(&verify_msg).await.unwrap();
         assert_eq!(x.duration, add_challenge_msg.duration);
         assert_eq!(x.difficulty_factor, add_challenge_msg.difficulty);
+
+        assert!(r
+            .add_challenge(CAPTCHA_NAME, &add_challenge_msg)
+            .await
+            .is_ok());
+
+        assert!(r.delete_challenge(&verify_msg).await.is_ok());
 
         let add_challenge_msg = CacheResult {
             key: CAPTCHA_NAME.into(),
