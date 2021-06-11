@@ -53,6 +53,7 @@ impl RedisConfig {
 }
 
 /// Redis connection - manages both single and clustered deployments
+#[derive(Clone)]
 pub enum RedisConnection {
     Single(Rc<RefCell<Connection>>),
     Cluster(Rc<RefCell<ClusterConnection>>),
@@ -86,6 +87,7 @@ pub enum RedisClient {
 
 /// A Redis Client Object that encapsulates [RedisClient] and [RedisConnection].
 /// Use this when you need a Redis Client
+#[derive(Clone)]
 pub struct Redis {
     _client: RedisClient,
     connection: RedisConnection,

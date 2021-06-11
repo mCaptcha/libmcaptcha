@@ -29,6 +29,7 @@ use crate::redis::RedisConfig;
 use crate::redis::RedisConnection;
 
 /// Redis instance with mCaptcha Redis module loaded
+#[derive(Clone)]
 pub struct MCaptchaRedis(Redis);
 
 /// Connection to Redis instance with mCaptcha Redis module loaded

@@ -34,8 +34,7 @@ async fn main() -> std::io::Result<()> {
         .master(master)
         .cache(cache)
         .pow(pow.clone())
-        .build()
-        .unwrap();
+        .build();
 
     // configure defense. This is a per site configuration. A site can have several levels
     // of defenses configured

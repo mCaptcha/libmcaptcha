@@ -17,13 +17,13 @@
  */
 //! Embedded [Master] actor module that manages [Counter] actors
 use std::collections::BTreeMap;
-use std::sync::mpsc::channel;
 use std::time::Duration;
 
 //use actix::clock::sleep;
 use actix::clock::delay_for;
 use actix::dev::*;
 use log::info;
+use tokio::sync::oneshot::channel;
 
 use super::counter::Counter;
 use crate::errors::*;
@@ -181,12 +181,15 @@ impl Handler<RemoveSite> for Master {
 }
 
 impl Handler<AddSite> for Master {
-    type Result = ();
+    type Result = MessageResult<AddSite>;
 
     fn handle(&mut self, m: AddSite, _ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = channel();
         let counter: Counter = m.mcaptcha.into();
         let addr = counter.start();
         self.add_site(addr, m.id);
+        tx.send(Ok(())).unwrap();
+        MessageResult(rx)
     }
 }
 

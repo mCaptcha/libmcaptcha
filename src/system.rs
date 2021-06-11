@@ -17,7 +17,6 @@
  */
 //! module describing mCaptcha system
 use actix::dev::*;
-use derive_builder::Builder;
 use pow_sha256::Config;
 
 use crate::cache::messages::*;
@@ -27,8 +26,48 @@ use crate::master::messages::*;
 use crate::master::Master;
 use crate::pow::*;
 
+pub struct SystemBuilder<T: Save, X: Master> {
+    pub master: Option<Addr<X>>,
+    cache: Option<Addr<T>>,
+    pow: Option<Config>,
+}
+
+impl<T: Master, S: Save> Default for SystemBuilder<S, T> {
+    fn default() -> Self {
+        Self {
+            pow: None,
+            cache: None,
+            master: None,
+        }
+    }
+}
+
+impl<T: Master, S: Save> SystemBuilder<S, T> {
+    pub fn master(mut self, m: Addr<T>) -> Self {
+        self.master = Some(m);
+        self
+    }
+
+    pub fn cache(mut self, c: Addr<S>) -> Self {
+        self.cache = Some(c);
+        self
+    }
+
+    pub fn pow(mut self, p: Config) -> Self {
+        self.pow = Some(p);
+        self
+    }
+
+    pub fn build(self) -> System<S, T> {
+        System {
+            master: self.master.unwrap(),
+            pow: self.pow.unwrap(),
+            cache: self.cache.unwrap(),
+        }
+    }
+}
+
 /// struct describing various bits of data required for an mCaptcha system
-#[derive(Clone, Builder)]
 pub struct System<T: Save, X: Master> {
     pub master: Addr<X>,
     cache: Addr<T>,
@@ -52,7 +91,7 @@ where
             .send(AddVisitor(id.clone()))
             .await
             .unwrap()
-            .recv()
+            .await
             .unwrap()
         {
             Ok(Some(mcaptcha)) => {
@@ -160,7 +199,6 @@ mod tests {
             .cache(cache)
             .pow(pow)
             .build()
-            .unwrap()
     }
 
     fn get_config() -> Config {

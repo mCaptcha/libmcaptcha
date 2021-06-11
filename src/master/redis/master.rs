@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-use std::sync::mpsc;
-
 use actix::dev::*;
+use tokio::sync::oneshot;
 
 use crate::errors::*;
 use crate::master::messages::{AddSite, AddVisitor};
@@ -25,6 +24,7 @@ use crate::master::Master as MasterTrait;
 use crate::redis::mcaptcha_redis::MCaptchaRedis;
 use crate::redis::RedisConfig;
 
+#[derive(Clone)]
 pub struct Master {
     pub redis: MCaptchaRedis,
 }
@@ -47,7 +47,7 @@ impl Handler<AddVisitor> for Master {
     type Result = MessageResult<AddVisitor>;
 
     fn handle(&mut self, m: AddVisitor, ctx: &mut Self::Context) -> Self::Result {
-        let (tx, rx) = mpsc::channel();
+        let (tx, rx) = oneshot::channel();
 
         let con = self.redis.get_client();
         let fut = async move {
@@ -61,17 +61,18 @@ impl Handler<AddVisitor> for Master {
 }
 
 impl Handler<AddSite> for Master {
-    type Result = ();
+    type Result = MessageResult<AddSite>;
 
     fn handle(&mut self, m: AddSite, ctx: &mut Self::Context) -> Self::Result {
-        //let (tx, rx) = mpsc::channel();
+        let (tx, rx) = oneshot::channel();
         let con = self.redis.get_client();
         let fut = async move {
-            let _res = con.add_mcaptcha(m).await;
-            //tx.send(res).unwrap();
+            let res = con.add_mcaptcha(m).await;
+            let _ = tx.send(res);
         }
         .into_actor(self);
         ctx.wait(fut);
+        MessageResult(rx)
     }
 }
 

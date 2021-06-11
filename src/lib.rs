@@ -82,8 +82,7 @@
 //!         .master(master)
 //!         .cache(cache)
 //!         .pow(pow.clone())
-//!         .build()
-//!         .unwrap();
+//!         .build();
 //!
 //!     // configure defense. This is a per site configuration. A site can have several levels
 //!     // of defenses configured
@@ -188,7 +187,7 @@ pub mod errors;
 pub mod master;
 
 #[cfg(feature = "full")]
-mod redis;
+pub mod redis;
 
 /// message datatypes to interact with [MCaptcha] actor
 pub mod cache;

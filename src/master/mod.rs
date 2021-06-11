@@ -62,10 +62,11 @@ impl AddVisitorResult {
 #[cfg(feature = "full")]
 pub mod messages {
     //! Messages that a [super::Master] should respond to
-    use std::sync::mpsc::Receiver;
+    //    use std::sync::mpsc::Receiver;
 
     use actix::dev::*;
     use derive_builder::Builder;
+    use tokio::sync::oneshot::Receiver;
 
     use crate::errors::CaptchaResult;
     use crate::mcaptcha::MCaptcha;
@@ -77,7 +78,7 @@ pub mod messages {
 
     /// Message to add an [Counter] actor to [Master]
     #[derive(Message, Builder)]
-    #[rtype(result = "()")]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct AddSite {
         pub id: String,
         pub mcaptcha: MCaptcha,
