@@ -180,8 +180,7 @@ impl MCaptchaRedisConnection {
 
     /// Delete PoW Challenge object from Redis
     pub async fn delete_challenge(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<()> {
-        let _: () = self
-            .0
+        self.0
             .exec(redis::cmd(DELETE_CHALLENGE).arg(&[&msg.key, &msg.token]))
             .await?;
         Ok(())

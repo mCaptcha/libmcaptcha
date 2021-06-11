@@ -21,8 +21,8 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "full")]
 pub mod hashcache;
-//#[cfg(feature = "full")]
-//pub mod redis;
+#[cfg(feature = "full")]
+pub mod redis;
 
 #[derive(Serialize, Deserialize)]
 pub struct AddChallenge {
@@ -50,12 +50,13 @@ pub mod messages {
     use actix::dev::*;
     use derive_builder::Builder;
     use serde::{Deserialize, Serialize};
+    use tokio::sync::oneshot::Receiver;
 
     use crate::errors::*;
 
     /// Message to cache PoW difficulty factor and string
     #[derive(Message, Serialize, Deserialize, Builder, Clone)]
-    #[rtype(result = "CaptchaResult<()>")]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct CachePoW {
         /// challenge string
         pub string: String,
@@ -70,8 +71,8 @@ pub mod messages {
     /// Message to retrive the the difficulty factor for the specified
     /// string from the cache
     #[derive(Message)]
-    #[rtype(result = "CaptchaResult<Option<CachedPoWConfig>>")]
-    pub struct RetrivePoW(pub String);
+    #[rtype(result = "Receiver<CaptchaResult<Option<CachedPoWConfig>>>")]
+    pub struct RetrivePoW(pub VerifyCaptchaResult);
 
     #[derive(Clone, PartialEq, Debug, Default, Deserialize, Serialize)]
     pub struct CachedPoWConfig {
@@ -90,7 +91,7 @@ pub mod messages {
     /// Message to cache captcha result and the captcha key for which
     /// it was generated
     #[derive(Message, Serialize, Deserialize, Builder)]
-    #[rtype(result = "CaptchaResult<()>")]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct CacheResult {
         pub token: String,
         /// key is mCaptcha identifier
@@ -114,7 +115,7 @@ pub mod messages {
     /// Message to verify captcha result against
     /// the stored captcha key
     #[derive(Message, Clone, Deserialize, Serialize)]
-    #[rtype(result = "CaptchaResult<bool>")]
+    #[rtype(result = "Receiver<CaptchaResult<bool>>")]
     pub struct VerifyCaptchaResult {
         pub token: String,
         pub key: String,

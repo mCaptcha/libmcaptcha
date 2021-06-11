@@ -66,7 +66,13 @@ where
                     .build()
                     .unwrap();
 
-                self.cache.send(cache_msg).await.unwrap().unwrap();
+                self.cache
+                    .send(cache_msg)
+                    .await
+                    .unwrap()
+                    .await
+                    .unwrap()
+                    .unwrap();
                 Some(pow_config)
             }
             _ => None,
@@ -76,9 +82,13 @@ where
     /// utility function to verify [Work]
     pub async fn verify_pow(&self, work: Work) -> CaptchaResult<String> {
         let string = work.string.clone();
-        let msg = RetrivePoW(string.clone());
+        let msg = VerifyCaptchaResult {
+            token: string.clone(),
+            key: work.key.clone(),
+        };
+        let msg = RetrivePoW(msg);
 
-        let cached_config = self.cache.send(msg).await.unwrap()?;
+        let cached_config = self.cache.send(msg).await.unwrap().await.unwrap()?;
 
         if cached_config.is_none() {
             return Err(CaptchaError::StringNotFound);
@@ -105,7 +115,7 @@ where
 
         let msg: CacheResult = cached_config.into();
         let res = msg.token.clone();
-        self.cache.send(msg).await.unwrap()?;
+        self.cache.send(msg).await.unwrap().await.unwrap()?;
         Ok(res)
     }
 
@@ -114,7 +124,7 @@ where
         &self,
         msg: VerifyCaptchaResult,
     ) -> CaptchaResult<bool> {
-        self.cache.send(msg).await.unwrap()
+        self.cache.send(msg).await.unwrap().await.unwrap()
     }
 }
 

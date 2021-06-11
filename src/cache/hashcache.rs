@@ -19,6 +19,7 @@
 use std::collections::HashMap;
 
 use actix::prelude::*;
+use tokio::sync::oneshot;
 
 use super::messages::*;
 use super::Save;
@@ -46,8 +47,11 @@ impl HashCache {
     }
 
     // retrive [PoWConfig] from cache. Deletes config post retrival
-    fn retrive_pow_config(&mut self, string: String) -> CaptchaResult<Option<CachedPoWConfig>> {
-        if let Some(difficulty_factor) = self.remove_pow_config(&string) {
+    fn retrive_pow_config(
+        &mut self,
+        msg: VerifyCaptchaResult,
+    ) -> CaptchaResult<Option<CachedPoWConfig>> {
+        if let Some(difficulty_factor) = self.remove_pow_config(&msg.token) {
             Ok(Some(difficulty_factor))
         } else {
             Ok(None)
@@ -110,7 +114,9 @@ impl Handler<CachePoW> for HashCache {
         .into_actor(self);
         ctx.spawn(wait_for);
 
-        MessageResult(self.save_pow_config(msg))
+        let (tx, rx) = oneshot::channel();
+        tx.send(self.save_pow_config(msg)).unwrap();
+        MessageResult(rx)
     }
 }
 
@@ -127,7 +133,9 @@ impl Handler<DeletePoW> for HashCache {
 impl Handler<RetrivePoW> for HashCache {
     type Result = MessageResult<RetrivePoW>;
     fn handle(&mut self, msg: RetrivePoW, _ctx: &mut Self::Context) -> Self::Result {
-        MessageResult(self.retrive_pow_config(msg.0))
+        let (tx, rx) = oneshot::channel();
+        tx.send(self.retrive_pow_config(msg.0)).unwrap();
+        MessageResult(rx)
     }
 }
 
@@ -153,7 +161,9 @@ impl Handler<CacheResult> for HashCache {
         .into_actor(self);
         ctx.spawn(wait_for);
 
-        MessageResult(self.save_captcha_result(msg))
+        let (tx, rx) = oneshot::channel();
+        tx.send(self.save_captcha_result(msg)).unwrap();
+        MessageResult(rx)
     }
 }
 
@@ -171,7 +181,9 @@ impl Handler<VerifyCaptchaResult> for HashCache {
     type Result = MessageResult<VerifyCaptchaResult>;
     fn handle(&mut self, msg: VerifyCaptchaResult, _ctx: &mut Self::Context) -> Self::Result {
         // MessageResult(self.retrive(msg.0))
-        MessageResult(self.verify_captcha_result(msg))
+        let (tx, rx) = oneshot::channel();
+        tx.send(self.verify_captcha_result(msg)).unwrap();
+        MessageResult(rx)
     }
 }
 
@@ -215,10 +227,16 @@ mod tests {
             .build()
             .unwrap();
 
-        addr.send(msg).await.unwrap().unwrap();
+        addr.send(msg).await.unwrap().await.unwrap().unwrap();
 
+        let msg = VerifyCaptchaResult {
+            token: string.clone(),
+            key: KEY.into(),
+        };
         let cache_difficulty_factor = addr
-            .send(RetrivePoW(string.clone()))
+            .send(RetrivePoW(msg.clone()))
+            .await
+            .unwrap()
             .await
             .unwrap()
             .unwrap();
@@ -231,7 +249,13 @@ mod tests {
         //sleep(DURATION + DURATION).await;
         delay_for(duration + duration).await;
 
-        let expired_string = addr.send(RetrivePoW(string)).await.unwrap().unwrap();
+        let expired_string = addr
+            .send(RetrivePoW(msg))
+            .await
+            .unwrap()
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(None, expired_string);
     }
 
@@ -256,22 +280,28 @@ mod tests {
             duration: DURATION,
         };
 
-        addr.send(add_cache).await.unwrap().unwrap();
+        addr.send(add_cache).await.unwrap().await.unwrap().unwrap();
 
         let verify_msg = VerifyCaptchaResult {
             key: KEY.into(),
             token: RES.into(),
         };
 
-        assert!(addr.send(verify_msg.clone()).await.unwrap().unwrap());
+        assert!(addr
+            .send(verify_msg.clone())
+            .await
+            .unwrap()
+            .await
+            .unwrap()
+            .unwrap());
         // duplicate
-        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
+        assert!(!addr.send(verify_msg).await.unwrap().await.unwrap().unwrap());
 
         let verify_msg = VerifyCaptchaResult {
             key: "cz".into(),
             token: RES.into(),
         };
-        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
+        assert!(!addr.send(verify_msg).await.unwrap().await.unwrap().unwrap());
 
         let duration: Duration = Duration::new(5, 0);
         delay_for(duration + duration).await;
@@ -280,6 +310,6 @@ mod tests {
             key: KEY.into(),
             token: RES.into(),
         };
-        assert!(!addr.send(verify_msg).await.unwrap().unwrap());
+        assert!(!addr.send(verify_msg).await.unwrap().await.unwrap().unwrap());
     }
 }
