@@ -333,6 +333,7 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
+<span id="333">333</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -365,6 +366,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">RedisConnection</span>;
 
 <span class="doccomment">/// Redis instance with mCaptcha Redis module loaded</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptchaRedis</span>(<span class="ident">Redis</span>);
 
 <span class="doccomment">/// Connection to Redis instance with mCaptcha Redis module loaded</span>

@@ -221,7 +221,6 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
-<span id="221">221</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -307,8 +306,7 @@
 <span class="doccomment">//!         .master(master)</span>
 <span class="doccomment">//!         .cache(cache)</span>
 <span class="doccomment">//!         .pow(pow.clone())</span>
-<span class="doccomment">//!         .build()</span>
-<span class="doccomment">//!         .unwrap();</span>
+<span class="doccomment">//!         .build();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // configure defense. This is a per site configuration. A site can have several levels</span>
 <span class="doccomment">//!     // of defenses configured</span>
@@ -413,7 +411,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">master</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">redis</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">redis</span>;
 
 <span class="doccomment">/// message datatypes to interact with [MCaptcha] actor</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cache</span>;

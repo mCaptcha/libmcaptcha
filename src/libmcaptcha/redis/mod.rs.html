@@ -127,6 +127,8 @@
 <span id="124">124</span>
 <span id="125">125</span>
 <span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -183,6 +185,7 @@
 }
 
 <span class="doccomment">/// Redis connection - manages both single and clustered deployments</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedisConnection</span> {
     <span class="ident">Single</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Connection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
     <span class="ident">Cluster</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">ClusterConnection</span><span class="op">&gt;</span><span class="op">&gt;</span>),
@@ -216,6 +219,7 @@
 
 <span class="doccomment">/// A Redis Client Object that encapsulates [RedisClient] and [RedisConnection].</span>
 <span class="doccomment">/// Use this when you need a Redis Client</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Redis</span> {
     <span class="ident">_client</span>: <span class="ident">RedisClient</span>,
     <span class="ident">connection</span>: <span class="ident">RedisConnection</span>,

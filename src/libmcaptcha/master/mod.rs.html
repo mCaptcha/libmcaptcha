@@ -86,6 +86,7 @@
 <span id="83">83</span>
 <span id="84">84</span>
 <span id="85">85</span>
+<span id="86">86</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -151,10 +152,11 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span> {
     <span class="doccomment">//! Messages that a [super::Master] should respond to</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
+    <span class="comment">//    use std::sync::mpsc::Receiver;</span>
 
     <span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">dev</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">derive_builder</span>::<span class="ident">Builder</span>;
+    <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">oneshot</span>::<span class="ident">Receiver</span>;
 
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="ident">CaptchaResult</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>;
@@ -166,7 +168,7 @@
 
     <span class="doccomment">/// Message to add an [Counter] actor to [Master]</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Message</span>, <span class="ident">Builder</span>)]</span>
-    <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;()&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">rtype</span>(<span class="ident">result</span> <span class="op">=</span> <span class="string">&quot;Receiver&lt;CaptchaResult&lt;()&gt;&gt;&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddSite</span> {
         <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
         <span class="kw">pub</span> <span class="ident">mcaptcha</span>: <span class="ident">MCaptcha</span>,
