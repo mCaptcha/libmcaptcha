@@ -246,6 +246,16 @@
 <span id="243">243</span>
 <span id="244">244</span>
 <span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -315,7 +325,13 @@
                     .<span class="ident">build</span>()
                     .<span class="ident">unwrap</span>();
 
-                <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">cache_msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
+                <span class="self">self</span>.<span class="ident">cache</span>
+                    .<span class="ident">send</span>(<span class="ident">cache_msg</span>)
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap</span>()
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap</span>()
+                    .<span class="ident">unwrap</span>();
                 <span class="prelude-val">Some</span>(<span class="ident">pow_config</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
@@ -325,9 +341,13 @@
     <span class="doccomment">/// utility function to verify [Work]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">verify_pow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">work</span>: <span class="ident">Work</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">work</span>.<span class="ident">string</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">RetrivePoW</span>(<span class="ident">string</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">VerifyCaptchaResult</span> {
+            <span class="ident">token</span>: <span class="ident">string</span>.<span class="ident">clone</span>(),
+            <span class="ident">key</span>: <span class="ident">work</span>.<span class="ident">key</span>.<span class="ident">clone</span>(),
+        };
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">RetrivePoW</span>(<span class="ident">msg</span>);
 
-        <span class="kw">let</span> <span class="ident">cached_config</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cached_config</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>()<span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="ident">cached_config</span>.<span class="ident">is_none</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError</span>::<span class="ident">StringNotFound</span>);
@@ -354,7 +374,7 @@
 
         <span class="kw">let</span> <span class="ident">msg</span>: <span class="ident">CacheResult</span> <span class="op">=</span> <span class="ident">cached_config</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">token</span>.<span class="ident">clone</span>();
-        <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>()<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
     }
 
@@ -363,7 +383,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">msg</span>: <span class="ident">VerifyCaptchaResult</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>()
+        <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">send</span>(<span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>()
     }
 }
 

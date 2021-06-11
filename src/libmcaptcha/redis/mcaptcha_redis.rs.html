@@ -333,7 +333,6 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
-<span id="333">333</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -517,8 +516,7 @@
 
     <span class="doccomment">/// Delete PoW Challenge object from Redis</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete_challenge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">VerifyCaptchaResult</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw">_</span>: () <span class="op">=</span> <span class="self">self</span>
-            .<span class="number">0</span>
+        <span class="self">self</span>.<span class="number">0</span>
             .<span class="ident">exec</span>(<span class="ident">redis</span>::<span class="ident">cmd</span>(<span class="ident">DELETE_CHALLENGE</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">token</span>]))
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
