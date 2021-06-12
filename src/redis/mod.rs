@@ -76,6 +76,18 @@ impl RedisConnection {
             RedisConnection::Cluster(con) => cmd.query(&mut *con.borrow_mut()),
         }
     }
+
+    pub async fn ping(&self) -> bool {
+        if let Ok(redis::Value::Status(v)) = self.exec(&mut redis::cmd("PING")).await {
+            if v == "PONG" {
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -124,5 +136,18 @@ impl Redis {
             }
         };
         (redis, client)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[actix_rt::test]
+    async fn ping_works() {
+        let r = Redis::new(RedisConfig::Single("redis://127.0.0.1".into()))
+            .await
+            .unwrap();
+        assert!(r.get_client().ping().await);
     }
 }

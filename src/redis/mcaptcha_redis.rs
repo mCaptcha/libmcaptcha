@@ -110,6 +110,11 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
+    /// Ping redis
+    pub async fn ping(&self) -> bool {
+        self.0.ping().await
+    }
+
     /// Add visitor
     pub async fn add_visitor(&self, msg: AddVisitor) -> CaptchaResult<Option<AddVisitorResult>> {
         let res: String = self.0.exec(redis::cmd(ADD_VISITOR).arg(&[msg.0])).await?;
@@ -327,6 +332,8 @@ pub mod tests {
 
         r.add_token(&add_challenge_msg).await.unwrap();
         assert!(r.delete_token(&challenge_msg).await.is_ok());
+
+        assert!(r.ping().await);
 
         assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
     }
