@@ -79,11 +79,7 @@ impl RedisConnection {
 
     pub async fn ping(&self) -> bool {
         if let Ok(redis::Value::Status(v)) = self.exec(&mut redis::cmd("PING")).await {
-            if v == "PONG" {
-                true
-            } else {
-                false
-            }
+            v == "PONG"
         } else {
             false
         }
@@ -108,7 +104,7 @@ pub struct Redis {
 impl Redis {
     /// create new [Redis]. Will try to connect to Redis instance specified in [RedisConfig]
     pub async fn new(redis: RedisConfig) -> CaptchaResult<Self> {
-        let (_client, connection) = Self::connect(redis).await;
+        let (_client, connection) = Self::connect(redis).await?;
         let master = Self {
             _client,
             connection,
@@ -123,19 +119,19 @@ impl Redis {
         self.connection.get_client()
     }
 
-    async fn connect(redis: RedisConfig) -> (RedisClient, RedisConnection) {
+    async fn connect(redis: RedisConfig) -> CaptchaResult<(RedisClient, RedisConnection)> {
         let redis = redis.connect();
         let client = match &redis {
             RedisClient::Single(c) => {
-                let con = c.get_async_connection().await.unwrap();
+                let con = c.get_async_connection().await?;
                 RedisConnection::Single(Rc::new(RefCell::new(con)))
             }
             RedisClient::Cluster(c) => {
-                let con = c.get_connection().unwrap();
+                let con = c.get_connection()?;
                 RedisConnection::Cluster(Rc::new(RefCell::new(con)))
             }
         };
-        (redis, client)
+        Ok((redis, client))
     }
 }
 
