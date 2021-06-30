@@ -148,6 +148,10 @@ impl Handler<DeletePoW> for RedisCache {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use std::time::Duration;
+
+    use actix::clock::sleep;
     //use crate::master::AddVisitorResult;
     //use crate::pow::PoWConfig;
 
@@ -165,9 +169,6 @@ mod tests {
 
     #[actix_rt::test]
     async fn rediscache_pow_cache_works() {
-        use actix::clock::delay_for;
-        use actix::clock::Duration;
-
         const DIFFICULTY_FACTOR: u32 = 54;
         const DURATION: u64 = 5;
         const KEY: &str = "mcaptchakey";
@@ -211,8 +212,8 @@ mod tests {
         );
 
         let duration: Duration = Duration::new(5, 0);
-        //sleep(DURATION + DURATION).await;
-        delay_for(duration + duration).await;
+        //delay_for(duration + duration).await;
+        sleep(duration + duration).await;
 
         let expired_string = addr.send(RetrivePoW(msg)).await.unwrap().await.unwrap();
         assert!(expired_string.is_err());
@@ -220,8 +221,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn redishashcache_result_cache_works() {
-        use actix::clock::delay_for;
-        use actix::clock::Duration;
+        use std::time::Duration;
+        //use actix::clock::delay_for;
 
         const DURATION: u64 = 5;
         const KEY: &str = "a";
@@ -267,7 +268,8 @@ mod tests {
         assert!(!addr.send(verify_msg).await.unwrap().await.unwrap().unwrap());
 
         let duration: Duration = Duration::new(5, 0);
-        delay_for(duration + duration).await;
+        //delay_for(duration + duration).await;
+        sleep(duration + duration).await;
 
         let verify_msg = VerifyCaptchaResult {
             key: KEY.into(),

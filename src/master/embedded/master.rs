@@ -19,8 +19,8 @@
 use std::collections::BTreeMap;
 use std::time::Duration;
 
-//use actix::clock::sleep;
-use actix::clock::delay_for;
+use actix::clock::sleep;
+//use actix::clock::delay_for;
 use actix::dev::*;
 use log::info;
 use tokio::sync::oneshot::channel;
@@ -158,8 +158,8 @@ impl Handler<CleanUp> for Master {
             }
 
             let duration = Duration::new(gc, 0);
-            //sleep(duration).await;
-            delay_for(duration).await;
+            sleep(duration).await;
+            //delay_for(duration).await;
             master.send(CleanUp).await.unwrap();
         }
         .into_actor(self);
@@ -220,10 +220,10 @@ mod tests {
         assert!(addr_doesnt_exist.is_none());
 
         let timer_expire = Duration::new(DURATION, 0);
-        //        sleep(timer_expire).await;
-        //        sleep(timer_expire).await;
-        delay_for(timer_expire).await;
-        delay_for(timer_expire).await;
+        sleep(timer_expire).await;
+        sleep(timer_expire).await;
+        //        delay_for(timer_expire).await;
+        //        delay_for(timer_expire).await;
 
         let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
         assert_eq!(mcaptcha_addr, None);

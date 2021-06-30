@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(visitors, 1);
 
         let timer_expire = std::time::Duration::new(duration, 0);
-        actix::clock::delay_for(timer_expire).await;
+        actix::clock::sleep(timer_expire).await;
         let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
         assert_eq!(visitors, 0);
     }
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(visitors, 500);
 
         let timer_expire = std::time::Duration::new(duration, 0);
-        actix::clock::delay_for(timer_expire).await;
+        actix::clock::sleep(timer_expire).await;
         let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
         assert_eq!(visitors, 0);
     }

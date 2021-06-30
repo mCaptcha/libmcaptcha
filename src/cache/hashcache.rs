@@ -98,8 +98,8 @@ impl Actor for HashCache {
 impl Handler<CachePoW> for HashCache {
     type Result = MessageResult<CachePoW>;
     fn handle(&mut self, msg: CachePoW, ctx: &mut Self::Context) -> Self::Result {
-        //use actix::clock::sleep;
-        use actix::clock::delay_for;
+        use actix::clock::sleep;
+        //use actix::clock::delay_for;
         use std::time::Duration;
 
         let addr = ctx.address();
@@ -107,8 +107,8 @@ impl Handler<CachePoW> for HashCache {
 
         let duration: Duration = Duration::new(msg.duration, 0);
         let wait_for = async move {
-            //sleep(duration).await;
-            delay_for(duration).await;
+            sleep(duration).await;
+            //delay_for(duration).await;
             addr.send(del_msg).await.unwrap().unwrap();
         }
         .into_actor(self);
@@ -143,8 +143,8 @@ impl Handler<RetrivePoW> for HashCache {
 impl Handler<CacheResult> for HashCache {
     type Result = MessageResult<CacheResult>;
     fn handle(&mut self, msg: CacheResult, ctx: &mut Self::Context) -> Self::Result {
-        //use actix::clock::sleep;
-        use actix::clock::delay_for;
+        use actix::clock::sleep;
+        //use actix::clock::delay_for;
         use std::time::Duration;
 
         let addr = ctx.address();
@@ -154,8 +154,8 @@ impl Handler<CacheResult> for HashCache {
 
         let duration: Duration = Duration::new(msg.duration, 0);
         let wait_for = async move {
-            //sleep(duration).await;
-            delay_for(duration).await;
+            sleep(duration).await;
+            //delay_for(duration).await;
             addr.send(del_msg).await.unwrap().unwrap();
         }
         .into_actor(self);
@@ -193,6 +193,9 @@ mod tests {
     use crate::master::AddVisitorResult;
     use crate::pow::PoWConfig;
 
+    use actix::clock::sleep;
+    use std::time::Duration;
+
     //   async fn sleep(time: u64) {
     //       //use actix::clock::sleep;
     //       use actix::clock::delay_for;
@@ -205,9 +208,6 @@ mod tests {
 
     #[actix_rt::test]
     async fn hashcache_pow_cache_works() {
-        use actix::clock::delay_for;
-        use actix::clock::Duration;
-
         const DIFFICULTY_FACTOR: u32 = 54;
         const DURATION: u64 = 5;
         const KEY: &str = "mcaptchakey";
@@ -247,7 +247,7 @@ mod tests {
 
         let duration: Duration = Duration::new(5, 0);
         //sleep(DURATION + DURATION).await;
-        delay_for(duration + duration).await;
+        sleep(duration + duration).await;
 
         let expired_string = addr
             .send(RetrivePoW(msg))
@@ -261,9 +261,6 @@ mod tests {
 
     #[actix_rt::test]
     async fn hashcache_result_cache_works() {
-        use actix::clock::delay_for;
-        use actix::clock::Duration;
-
         const DURATION: u64 = 5;
         const KEY: &str = "a";
         const RES: &str = "b";
@@ -304,7 +301,7 @@ mod tests {
         assert!(!addr.send(verify_msg).await.unwrap().await.unwrap().unwrap());
 
         let duration: Duration = Duration::new(5, 0);
-        delay_for(duration + duration).await;
+        sleep(duration + duration).await;
 
         let verify_msg = VerifyCaptchaResult {
             key: KEY.into(),
