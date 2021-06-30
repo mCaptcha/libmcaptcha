@@ -279,7 +279,7 @@
         <span class="macro">assert_eq!</span>(<span class="ident">visitors</span>, <span class="number">1</span>);
 
         <span class="kw">let</span> <span class="ident">timer_expire</span> <span class="op">=</span> <span class="ident">std::time::Duration::new</span>(<span class="ident">duration</span>, <span class="number">0</span>);
-        <span class="ident">actix::clock::delay_for</span>(<span class="ident">timer_expire</span>).<span class="kw">await</span>;
+        <span class="ident">actix::clock::sleep</span>(<span class="ident">timer_expire</span>).<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">visitors</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">get_visitors</span>(<span class="ident">CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">visitors</span>, <span class="number">0</span>);
     }
@@ -317,7 +317,7 @@
         <span class="macro">assert_eq!</span>(<span class="ident">visitors</span>, <span class="number">500</span>);
 
         <span class="kw">let</span> <span class="ident">timer_expire</span> <span class="op">=</span> <span class="ident">std::time::Duration::new</span>(<span class="ident">duration</span>, <span class="number">0</span>);
-        <span class="ident">actix::clock::delay_for</span>(<span class="ident">timer_expire</span>).<span class="kw">await</span>;
+        <span class="ident">actix::clock::sleep</span>(<span class="ident">timer_expire</span>).<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">visitors</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">get_visitors</span>(<span class="ident">CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">visitors</span>, <span class="number">0</span>);
     }
