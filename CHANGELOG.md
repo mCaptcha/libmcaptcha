@@ -3,6 +3,8 @@
 ## Added:
 
 - `Master` trait: provides methods to manage mcaptcha
+- `MCaptcha::get_defense()`: returns the `MCaptcha` instance's defense
+  configuration
 
 ## Changed:
 

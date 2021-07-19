@@ -136,4 +136,10 @@ impl MCaptcha {
     pub fn get_visitors(&self) -> u32 {
         self.visitor_threshold
     }
+
+    /// get mCaptcha's defense configuration
+    #[inline]
+    pub fn get_defense(&self) -> Defense {
+        self.defense.clone()
+    }
 }
