@@ -341,6 +341,22 @@
 <span id="338">338</span>
 <span id="339">339</span>
 <span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -384,6 +400,7 @@
 <span class="kw">const</span> <span class="ident">DEL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.DELETE_CAPTCHA&quot;</span>;
 <span class="kw">const</span> <span class="ident">ADD_CAPTCHA</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.ADD_CAPTCHA&quot;</span>;
 <span class="kw">const</span> <span class="ident">CAPTCHA_EXISTS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.CAPTCHA_EXISTS&quot;</span>;
+<span class="kw">const</span> <span class="ident">RENAME_CAPTCHA</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.RENAME_CAPTCHA&quot;</span>;
 <span class="kw">const</span> <span class="ident">ADD_CHALLENGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.ADD_CHALLENGE&quot;</span>;
 <span class="kw">const</span> <span class="ident">GET_CHALLENGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.GET_CHALLENGE&quot;</span>;
 <span class="kw">const</span> <span class="ident">DELETE_CHALLENGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;MCAPTCHA_CACHE.DELETE_CHALLENGE&quot;</span>;
@@ -434,6 +451,7 @@
             <span class="ident">ADD_CHALLENGE</span>,
             <span class="ident">GET_CHALLENGE</span>,
             <span class="ident">DELETE_CHALLENGE</span>,
+            <span class="ident">RENAME_CAPTCHA</span>,
         ];
 
         <span class="kw">for</span> <span class="ident">cmd</span> <span class="kw">in</span> <span class="ident">commands</span>.<span class="ident">iter</span>() {
@@ -503,6 +521,14 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Rename mCaptcha object in Redis</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">rename_captcha</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">rename_to</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="number">0</span>
+            .<span class="ident">exec</span>(<span class="ident">redis::cmd</span>(<span class="ident">RENAME_CAPTCHA</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="ident">name</span>, <span class="ident">rename_to</span>]))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Add PoW Challenge object to Redis</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_challenge</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -563,7 +589,6 @@
         <span class="comment">// mcaptcha:token:captcha::token</span>
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;mcaptcha:token:{}:{}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">exec</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;DEL&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">key</span>])).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">res</span>);
         <span class="kw">match</span> <span class="ident">res</span> {
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
@@ -588,6 +613,7 @@
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::redis</span>::<span class="kw-2">*</span>;
 
     <span class="kw">const</span> <span class="ident">CAPTCHA_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;REDIS_CAPTCHA_TEST&quot;</span>;
+    <span class="kw">const</span> <span class="ident">RENAME_CAPTCHA_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;RENAME_REDIS_CAPTCHA_TEST&quot;</span>;
     <span class="kw">const</span> <span class="ident">REDIS_URL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.1.1/&quot;</span>;
     <span class="kw">const</span> <span class="ident">CHALLENGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;randomchallengestring&quot;</span>;
 
@@ -679,7 +705,13 @@
 
         <span class="macro">assert!</span>(<span class="ident">r</span>.<span class="ident">ping</span>().<span class="kw">await</span>);
 
-        <span class="macro">assert!</span>(<span class="ident">r</span>.<span class="ident">delete_captcha</span>(<span class="ident">CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(<span class="ident">r</span>
+            .<span class="ident">rename_captcha</span>(<span class="ident">CAPTCHA_NAME</span>, <span class="ident">RENAME_CAPTCHA_NAME</span>)
+            .<span class="kw">await</span>
+            .<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(<span class="ident">r</span>.<span class="ident">check_captcha_exists</span>(<span class="ident">RENAME_CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>());
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">r</span>.<span class="ident">check_captcha_exists</span>(<span class="ident">CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>());
+        <span class="macro">assert!</span>(<span class="ident">r</span>.<span class="ident">delete_captcha</span>(<span class="ident">RENAME_CAPTCHA_NAME</span>).<span class="kw">await</span>.<span class="ident">is_ok</span>());
     }
 }
 </pre></div>
