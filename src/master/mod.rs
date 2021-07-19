@@ -83,4 +83,11 @@ pub mod messages {
         pub id: String,
         pub mcaptcha: MCaptcha,
     }
+
+    #[derive(Message, Builder)]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
+    pub struct Rename {
+        pub name: String,
+        pub rename_to: String,
+    }
 }

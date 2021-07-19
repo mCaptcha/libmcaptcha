@@ -27,7 +27,7 @@ use tokio::sync::oneshot::channel;
 
 use super::counter::Counter;
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor};
+use crate::master::messages::{AddSite, AddVisitor, Rename};
 use crate::master::Master as MasterTrait;
 
 /// This Actor manages the [Counter] actors.
@@ -71,6 +71,15 @@ impl Master {
     pub fn rm_site(&mut self, id: &str) {
         self.sites.remove(id);
     }
+
+    /// renames [Counter] actor
+    pub fn rename(&mut self, msg: Rename) {
+        // If actor isn't present, it's okay to not throw an error
+        // since actors are lazyily initialized and are cleaned up when inactive
+        if let Some((_, counter)) = self.sites.remove(&msg.name) {
+            self.add_site(counter, msg.rename_to);
+        }
+    }
 }
 
 impl Actor for Master {
@@ -111,6 +120,21 @@ impl Handler<AddVisitor> for Master {
                 ctx.spawn(fut);
             }
         }
+        MessageResult(rx)
+    }
+}
+
+impl Handler<Rename> for Master {
+    type Result = MessageResult<Rename>;
+
+    fn handle(&mut self, m: Rename, ctx: &mut Self::Context) -> Self::Result {
+        self.rename(m);
+        let (tx, rx) = channel();
+        let fut = async move {
+            let _ = tx.send(Ok(()));
+        }
+        .into_actor(self);
+        ctx.spawn(fut);
         MessageResult(rx)
     }
 }
@@ -198,22 +222,37 @@ mod tests {
     use super::*;
     use crate::master::embedded::counter::tests::*;
     use crate::master::messages::AddSiteBuilder;
+    use crate::master::messages::RenameBuilder;
+    use crate::MCaptcha;
 
     #[actix_rt::test]
     async fn master_actor_works() {
         let addr = Master::new(1).start();
 
+        let get_add_site_msg = |id: String, mcaptcha: MCaptcha| {
+            AddSiteBuilder::default()
+                .id(id)
+                .mcaptcha(mcaptcha)
+                .build()
+                .unwrap()
+        };
+
         let id = "yo";
-        let mcaptcha = get_mcaptcha();
-        let msg = AddSiteBuilder::default()
-            .id(id.into())
-            .mcaptcha(mcaptcha.clone())
-            .build()
-            .unwrap();
+        let msg = get_add_site_msg(id.into(), get_mcaptcha());
 
         addr.send(msg).await.unwrap();
 
         let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        assert!(mcaptcha_addr.is_some());
+
+        let new_id = "yoyo";
+        let rename = RenameBuilder::default()
+            .name(id.into())
+            .rename_to(new_id.into())
+            .build()
+            .unwrap();
+        addr.send(rename).await.unwrap();
+        let mcaptcha_addr = addr.send(GetSite(new_id.into())).await.unwrap();
         assert!(mcaptcha_addr.is_some());
 
         let addr_doesnt_exist = addr.send(GetSite("a".into())).await.unwrap();
@@ -225,7 +264,7 @@ mod tests {
         //        delay_for(timer_expire).await;
         //        delay_for(timer_expire).await;
 
-        let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
+        let mcaptcha_addr = addr.send(GetSite(new_id.into())).await.unwrap();
         assert_eq!(mcaptcha_addr, None);
     }
 }
