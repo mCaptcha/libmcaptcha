@@ -40,6 +40,7 @@ const ADD_VISITOR: &str = "MCAPTCHA_CACHE.ADD_VISITOR";
 const DEL: &str = "MCAPTCHA_CACHE.DELETE_CAPTCHA";
 const ADD_CAPTCHA: &str = "MCAPTCHA_CACHE.ADD_CAPTCHA";
 const CAPTCHA_EXISTS: &str = "MCAPTCHA_CACHE.CAPTCHA_EXISTS";
+const RENAME_CAPTCHA: &str = "MCAPTCHA_CACHE.RENAME_CAPTCHA";
 const ADD_CHALLENGE: &str = "MCAPTCHA_CACHE.ADD_CHALLENGE";
 const GET_CHALLENGE: &str = "MCAPTCHA_CACHE.GET_CHALLENGE";
 const DELETE_CHALLENGE: &str = "MCAPTCHA_CACHE.DELETE_CHALLENGE";
@@ -90,6 +91,7 @@ impl MCaptchaRedisConnection {
             ADD_CHALLENGE,
             GET_CHALLENGE,
             DELETE_CHALLENGE,
+            RENAME_CAPTCHA,
         ];
 
         for cmd in commands.iter() {
@@ -159,6 +161,14 @@ impl MCaptchaRedisConnection {
         Ok(())
     }
 
+    /// Rename mCaptcha object in Redis
+    pub async fn rename_captcha(&self, name: &str, rename_to: &str) -> CaptchaResult<()> {
+        self.0
+            .exec(redis::cmd(RENAME_CAPTCHA).arg(&[name, rename_to]))
+            .await?;
+        Ok(())
+    }
+
     /// Add PoW Challenge object to Redis
     pub async fn add_challenge(
         &self,
@@ -219,7 +229,6 @@ impl MCaptchaRedisConnection {
         // mcaptcha:token:captcha::token
         let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
         let res = self.0.exec(redis::cmd("DEL").arg(&[&key])).await?;
-        println!("{}", res);
         match res {
             1 => Ok(true),
             0 => Ok(false),
@@ -244,6 +253,7 @@ pub mod tests {
     use crate::redis::*;
 
     const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
+    const RENAME_CAPTCHA_NAME: &str = "RENAME_REDIS_CAPTCHA_TEST";
     const REDIS_URL: &str = "redis://127.0.1.1/";
     const CHALLENGE: &str = "randomchallengestring";
 
@@ -335,6 +345,12 @@ pub mod tests {
 
         assert!(r.ping().await);
 
-        assert!(r.delete_captcha(CAPTCHA_NAME).await.is_ok());
+        assert!(r
+            .rename_captcha(CAPTCHA_NAME, RENAME_CAPTCHA_NAME)
+            .await
+            .is_ok());
+        assert!(r.check_captcha_exists(RENAME_CAPTCHA_NAME).await.unwrap());
+        assert!(!r.check_captcha_exists(CAPTCHA_NAME).await.unwrap());
+        assert!(r.delete_captcha(RENAME_CAPTCHA_NAME).await.is_ok());
     }
 }
