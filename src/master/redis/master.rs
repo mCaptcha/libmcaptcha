@@ -19,7 +19,7 @@ use actix::dev::*;
 use tokio::sync::oneshot;
 
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor};
+use crate::master::messages::{AddSite, AddVisitor, Rename};
 use crate::master::Master as MasterTrait;
 use crate::redis::mcaptcha_redis::MCaptchaRedis;
 use crate::redis::RedisConfig;
@@ -76,10 +76,28 @@ impl Handler<AddSite> for Master {
     }
 }
 
+impl Handler<Rename> for Master {
+    type Result = MessageResult<Rename>;
+
+    fn handle(&mut self, m: Rename, ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = oneshot::channel();
+
+        let con = self.redis.get_client();
+        let fut = async move {
+            let res = con.rename_captcha(&m.name, &m.rename_to).await;
+            let _ = tx.send(res);
+        }
+        .into_actor(self);
+        ctx.wait(fut);
+        MessageResult(rx)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::master::embedded::counter::tests::get_mcaptcha;
+    use crate::master::messages::RenameBuilder;
     use crate::master::redis::master::Master;
     use crate::redis::RedisConfig;
 
@@ -88,6 +106,8 @@ mod tests {
     #[actix_rt::test]
     async fn redis_master_works() {
         const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
+        const RENAME_CAPTCHA_NAME: &str = "RENAME_REDIS_MASTER_CAPTCHA_TEST";
+
         let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
         let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
         let r = sec_master.unwrap().redis.get_client();
@@ -96,6 +116,11 @@ mod tests {
         let master = master.unwrap();
         {
             let _ = master.redis.get_client().delete_captcha(CAPTCHA_NAME).await;
+            let _ = master
+                .redis
+                .get_client()
+                .delete_captcha(RENAME_CAPTCHA_NAME)
+                .await;
         }
 
         let addr = master.start();
@@ -118,6 +143,13 @@ mod tests {
         actix::clock::sleep(timer_expire).await;
         let visitors = r.get_visitors(CAPTCHA_NAME).await.unwrap();
         assert_eq!(visitors, 0);
+
+        let rename = RenameBuilder::default()
+            .name(CAPTCHA_NAME.into())
+            .rename_to(RENAME_CAPTCHA_NAME.into())
+            .build()
+            .unwrap();
+        assert!(addr.send(rename).await.is_ok());
     }
 
     #[actix_rt::test]

@@ -28,7 +28,10 @@ pub mod redis;
 #[cfg(feature = "full")]
 /// Describes actor handler trait impls that are required by a cache implementation
 pub trait Master:
-    actix::Actor + actix::Handler<messages::AddVisitor> + actix::Handler<messages::AddSite>
+    actix::Actor
+    + actix::Handler<messages::AddVisitor>
+    + actix::Handler<messages::AddSite>
+    + actix::Handler<messages::Rename>
 {
 }
 
