@@ -32,6 +32,7 @@ pub trait Master:
     + actix::Handler<messages::AddVisitor>
     + actix::Handler<messages::AddSite>
     + actix::Handler<messages::Rename>
+    + actix::Handler<messages::RemoveCaptcha>
 {
 }
 
@@ -87,10 +88,16 @@ pub mod messages {
         pub mcaptcha: MCaptcha,
     }
 
+    /// Message to rename an MCaptcha actor
     #[derive(Message, Builder)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct Rename {
         pub name: String,
         pub rename_to: String,
     }
+
+    /// Message to delete [Counter] actor
+    #[derive(Message)]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
+    pub struct RemoveCaptcha(pub String);
 }

@@ -27,7 +27,7 @@ use tokio::sync::oneshot::channel;
 
 use super::counter::Counter;
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor, Rename};
+use crate::master::messages::{AddSite, AddVisitor, RemoveCaptcha, Rename};
 use crate::master::Master as MasterTrait;
 
 /// This Actor manages the [Counter] actors.
@@ -127,14 +127,10 @@ impl Handler<AddVisitor> for Master {
 impl Handler<Rename> for Master {
     type Result = MessageResult<Rename>;
 
-    fn handle(&mut self, m: Rename, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, m: Rename, _ctx: &mut Self::Context) -> Self::Result {
         self.rename(m);
         let (tx, rx) = channel();
-        let fut = async move {
-            let _ = tx.send(Ok(()));
-        }
-        .into_actor(self);
-        ctx.spawn(fut);
+        let _ = tx.send(Ok(()));
         MessageResult(rx)
     }
 }
@@ -176,7 +172,7 @@ impl Handler<CleanUp> for Master {
                 println!("{}", visitor_count);
                 if visitor_count == 0 && new.is_some() {
                     addr.send(Stop).await.unwrap();
-                    master.send(RemoveSite(id.to_owned())).await.unwrap();
+                    master.send(RemoveCaptcha(id.to_owned())).await.unwrap();
                     println!("cleaned up");
                 }
             }
@@ -191,16 +187,14 @@ impl Handler<CleanUp> for Master {
     }
 }
 
-/// Message to delete [Counter] actor
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct RemoveSite(pub String);
+impl Handler<RemoveCaptcha> for Master {
+    type Result = MessageResult<RemoveCaptcha>;
 
-impl Handler<RemoveSite> for Master {
-    type Result = ();
-
-    fn handle(&mut self, m: RemoveSite, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, m: RemoveCaptcha, _ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = channel();
         self.rm_site(&m.0);
+        tx.send(Ok(())).unwrap();
+        MessageResult(rx)
     }
 }
 
@@ -266,5 +260,7 @@ mod tests {
 
         let mcaptcha_addr = addr.send(GetSite(new_id.into())).await.unwrap();
         assert_eq!(mcaptcha_addr, None);
+
+        assert!(addr.send(RemoveCaptcha(new_id.into())).await.is_ok());
     }
 }

@@ -19,7 +19,7 @@ use actix::dev::*;
 use tokio::sync::oneshot;
 
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor, Rename};
+use crate::master::messages::{AddSite, AddVisitor, RemoveCaptcha, Rename};
 use crate::master::Master as MasterTrait;
 use crate::redis::mcaptcha_redis::MCaptchaRedis;
 use crate::redis::RedisConfig;
@@ -93,6 +93,23 @@ impl Handler<Rename> for Master {
     }
 }
 
+impl Handler<RemoveCaptcha> for Master {
+    type Result = MessageResult<RemoveCaptcha>;
+
+    fn handle(&mut self, m: RemoveCaptcha, ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = oneshot::channel();
+
+        let con = self.redis.get_client();
+        let fut = async move {
+            let res = con.delete_captcha(&m.0).await;
+            let _ = tx.send(res);
+        }
+        .into_actor(self);
+        ctx.wait(fut);
+        MessageResult(rx)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,6 +167,10 @@ mod tests {
             .build()
             .unwrap();
         assert!(addr.send(rename).await.is_ok());
+        assert!(addr
+            .send(RemoveCaptcha(RENAME_CAPTCHA_NAME.into()))
+            .await
+            .is_ok());
     }
 
     #[actix_rt::test]
