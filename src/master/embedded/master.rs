@@ -30,6 +30,8 @@ use crate::errors::*;
 use crate::master::messages::{AddSite, AddVisitor, RemoveCaptcha, Rename};
 use crate::master::Master as MasterTrait;
 
+use super::counter::{GetCurrentVisitorCount, Stop};
+
 /// This Actor manages the [Counter] actors.
 /// A service can have several [Counter] actors with
 /// varying [Defense][crate::defense::Defense] configurations
@@ -68,8 +70,8 @@ impl Master {
     }
 
     /// remvoes [Counter] actor from [Master]
-    pub fn rm_site(&mut self, id: &str) {
-        self.sites.remove(id);
+    pub fn rm_site(&mut self, id: &str) -> Option<(Option<()>, Addr<Counter>)> {
+        self.sites.remove(id)
     }
 
     /// renames [Counter] actor
@@ -167,7 +169,6 @@ impl Handler<CleanUp> for Master {
         info!("init master actor cleanup up");
         let task = async move {
             for (id, (new, addr)) in sites.iter() {
-                use super::counter::{GetCurrentVisitorCount, Stop};
                 let visitor_count = addr.send(GetCurrentVisitorCount).await.unwrap();
                 println!("{}", visitor_count);
                 if visitor_count == 0 && new.is_some() {
@@ -190,10 +191,19 @@ impl Handler<CleanUp> for Master {
 impl Handler<RemoveCaptcha> for Master {
     type Result = MessageResult<RemoveCaptcha>;
 
-    fn handle(&mut self, m: RemoveCaptcha, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, m: RemoveCaptcha, ctx: &mut Self::Context) -> Self::Result {
         let (tx, rx) = channel();
-        self.rm_site(&m.0);
-        tx.send(Ok(())).unwrap();
+        if let Some((_, addr)) = self.rm_site(&m.0) {
+            let fut = async move {
+                //addr.send(Stop).await?;
+                let res: CaptchaResult<()> = addr.send(Stop).await.map_err(|e| e.into());
+                let _ = tx.send(res);
+            }
+            .into_actor(self);
+            ctx.spawn(fut);
+        } else {
+            tx.send(Ok(())).unwrap();
+        }
         MessageResult(rx)
     }
 }
