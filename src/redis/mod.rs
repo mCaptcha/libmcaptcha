@@ -64,8 +64,8 @@ impl RedisConnection {
     /// Get client. Uses interior mutability, so lookout for panics
     pub fn get_client(&self) -> Self {
         match self {
-            Self::Single(con) => Self::Single(Rc::clone(&con)),
-            Self::Cluster(con) => Self::Cluster(Rc::clone(&con)),
+            Self::Single(con) => Self::Single(Rc::clone(con)),
+            Self::Cluster(con) => Self::Cluster(Rc::clone(con)),
         }
     }
     #[inline]
