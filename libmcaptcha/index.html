@@ -120,7 +120,7 @@ useful abstractions. An mCaptcha system/instance can have only a single
 
     <span class="comment">// Get PoW config. Should be called everytime there&#39;s a visitor for a</span>
     <span class="comment">// managed site(here mcaptcha_name)</span>
-    <span class="kw">let</span> <span class="ident">work_req</span> <span class="op">=</span> <span class="ident">system</span>.<span class="ident">get_pow</span>(<span class="ident">mcaptcha_name</span>.<span class="ident">into</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">work_req</span> <span class="op">=</span> <span class="ident">system</span>.<span class="ident">get_pow</span>(<span class="ident">mcaptcha_name</span>.<span class="ident">into</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
 
     <span class="comment">// the following computation should be done on the client but for the purpose</span>
     <span class="comment">// of this illustration, we are going to do it on the server it self</span>

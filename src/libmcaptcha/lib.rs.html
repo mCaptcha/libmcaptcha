@@ -361,7 +361,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // Get PoW config. Should be called everytime there&#39;s a visitor for a</span>
 <span class="doccomment">//!     // managed site(here mcaptcha_name)</span>
-<span class="doccomment">//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap();</span>
+<span class="doccomment">//!     let work_req = system.get_pow(mcaptcha_name.into()).await.unwrap().unwrap();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // the following computation should be done on the client but for the purpose</span>
 <span class="doccomment">//!     // of this illustration, we are going to do it on the server it self</span>

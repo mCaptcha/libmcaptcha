@@ -133,6 +133,22 @@
 <span id="131">131</span>
 <span id="132">132</span>
 <span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
 </pre><pre class="rust">
 <span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
@@ -156,6 +172,8 @@
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">redis::RedisError</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tokio::sync::oneshot::error::RecvError</span>;
 
 <span class="doccomment">/// Error datatype</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Display</span>, <span class="ident">Error</span>)]</span>
@@ -224,6 +242,11 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
     <span class="ident">RedisError</span>(<span class="ident">RedisError</span>),
 
+    <span class="doccomment">/// Channel receive error</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;{}&quot;</span>, <span class="ident">_0</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="ident">RecvError</span>(<span class="ident">RecvError</span>),
+
     <span class="doccomment">/// Weird behaviour from mcaptcha redis module</span>
     <span class="attribute">#[<span class="ident">display</span>(
         <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Something weird happening with mCaptcha redis module. Please file bug report&quot;</span>
@@ -254,6 +277,15 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">RedisError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CaptchaError</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">RedisError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span><span class="ident">::RedisError</span>(<span class="ident">e</span>)
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">tarpaulin_include</span>))]</span>
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">RecvError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CaptchaError</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">RecvError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>);
+        <span class="self">Self</span><span class="ident">::RecvError</span>(<span class="ident">e</span>)
     }
 }
 
