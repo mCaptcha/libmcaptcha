@@ -20,6 +20,8 @@
 use derive_more::{Display, Error};
 #[cfg(feature = "full")]
 use redis::RedisError;
+#[cfg(feature = "full")]
+use tokio::sync::oneshot::error::RecvError;
 
 /// Error datatype
 #[derive(Debug, PartialEq, Display, Error)]
@@ -88,6 +90,11 @@ pub enum CaptchaError {
     #[cfg(feature = "full")]
     RedisError(RedisError),
 
+    /// Channel receive error
+    #[display(fmt = "{}", _0)]
+    #[cfg(feature = "full")]
+    RecvError(RecvError),
+
     /// Weird behaviour from mcaptcha redis module
     #[display(
         fmt = "Something weird happening with mCaptcha redis module. Please file bug report"
@@ -118,6 +125,15 @@ pub enum CaptchaError {
 impl From<RedisError> for CaptchaError {
     fn from(e: RedisError) -> Self {
         Self::RedisError(e)
+    }
+}
+
+#[cfg(feature = "full")]
+#[cfg(not(tarpaulin_include))]
+impl From<RecvError> for CaptchaError {
+    fn from(e: RecvError) -> Self {
+        log::error!("{:?}", e);
+        Self::RecvError(e)
     }
 }
 

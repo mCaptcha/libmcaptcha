@@ -85,15 +85,8 @@ where
     <X as actix::Actor>::Context: ToEnvelope<X, AddVisitor> + ToEnvelope<X, AddSite>,
 {
     /// utility function to get difficulty factor of site `id` and cache it
-    pub async fn get_pow(&self, id: String) -> Option<PoWConfig> {
-        match self
-            .master
-            .send(AddVisitor(id.clone()))
-            .await
-            .unwrap()
-            .await
-            .unwrap()
-        {
+    pub async fn get_pow(&self, id: String) -> CaptchaResult<Option<PoWConfig>> {
+        match self.master.send(AddVisitor(id.clone())).await?.await? {
             Ok(Some(mcaptcha)) => {
                 let pow_config = PoWConfig::new(mcaptcha.difficulty_factor, self.pow.salt.clone());
 
@@ -105,16 +98,10 @@ where
                     .build()
                     .unwrap();
 
-                self.cache
-                    .send(cache_msg)
-                    .await
-                    .unwrap()
-                    .await
-                    .unwrap()
-                    .unwrap();
-                Some(pow_config)
+                self.cache.send(cache_msg).await?.await??;
+                Ok(Some(pow_config))
             }
-            _ => None,
+            _ => Ok(None),
         }
     }
 
@@ -127,7 +114,7 @@ where
         };
         let msg = RetrivePoW(msg);
 
-        let cached_config = self.cache.send(msg).await.unwrap().await.unwrap()?;
+        let cached_config = self.cache.send(msg).await?.await??;
 
         if cached_config.is_none() {
             return Err(CaptchaError::StringNotFound);
@@ -154,7 +141,7 @@ where
 
         let msg: CacheResult = cached_config.into();
         let res = msg.token.clone();
-        self.cache.send(msg).await.unwrap().await.unwrap()?;
+        self.cache.send(msg).await?.await??;
         Ok(res)
     }
 
@@ -163,7 +150,7 @@ where
         &self,
         msg: VerifyCaptchaResult,
     ) -> CaptchaResult<bool> {
-        self.cache.send(msg).await.unwrap().await.unwrap()
+        self.cache.send(msg).await?.await?
     }
 }
 
@@ -211,7 +198,7 @@ mod tests {
     #[actix_rt::test]
     async fn get_pow_works() {
         let actors = boostrap_system(10).await;
-        let pow = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let pow = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
         assert_eq!(pow.difficulty_factor, LEVEL_1.0);
     }
 
@@ -220,7 +207,7 @@ mod tests {
         // start system
         let actors = boostrap_system(10).await;
         // get work
-        let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
         // get config
         let config = get_config();
 
@@ -261,7 +248,7 @@ mod tests {
         let res = actors.verify_pow(payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::StringNotFound));
 
-        let insufficient_work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let insufficient_work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
         let insufficient_work = config.prove_work(&insufficient_work_req.string, 1).unwrap();
         let insufficient_work_payload = Work {
             string: insufficient_work_req.string,
@@ -272,7 +259,7 @@ mod tests {
         let res = actors.verify_pow(insufficient_work_payload.clone()).await;
         assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
 
-        let sitekeyfail_config = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap();
+        let sitekeyfail_config = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
         let sitekeyfail_work = config
             .prove_work(
                 &sitekeyfail_config.string,

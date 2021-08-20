@@ -22,6 +22,9 @@
   `crate::master::embedded::master`, it automatically starts `Counter`
   actor.
 
+- `System::get_pow` returns `errors::CaptchaResult<Option<PoWConfig>>`
+  instead of `Option<PoWConfig>`
+
 ## 0.1.3
 
 ## Added
