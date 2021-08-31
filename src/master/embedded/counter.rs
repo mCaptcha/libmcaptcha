@@ -111,7 +111,7 @@ struct DeleteVisitor;
 impl Handler<DeleteVisitor> for Counter {
     type Result = ();
     fn handle(&mut self, _msg: DeleteVisitor, _ctx: &mut Self::Context) -> Self::Result {
-        self.0.decrement_visitor();
+        self.0.decrement_visitor_by(1);
     }
 }
 

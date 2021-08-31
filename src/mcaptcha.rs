@@ -99,14 +99,6 @@ impl MCaptcha {
         }
     }
 
-    /// decrements the visitor count by one
-    #[inline]
-    pub fn decrement_visitor(&mut self) {
-        if self.visitor_threshold > 0 {
-            self.visitor_threshold -= 1;
-        }
-    }
-
     /// decrements the visitor count by specified count
     #[inline]
     pub fn decrement_visitor_by(&mut self, count: u32) {

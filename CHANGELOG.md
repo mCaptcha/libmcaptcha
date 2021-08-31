@@ -25,6 +25,10 @@
 - `System::get_pow` returns `errors::CaptchaResult<Option<PoWConfig>>`
   instead of `Option<PoWConfig>`
 
+## Removed
+- `MCaptcha::decrement_visiotr`: seemed redundant when
+  `MCaptcha::decrement_visitor_by` was available
+
 ## 0.1.3
 
 ## Added
