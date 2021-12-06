@@ -7,13 +7,13 @@ keywords = ["DDoS", "mcaptcha", "captcha", "pow"]
 homepage = "https://mcaptcha.org"
 repository = "https://github.com/realaravinth/libmcaptcha"
 license = "AGPL-3.0"
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 
 [dependencies]
 actix = { version =  "0.12", optional = true}
 
-serde = "1.0.114"
+serde = "1.0"
 serde_json = "1"
 
 pretty_env_logger = {version = "0.4",  optional = true }
@@ -29,7 +29,7 @@ pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256"
 redis = { version = "0.21", features = ["tokio-comp","aio", "cluster"], optional=true }
 #redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
 
-tokio = { version = "1", features = ["sync"]}
+tokio = { version = "1.14", features = ["sync"]}
 
 [dev-dependencies]
 actix-rt = "2"
