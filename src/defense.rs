@@ -106,20 +106,6 @@ impl LevelBuilder {
     }
 }
 
-/// struct describes all the different [Level]s at which an mCaptcha system operates
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct Defense {
-    levels: Vec<Level>,
-    // index of current visitor threshold
-    current_visitor_threshold: usize,
-}
-
-impl From<Defense> for Vec<Level> {
-    fn from(d: Defense) -> Self {
-        d.levels
-    }
-}
-
 /// Builder struct for [Defense]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefenseBuilder {
@@ -174,6 +160,20 @@ impl DefenseBuilder {
     }
 }
 
+/// struct describes all the different [Level]s at which an mCaptcha system operates
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct Defense {
+    levels: Vec<Level>,
+    // index of current visitor threshold
+    current_visitor_threshold: usize,
+}
+
+impl From<Defense> for Vec<Level> {
+    fn from(d: Defense) -> Self {
+        d.levels
+    }
+}
+
 impl Defense {
     ///! Difficulty is calculated as:
     ///! ```rust
@@ -209,6 +209,11 @@ impl Defense {
     /// Set defense to minimum level
     pub fn min_defense(&mut self) {
         self.current_visitor_threshold = 0;
+    }
+
+    /// Get current level's  visitor threshold
+    pub fn current_level(&self) -> &Level {
+        &self.levels[self.current_visitor_threshold]
     }
 
     /// Get current level's  visitor threshold

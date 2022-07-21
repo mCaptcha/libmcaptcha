@@ -92,7 +92,8 @@ impl MCaptcha {
     #[inline]
     pub fn add_visitor(&mut self) {
         self.visitor_threshold += 1;
-        if self.visitor_threshold > self.defense.visitor_threshold() {
+        let current_level = self.defense.current_level();
+        if self.visitor_threshold > current_level.visitor_threshold {
             self.defense.tighten_up();
         } else {
             self.defense.loosen_up();
