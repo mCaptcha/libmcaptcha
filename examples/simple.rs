@@ -34,6 +34,7 @@ async fn main() -> std::io::Result<()> {
         .master(master)
         .cache(cache)
         .pow(pow.clone())
+        .runners(4)
         .build();
 
     // configure defense. This is a per site configuration. A site can have several levels
@@ -108,7 +109,9 @@ async fn main() -> std::io::Result<()> {
 
     // mCAptcha evaluates client's work. Returns a token if everything
     // checksout and Err() if something fishy is happening
-    let res = system.verify_pow(payload.clone()).await;
+    let res = system
+        .verify_pow(payload.clone(), "192.168.0.103".into())
+        .await;
     assert!(res.is_ok());
 
     // The client should submit the token to the mCaptcha protected service

@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! module describing mCaptcha system
+use std::sync::Arc;
+
 use actix::dev::*;
 use pow_sha256::Config;
 
@@ -25,11 +27,13 @@ use crate::errors::*;
 use crate::master::messages::*;
 use crate::master::Master;
 use crate::pow::*;
+use crate::queue::{Manager, QueuedWork};
 
 pub struct SystemBuilder<T: Save, X: Master> {
     pub master: Option<Addr<X>>,
     cache: Option<Addr<T>>,
     pow: Option<Config>,
+    runners: Option<Manager>,
 }
 
 impl<T: Master, S: Save> Default for SystemBuilder<S, T> {
@@ -38,6 +42,7 @@ impl<T: Master, S: Save> Default for SystemBuilder<S, T> {
             pow: None,
             cache: None,
             master: None,
+            runners: None,
         }
     }
 }
@@ -58,11 +63,18 @@ impl<T: Master, S: Save> SystemBuilder<S, T> {
         self
     }
 
+    pub fn runners(mut self, workers: usize) -> Self {
+        let m = Manager::new(workers);
+        self.runners = Some(m);
+        self
+    }
+
     pub fn build(self) -> System<S, T> {
         System {
             master: self.master.unwrap(),
-            pow: self.pow.unwrap(),
+            pow: Arc::new(self.pow.unwrap()),
             cache: self.cache.unwrap(),
+            runners: self.runners.unwrap(),
         }
     }
 }
@@ -71,7 +83,8 @@ impl<T: Master, S: Save> SystemBuilder<S, T> {
 pub struct System<T: Save, X: Master> {
     pub master: Addr<X>,
     cache: Addr<T>,
-    pow: Config,
+    pow: Arc<Config>,
+    runners: Manager,
 }
 
 impl<T, X> System<T, X>
@@ -106,7 +119,9 @@ where
     }
 
     /// utility function to verify [Work]
-    pub async fn verify_pow(&self, work: Work) -> CaptchaResult<String> {
+    pub async fn verify_pow(&self, work: Work, ip: String) -> CaptchaResult<String> {
+        use crossbeam_channel::TryRecvError;
+
         let string = work.string.clone();
         let msg = VerifyCaptchaResult {
             token: string.clone(),
@@ -128,17 +143,39 @@ where
 
         let pow = work.into();
 
-        if !self
-            .pow
-            .is_sufficient_difficulty(&pow, cached_config.difficulty_factor)
-        {
-            return Err(CaptchaError::InsuffiencientDifficulty);
+        let (queued_work, rx) = QueuedWork::new(
+            self.pow.clone(),
+            pow,
+            string,
+            cached_config.difficulty_factor,
+        );
+        self.runners.add(ip, queued_work);
+        loop {
+            match rx.try_recv() {
+                Err(TryRecvError::Empty) => continue,
+                Err(TryRecvError::Disconnected) => {
+                    return Err(CaptchaError::InsuffiencientDifficulty);
+                }
+                Ok(t) => {
+                    if !t {
+                        return Err(CaptchaError::InsuffiencientDifficulty);
+                    }
+                    break;
+                }
+            };
         }
 
-        if !self.pow.is_valid_proof(&pow, &string) {
-            return Err(CaptchaError::InvalidPoW);
-        }
-
+        //        if !self
+        //            .pow
+        //            .is_sufficient_difficulty(&pow, cached_config.difficulty_factor)
+        //        {
+        //            return Err(CaptchaError::InsuffiencientDifficulty);
+        //        }
+        //
+        //        if !self.pow.is_valid_proof(&pow, &string) {
+        //            return Err(CaptchaError::InvalidPoW);
+        //        }
+        //
         let msg: CacheResult = cached_config.into();
         let res = msg.token.clone();
         self.cache.send(msg).await?.await??;
@@ -185,6 +222,7 @@ mod tests {
             .master(master)
             .cache(cache)
             .pow(pow)
+            .runners(2)
             .build()
     }
 
@@ -224,7 +262,7 @@ mod tests {
         };
 
         // verifiy proof
-        let res = actors.verify_pow(payload.clone()).await;
+        let res = actors.verify_pow(payload.clone(), "1".into()).await;
         assert!(res.is_ok());
 
         // verify validation token
@@ -245,7 +283,7 @@ mod tests {
             .unwrap());
 
         payload.string = "wrongstring".into();
-        let res = actors.verify_pow(payload.clone()).await;
+        let res = actors.verify_pow(payload.clone(), "1".into()).await;
         assert_eq!(res, Err(CaptchaError::StringNotFound));
 
         let insufficient_work_req = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
@@ -256,7 +294,9 @@ mod tests {
             nonce: insufficient_work.nonce,
             key: MCAPTCHA_NAME.into(),
         };
-        let res = actors.verify_pow(insufficient_work_payload.clone()).await;
+        let res = actors
+            .verify_pow(insufficient_work_payload.clone(), "1".into())
+            .await;
         assert_eq!(res, Err(CaptchaError::InsuffiencientDifficulty));
 
         let sitekeyfail_config = actors.get_pow(MCAPTCHA_NAME.into()).await.unwrap().unwrap();
@@ -274,7 +314,7 @@ mod tests {
             key: "example.com".into(),
         };
 
-        let res = actors.verify_pow(sitekeyfail).await;
+        let res = actors.verify_pow(sitekeyfail, "1".into()).await;
         assert_eq!(res, Err(CaptchaError::MCaptchaKeyValidationFail));
     }
 }

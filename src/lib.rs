@@ -82,6 +82,7 @@
 //!         .master(master)
 //!         .cache(cache)
 //!         .pow(pow.clone())
+//!         .runners(4)
 //!         .build();
 //!
 //!     // configure defense. This is a per site configuration. A site can have several levels
@@ -156,7 +157,7 @@
 //!
 //!     // Server evaluates client's work. Returns true if everything
 //!     // checksout and Err() if something fishy is happening
-//!     let res = system.verify_pow(payload.clone()).await;
+//!     let res = system.verify_pow(payload.clone(), "192.168.0.103".into()).await;
 //!     assert!(res.is_ok());
 //!
 //!    // The client should submit the token to the mCaptcha protected service
@@ -194,6 +195,8 @@ pub mod cache;
 pub mod mcaptcha;
 #[cfg(feature = "full")]
 pub mod pow;
+#[cfg(feature = "full")]
+mod queue;
 #[cfg(feature = "full")]
 pub mod system;
 #[cfg(feature = "full")]

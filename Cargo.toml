@@ -30,6 +30,8 @@ redis = { version = "0.21", features = ["tokio-comp","aio", "cluster"], optional
 #redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
 
 tokio = { version = "1.14", features = ["sync"]}
+num_cpus = { version = "1.13.1", optional=true }
+crossbeam-channel = { version = "0.5.6", optional=true }
 
 [dev-dependencies]
 actix-rt = "2"
@@ -43,7 +45,9 @@ default = [
 	"log",
 	"pretty_env_logger",
 	"pow_sha256",
-	"redis"
+	"redis",
+    "num_cpus",
+    "crossbeam-channel"
 ]
 minimal = []
 full = []
