@@ -58,7 +58,6 @@ jobs:
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.15.0'
           args: '-t 1200'
 
       - name: Upload to Codecov
