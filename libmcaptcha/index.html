@@ -4,7 +4,7 @@
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../libmcaptcha/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"><a href="#">Crate libmcaptcha</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.1.4</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li></ul></div></section><div id="sidebar-vars" data-name="libmcaptcha" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../libmcaptcha/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">libmcaptcha</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/libmcaptcha/lib.rs.html#18-220">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>mCaptcha is a proof of work based Denaial-of-Service attack protection system.
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">libmcaptcha</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/libmcaptcha/lib.rs.html#18-223">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>mCaptcha is a proof of work based Denaial-of-Service attack protection system.
 This is is a server library that you can embed in your services to protect your
 servers.</p>
 <p>A commercial managed solution is in the works but I’d much rather prefer
@@ -67,6 +67,7 @@ useful abstractions. An mCaptcha system/instance can have only a single
         .<span class="ident">master</span>(<span class="ident">master</span>)
         .<span class="ident">cache</span>(<span class="ident">cache</span>)
         .<span class="ident">pow</span>(<span class="ident">pow</span>.<span class="ident">clone</span>())
+        .<span class="ident">runners</span>(<span class="number">4</span>)
         .<span class="ident">build</span>();
 
     <span class="comment">// configure defense. This is a per site configuration. A site can have several levels</span>
@@ -141,7 +142,7 @@ useful abstractions. An mCaptcha system/instance can have only a single
 
     <span class="comment">// Server evaluates client&#39;s work. Returns true if everything</span>
     <span class="comment">// checksout and Err() if something fishy is happening</span>
-    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">system</span>.<span class="ident">verify_pow</span>(<span class="ident">payload</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">system</span>.<span class="ident">verify_pow</span>(<span class="ident">payload</span>.<span class="ident">clone</span>(), <span class="string">&quot;192.168.0.103&quot;</span>.<span class="ident">into</span>()).<span class="kw">await</span>;
     <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_ok</span>());
 
    <span class="comment">// The client should submit the token to the mCaptcha protected service</span>

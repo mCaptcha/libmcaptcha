@@ -223,6 +223,9 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -307,6 +310,7 @@
 <span class="doccomment">//!         .master(master)</span>
 <span class="doccomment">//!         .cache(cache)</span>
 <span class="doccomment">//!         .pow(pow.clone())</span>
+<span class="doccomment">//!         .runners(4)</span>
 <span class="doccomment">//!         .build();</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // configure defense. This is a per site configuration. A site can have several levels</span>
@@ -381,7 +385,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     // Server evaluates client&#39;s work. Returns true if everything</span>
 <span class="doccomment">//!     // checksout and Err() if something fishy is happening</span>
-<span class="doccomment">//!     let res = system.verify_pow(payload.clone()).await;</span>
+<span class="doccomment">//!     let res = system.verify_pow(payload.clone(), &quot;192.168.0.103&quot;.into()).await;</span>
 <span class="doccomment">//!     assert!(res.is_ok());</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!    // The client should submit the token to the mCaptcha protected service</span>
@@ -419,6 +423,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcaptcha</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pow</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+<span class="kw">mod</span> <span class="ident">queue</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">system</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
