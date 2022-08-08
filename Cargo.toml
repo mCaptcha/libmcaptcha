@@ -1,6 +1,6 @@
 [package]
 name = "libmcaptcha"
-version = "0.1.4"
+version = "0.2.1"
 authors = ["realaravinth <realaravinth@batsense.net>"]
 description = "core of mCaptcha captcha system"
 keywords = ["DDoS", "mcaptcha", "captcha", "pow"]
@@ -25,7 +25,7 @@ derive_more = "0.99"
 rand = {version = "0.8",  optional = true }
 
 
-pow_sha256 = { version = "0.2.1", git = "https://github.com/mcaptcha/pow_sha256", optional=true }
+pow_sha256 = { version = "0.3.1", git = "https://github.com/mcaptcha/pow_sha256", optional=true }
 redis = { version = "0.21", features = ["tokio-comp","aio", "cluster"], optional=true }
 #redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
 
