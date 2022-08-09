@@ -308,35 +308,6 @@
 <span id="303">303</span>
 <span id="304">304</span>
 <span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2022 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -356,83 +327,26 @@
  */</span>
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::collections::VecDeque</span>;
-<span class="comment">//use std::sync::crossbeam_channel::{self, Receiver, Sender, Sender};</span>
 <span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>};
-<span class="comment">//use tokio::sync::oneshot::{Receiver as Receiver, Sender as Sender, self};</span>
 <span class="kw">use</span> <span class="ident">std::thread</span>::{<span class="self">self</span>, <span class="ident">JoinHandle</span>};
 
-<span class="kw">use</span> <span class="ident">pow_sha256</span>::{<span class="ident">Config</span>, <span class="ident">PoW</span>};
-
 <span class="kw">use</span> <span class="ident">crossbeam_channel</span>::{<span class="self">self</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
-<span class="kw">use</span> <span class="ident">println</span> <span class="kw">as</span> <span class="ident">debug</span>;
+<span class="kw">use</span> <span class="ident">log::debug</span>;
 
-<span class="kw">trait</span> <span class="ident">Runnable</span> {
-    <span class="kw">type</span> <span class="ident">Output</span>;
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span>;
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueuedWork</span> {
-    <span class="ident">tx</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-    <span class="ident">pow</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Config</span><span class="op">&gt;</span>,
-    <span class="ident">work</span>: <span class="ident">PoW</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">string</span>: <span class="ident">String</span>,
-    <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">QueuedWork</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">pow</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Config</span><span class="op">&gt;</span>,
-        <span class="ident">work</span>: <span class="ident">PoW</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">string</span>: <span class="ident">String</span>,
-        <span class="ident">difficulty_factor</span>: <span class="ident">u32</span>,
-    ) -&gt; (<span class="self">Self</span>, <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">crossbeam_channel::bounded</span>(<span class="number">2</span>);
-        (
-            <span class="self">Self</span> {
-                <span class="ident">tx</span>,
-                <span class="ident">pow</span>,
-                <span class="ident">work</span>,
-                <span class="ident">difficulty_factor</span>,
-                <span class="ident">string</span>,
-            },
-            <span class="ident">rx</span>,
-        )
-    }
-    <span class="kw">fn</span> <span class="ident">validate</span>(<span class="self">self</span>) {
-        <span class="comment">//        let res = self</span>
-        <span class="comment">//            .pow</span>
-        <span class="comment">//            .is_sufficient_difficulty(self.pow.as_ref(), self.difficulty_factor);</span>
-
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
-            .<span class="ident">pow</span>
-            .<span class="ident">is_sufficient_difficulty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">work</span>, <span class="self">self</span>.<span class="ident">difficulty_factor</span>)
-        {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">send</span>(<span class="bool-val">false</span>) {
-                <span class="macro">debug!</span>(<span class="string">&quot;[ERROR] unable to send work result: {e}&quot;</span>);
-            }
-        }
-
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">pow</span>.<span class="ident">is_valid_proof</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">work</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">string</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">send</span>(<span class="bool-val">false</span>) {
-                <span class="macro">debug!</span>(<span class="string">&quot;[ERROR] unable to send work result: {e}&quot;</span>);
-            }
-        }
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">send</span>(<span class="bool-val">true</span>) {
-            <span class="macro">debug!</span>(<span class="string">&quot;[ERROR] unable to send work result: {e}&quot;</span>);
-        }
-    }
-}
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors</span>::<span class="kw-2">*</span>;
 
 <span class="kw">enum</span> <span class="ident">Message</span> {
     <span class="ident">Stop</span>,
-    <span class="ident">Prove</span>(<span class="ident">QueuedWork</span>),
+    <span class="ident">Prove</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runnable</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">struct</span> <span class="ident">RunnerThread</span> {
     <span class="ident">tx</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
     <span class="ident">thread</span>: <span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+}
+
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Runnable</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
+    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="self">self</span>);
 }
 
 <span class="kw">impl</span> <span class="ident">RunnerThread</span> {
@@ -444,27 +358,26 @@
     }
 
     <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">rx</span>: <span class="kw-2">&amp;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>) {
-        <span class="macro">println!</span>(<span class="string">&quot;Spawned thread&quot;</span>);
         <span class="kw">loop</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">recv</span>() {
                 <span class="kw">match</span> <span class="ident">msg</span> {
                     <span class="ident">Message::Stop</span> =&gt; <span class="kw">return</span>,
-                    <span class="ident">Message::Prove</span>(<span class="ident">w</span>) =&gt; <span class="ident">w</span>.<span class="ident">validate</span>(),
-                }
+                    <span class="ident">Message::Prove</span>(<span class="ident">r</span>) =&gt; <span class="ident">r</span>.<span class="ident">run</span>(),
+                };
             }
         }
     }
 }
 
+<span class="kw">type</span> <span class="ident">InnerManagerQueue</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runnable</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">InnerManagerIP</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
 <span class="kw">struct</span> <span class="ident">InnerManager</span> {
-    <span class="ident">queues</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">QueuedWork</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">queues</span>: <span class="ident">InnerManagerQueue</span>,
     <span class="ident">runners</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RunnerThread</span><span class="op">&gt;</span>,
-    <span class="ident">ips</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">ips</span>: <span class="ident">InnerManagerIP</span>,
     <span class="ident">currnet_index</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
 }
-
-<span class="kw">type</span> <span class="ident">InnerManagerQueue</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">QueuedWork</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">type</span> <span class="ident">InnerManagerIP</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">InnerManager</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
@@ -542,6 +455,7 @@
     <span class="ident">queues</span>: <span class="ident">InnerManagerQueue</span>,
     <span class="ident">ips</span>: <span class="ident">InnerManagerIP</span>,
     <span class="ident">dispatch_runner</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">queue_length</span>: <span class="ident">usize</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Manager</span> {
@@ -553,7 +467,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Manager</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">workers</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">workers</span>: <span class="ident">usize</span>, <span class="ident">queue_length</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">crossbeam_channel::unbounded</span>();
         <span class="kw">let</span> <span class="ident">im</span> <span class="op">=</span> <span class="ident">InnerManager::new</span>(<span class="ident">workers</span>);
 
@@ -568,109 +482,137 @@
             <span class="ident">stop_dispatch_runner</span>: <span class="ident">tx</span>,
             <span class="ident">queues</span>,
             <span class="ident">ips</span>,
+            <span class="ident">queue_length</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ip</span>: <span class="ident">String</span>, <span class="ident">work</span>: <span class="ident">QueuedWork</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ip</span>: <span class="ident">String</span>, <span class="ident">job</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runnable</span><span class="op">&gt;</span>) -&gt; <span class="ident">CaptchaResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">len</span>() <span class="op">==</span> <span class="self">self</span>.<span class="ident">queue_length</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CaptchaError::QueueFull</span>);
+            }
+        }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">queue</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ip</span>) {
-            <span class="ident">queue</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">push_back</span>(<span class="ident">work</span>);
-            <span class="kw">return</span>;
+            <span class="ident">queue</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">push_back</span>(<span class="ident">job</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
         <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">queue</span> <span class="op">=</span> <span class="ident">VecDeque::with_capacity</span>(<span class="number">1</span>);
-            <span class="ident">queue</span>.<span class="ident">push_back</span>(<span class="ident">work</span>);
+            <span class="ident">queue</span>.<span class="ident">push_back</span>(<span class="ident">job</span>);
             <span class="ident">RwLock::new</span>(<span class="ident">queue</span>)
         };
         <span class="kw">let</span> <span class="ident">ip</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">ip</span>);
         <span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">insert</span>(<span class="ident">ip</span>.<span class="ident">clone</span>(), <span class="ident">queue</span>);
         <span class="self">self</span>.<span class="ident">ips</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">push</span>(<span class="ident">ip</span>);
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="comment">//#[cfg(test)]</span>
-<span class="comment">//mod tests {</span>
-<span class="comment">//    use std::time::Duration;</span>
-<span class="comment">//</span>
-<span class="comment">//    use super::*;</span>
-<span class="comment">//</span>
-<span class="comment">//    impl Manager {</span>
-<span class="comment">//        fn add_works(&amp;self) {</span>
-<span class="comment">//            const IP: &amp;str = &quot;foo bar&quot;;</span>
-<span class="comment">//</span>
-<span class="comment">//            let (w, rx) = QueuedWork::new(&quot;1&quot;.to_string());</span>
-<span class="comment">//</span>
-<span class="comment">//            {</span>
-<span class="comment">//                self.add(IP.into(), w);</span>
-<span class="comment">//                assert_eq!(self.queues.read().unwrap().len(), 1);</span>
-<span class="comment">//            }</span>
-<span class="comment">//</span>
-<span class="comment">//            let (w2, rx2) = QueuedWork::new(&quot;2&quot;.into());</span>
-<span class="comment">//            {</span>
-<span class="comment">//                self.add(IP.into(), w2);</span>
-<span class="comment">//                assert_eq!(self.queues.read().unwrap().len(), 1);</span>
-<span class="comment">//            }</span>
-<span class="comment">//</span>
-<span class="comment">//            thread::sleep(Duration::new(2, 0));</span>
-<span class="comment">//            assert!(rx.recv().unwrap());</span>
-<span class="comment">//            assert!(rx2.recv().unwrap());</span>
-<span class="comment">//        }</span>
-<span class="comment">//    }</span>
-<span class="comment">//</span>
-<span class="comment">//    #[test]</span>
-<span class="comment">//    fn manager_works() {</span>
-<span class="comment">//        let manager = Manager::new(4);</span>
-<span class="comment">//</span>
-<span class="comment">//        manager.add_works();</span>
-<span class="comment">//        drop(manager);</span>
-<span class="comment">//    }</span>
-<span class="comment">//</span>
-<span class="comment">//    #[test]</span>
-<span class="comment">//    fn abuse_manager() {</span>
-<span class="comment">//        let num_threads = 18;</span>
-<span class="comment">//        let manager = Arc::new(Manager::new(num_threads));</span>
-<span class="comment">//</span>
-<span class="comment">//        let mut threads = Vec::with_capacity(num_threads);</span>
-<span class="comment">//        for t in 0..num_threads {</span>
-<span class="comment">//            let m = manager.clone();</span>
-<span class="comment">//            let j = thread::spawn(move || {</span>
-<span class="comment">//                let num_jobs = 100000;</span>
-<span class="comment">//                let mut jobs = Vec::with_capacity(num_jobs);</span>
-<span class="comment">//                for i in 0..num_jobs {</span>
-<span class="comment">//                    let (w, rx) = QueuedWork::new(format!(&quot;thread {t} job {i}&quot;));</span>
-<span class="comment">//                    jobs.push(rx);</span>
-<span class="comment">//                    m.add(i.to_string(), w);</span>
-<span class="comment">//                }</span>
-<span class="comment">//                let mut err = false;</span>
-<span class="comment">//</span>
-<span class="comment">//                let mut count = 0;</span>
-<span class="comment">//</span>
-<span class="comment">//                for rx in jobs.drain(..0) {</span>
-<span class="comment">//                    loop {</span>
-<span class="comment">//                        match rx.try_recv() {</span>
-<span class="comment">//                            Err(crossbeam_channel::TryRecvError::Empty) =&gt; continue,</span>
-<span class="comment">//                            Err(crossbeam_channel::TryRecvError::Disconnected) =&gt; panic!(&quot;{count}&quot;),</span>
-<span class="comment">//                            Ok(t) =&gt; {</span>
-<span class="comment">//                                count += 1;</span>
-<span class="comment">//                                assert!(t);</span>
-<span class="comment">//                                break;</span>
-<span class="comment">//                            }</span>
-<span class="comment">//                        };</span>
-<span class="comment">//                    }</span>
-<span class="comment">//                }</span>
-<span class="comment">//</span>
-<span class="comment">//                if err {</span>
-<span class="comment">//                    panic!()</span>
-<span class="comment">//                }</span>
-<span class="comment">//                true</span>
-<span class="comment">//            });</span>
-<span class="comment">//            threads.push(j);</span>
-<span class="comment">//        }</span>
-<span class="comment">//        for t in threads.drain(0..) {</span>
-<span class="comment">//            assert!(t.join().unwrap());</span>
-<span class="comment">//        }</span>
-<span class="comment">//    }</span>
-<span class="comment">//}</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MockedRunnable</span> {
+        <span class="ident">tx</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">tag</span>: <span class="ident">String</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">MockedRunnable</span> {
+        <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">tag</span>: <span class="ident">String</span>) -&gt; (<span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) {
+            <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">crossbeam_channel::bounded</span>(<span class="number">2</span>);
+            (<span class="ident">Box::new</span>(<span class="self">Self</span> { <span class="ident">tx</span>, <span class="ident">tag</span> }), <span class="ident">rx</span>)
+        }
+    }
+
+    <span class="kw">impl</span> <span class="ident">Runnable</span> <span class="kw">for</span> <span class="ident">MockedRunnable</span> {
+        <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx</span>.<span class="ident">send</span>(<span class="bool-val">true</span>) {
+                <span class="macro">debug!</span>(<span class="string">&quot;[ERROR][{}] send failed: {e}&quot;</span>, <span class="self">self</span>.<span class="ident">tag</span>)
+            }
+        }
+    }
+
+    <span class="kw">impl</span> <span class="ident">Manager</span> {
+        <span class="kw">fn</span> <span class="ident">add_works</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+            <span class="kw">const</span> <span class="ident">IP</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;foo bar&quot;</span>;
+
+            <span class="kw">let</span> (<span class="ident">w</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">MockedRunnable::new</span>(<span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>());
+
+            {
+                <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">IP</span>.<span class="ident">into</span>(), <span class="ident">w</span>);
+                <span class="macro">assert_eq!</span>(<span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">1</span>);
+            }
+
+            <span class="kw">let</span> (<span class="ident">w2</span>, <span class="ident">rx2</span>) <span class="op">=</span> <span class="ident">MockedRunnable::new</span>(<span class="string">&quot;2&quot;</span>.<span class="ident">into</span>());
+            {
+                <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">IP</span>.<span class="ident">into</span>(), <span class="ident">w2</span>);
+                <span class="macro">assert_eq!</span>(<span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">1</span>);
+            }
+
+            <span class="ident">thread::sleep</span>(<span class="ident">Duration::new</span>(<span class="number">2</span>, <span class="number">0</span>));
+            <span class="macro">assert!</span>(<span class="ident">rx</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>());
+            <span class="macro">assert!</span>(<span class="ident">rx2</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>());
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">manager_works</span>() {
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">Manager::new</span>(<span class="number">4</span>, <span class="number">10</span>);
+
+        <span class="ident">manager</span>.<span class="ident">add_works</span>();
+        <span class="ident">drop</span>(<span class="ident">manager</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">abuse_manager</span>() {
+        <span class="kw">let</span> <span class="ident">num_threads</span> <span class="op">=</span> <span class="number">18</span>;
+        <span class="kw">let</span> <span class="ident">num_jobs</span> <span class="op">=</span> <span class="number">100_000</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Manager::new</span>(<span class="ident">num_threads</span>, <span class="ident">num_jobs</span>));
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">threads</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">num_threads</span>);
+        <span class="kw">for</span> <span class="ident">t</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_threads</span> {
+            <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">manager</span>.<span class="ident">clone</span>();
+            <span class="kw">let</span> <span class="ident">j</span> <span class="op">=</span> <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">jobs</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">num_jobs</span>);
+                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_jobs</span> {
+                    <span class="kw">let</span> (<span class="ident">w</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">MockedRunnable::new</span>(<span class="macro">format!</span>(<span class="string">&quot;thread {t} job {i}&quot;</span>));
+                    <span class="ident">jobs</span>.<span class="ident">push</span>(<span class="ident">rx</span>);
+                    <span class="ident">m</span>.<span class="ident">add</span>(<span class="ident">i</span>.<span class="ident">to_string</span>(), <span class="ident">w</span>);
+                }
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="bool-val">false</span>;
+
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
+
+                <span class="kw">for</span> <span class="ident">rx</span> <span class="kw">in</span> <span class="ident">jobs</span>.<span class="ident">drain</span>(..<span class="number">0</span>) {
+                    <span class="kw">loop</span> {
+                        <span class="kw">match</span> <span class="ident">rx</span>.<span class="ident">try_recv</span>() {
+                            <span class="prelude-val">Err</span>(<span class="ident">crossbeam_channel::TryRecvError::Empty</span>) =&gt; <span class="kw">continue</span>,
+                            <span class="prelude-val">Err</span>(<span class="ident">crossbeam_channel::TryRecvError::Disconnected</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{count}&quot;</span>),
+                            <span class="prelude-val">Ok</span>(<span class="ident">t</span>) =&gt; {
+                                <span class="ident">count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                                <span class="macro">assert!</span>(<span class="ident">t</span>);
+                                <span class="kw">break</span>;
+                            }
+                        };
+                    }
+                }
+
+                <span class="kw">if</span> <span class="ident">err</span> {
+                    <span class="macro">panic!</span>()
+                }
+                <span class="bool-val">true</span>
+            });
+            <span class="ident">threads</span>.<span class="ident">push</span>(<span class="ident">j</span>);
+        }
+        <span class="kw">for</span> <span class="ident">t</span> <span class="kw">in</span> <span class="ident">threads</span>.<span class="ident">drain</span>(<span class="number">0</span>..) {
+            <span class="macro">assert!</span>(<span class="ident">t</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>());
+        }
+    }
+}
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="libmcaptcha" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>
 </body></html>

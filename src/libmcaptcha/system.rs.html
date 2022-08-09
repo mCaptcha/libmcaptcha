@@ -323,6 +323,14 @@
 <span id="318">318</span>
 <span id="319">319</span>
 <span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -352,13 +360,14 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::master::messages</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::master::Master</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pow</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::queue</span>::{<span class="ident">Manager</span>, <span class="ident">QueuedWork</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::queue::Manager</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SystemBuilder</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Save</span>, <span class="ident">X</span>: <span class="ident">Master</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">master</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">pow</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Config</span><span class="op">&gt;</span>,
-    <span class="ident">runners</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Manager</span><span class="op">&gt;</span>,
+    <span class="ident">runners</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    <span class="ident">queue_length</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Master</span>, <span class="ident">S</span>: <span class="ident">Save</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SystemBuilder</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span> {
@@ -368,6 +377,7 @@
             <span class="ident">cache</span>: <span class="prelude-val">None</span>,
             <span class="ident">master</span>: <span class="prelude-val">None</span>,
             <span class="ident">runners</span>: <span class="prelude-val">None</span>,
+            <span class="ident">queue_length</span>: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -389,17 +399,22 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">runners</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">workers</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Manager::new</span>(<span class="ident">workers</span>);
-        <span class="self">self</span>.<span class="ident">runners</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">m</span>);
+        <span class="self">self</span>.<span class="ident">runners</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">workers</span>);
+        <span class="self">self</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_length</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">queue_length</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">queue_length</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">queue_length</span>);
         <span class="self">self</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">System</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">runners</span> <span class="op">=</span> <span class="ident">Manager::new</span>(<span class="self">self</span>.<span class="ident">runners</span>.<span class="ident">unwrap</span>(), <span class="self">self</span>.<span class="ident">queue_length</span>.<span class="ident">unwrap</span>());
         <span class="ident">System</span> {
             <span class="ident">master</span>: <span class="self">self</span>.<span class="ident">master</span>.<span class="ident">unwrap</span>(),
             <span class="ident">pow</span>: <span class="ident">Arc::new</span>(<span class="self">self</span>.<span class="ident">pow</span>.<span class="ident">unwrap</span>()),
             <span class="ident">cache</span>: <span class="self">self</span>.<span class="ident">cache</span>.<span class="ident">unwrap</span>(),
-            <span class="ident">runners</span>: <span class="self">self</span>.<span class="ident">runners</span>.<span class="ident">unwrap</span>(),
+            <span class="ident">runners</span>,
         }
     }
 }
@@ -474,7 +489,7 @@
             <span class="ident">string</span>,
             <span class="ident">cached_config</span>.<span class="ident">difficulty_factor</span>,
         );
-        <span class="self">self</span>.<span class="ident">runners</span>.<span class="ident">add</span>(<span class="ident">ip</span>, <span class="ident">queued_work</span>);
+        <span class="self">self</span>.<span class="ident">runners</span>.<span class="ident">add</span>(<span class="ident">ip</span>, <span class="ident">Box::new</span>(<span class="ident">queued_work</span>))<span class="question-mark">?</span>;
         <span class="kw">loop</span> {
             <span class="kw">match</span> <span class="ident">rx</span>.<span class="ident">try_recv</span>() {
                 <span class="prelude-val">Err</span>(<span class="ident">TryRecvError::Empty</span>) =&gt; <span class="kw">continue</span>,
@@ -548,6 +563,7 @@
             .<span class="ident">cache</span>(<span class="ident">cache</span>)
             .<span class="ident">pow</span>(<span class="ident">pow</span>)
             .<span class="ident">runners</span>(<span class="number">2</span>)
+            .<span class="ident">queue_length</span>(<span class="number">2000</span>)
             .<span class="ident">build</span>()
     }
 
