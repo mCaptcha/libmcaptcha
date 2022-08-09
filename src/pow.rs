@@ -15,12 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 //! PoW datatypes used in client-server interaction
+use std::sync::Arc;
+
+use crossbeam_channel::{self, Receiver, Sender};
+use log::debug;
+use pow_sha256::Config;
+pub use pow_sha256::ConfigBuilder;
 use pow_sha256::PoW;
 use serde::{Deserialize, Serialize};
 
-pub use pow_sha256::ConfigBuilder;
+use crate::queue::Runnable;
 
 /// PoW requirement datatype that is be sent to clients for generating PoW
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -59,5 +64,61 @@ impl From<Work> for PoW<String> {
             .nonce(w.nonce)
             .build()
             .unwrap()
+    }
+}
+
+#[derive(Debug)]
+pub struct QueuedWork {
+    tx: Sender<bool>,
+    pow: Arc<Config>,
+    work: PoW<String>,
+    string: String,
+    difficulty_factor: u32,
+}
+
+impl QueuedWork {
+    pub fn new(
+        pow: Arc<Config>,
+        work: PoW<String>,
+        string: String,
+        difficulty_factor: u32,
+    ) -> (Self, Receiver<bool>) {
+        let (tx, rx) = crossbeam_channel::bounded(2);
+        (
+            Self {
+                tx,
+                pow,
+                work,
+                difficulty_factor,
+                string,
+            },
+            rx,
+        )
+    }
+    fn validate(&self) {
+        if !self
+            .pow
+            .is_sufficient_difficulty(&self.work, self.difficulty_factor)
+        {
+            if let Err(e) = self.tx.send(false) {
+                debug!("[ERROR] unable to send work result: {e}");
+            }
+        }
+
+        if !self.pow.is_valid_proof(&self.work, &self.string) {
+            if let Err(e) = self.tx.send(false) {
+                debug!("[ERROR] unable to send work result: {e}");
+            }
+        }
+
+        if let Err(e) = self.tx.send(true) {
+            debug!("[ERROR] unable to send work result: {e}");
+        }
+    }
+}
+
+impl Runnable for QueuedWork {
+    fn run(&self) {
+        self.validate()
     }
 }

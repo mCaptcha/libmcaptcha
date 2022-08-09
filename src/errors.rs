@@ -118,6 +118,9 @@ pub enum CaptchaError {
         _0
     )]
     MCaptchaRediSModuleCommandNotFound(#[error(not(source))] String),
+
+    /// IP Queue is full
+    QueueFull,
 }
 
 #[cfg(feature = "full")]

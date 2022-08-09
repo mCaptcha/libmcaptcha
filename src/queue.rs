@@ -17,83 +17,26 @@
  */
 use std::collections::HashMap;
 use std::collections::VecDeque;
-//use std::sync::crossbeam_channel::{self, Receiver, Sender, Sender};
 use std::sync::{Arc, RwLock};
-//use tokio::sync::oneshot::{Receiver as Receiver, Sender as Sender, self};
 use std::thread::{self, JoinHandle};
 
-use pow_sha256::{Config, PoW};
-
 use crossbeam_channel::{self, Receiver, Sender};
-use println as debug;
+use log::debug;
 
-trait Runnable {
-    type Output;
-    fn run(&self) -> Self::Output;
-}
-
-#[derive(Debug)]
-pub struct QueuedWork {
-    tx: Sender<bool>,
-    pow: Arc<Config>,
-    work: PoW<String>,
-    string: String,
-    difficulty_factor: u32,
-}
-
-impl QueuedWork {
-    pub fn new(
-        pow: Arc<Config>,
-        work: PoW<String>,
-        string: String,
-        difficulty_factor: u32,
-    ) -> (Self, Receiver<bool>) {
-        let (tx, rx) = crossbeam_channel::bounded(2);
-        (
-            Self {
-                tx,
-                pow,
-                work,
-                difficulty_factor,
-                string,
-            },
-            rx,
-        )
-    }
-    fn validate(self) {
-        //        let res = self
-        //            .pow
-        //            .is_sufficient_difficulty(self.pow.as_ref(), self.difficulty_factor);
-
-        if !self
-            .pow
-            .is_sufficient_difficulty(&self.work, self.difficulty_factor)
-        {
-            if let Err(e) = self.tx.send(false) {
-                debug!("[ERROR] unable to send work result: {e}");
-            }
-        }
-
-        if !self.pow.is_valid_proof(&self.work, &self.string) {
-            if let Err(e) = self.tx.send(false) {
-                debug!("[ERROR] unable to send work result: {e}");
-            }
-        }
-
-        if let Err(e) = self.tx.send(true) {
-            debug!("[ERROR] unable to send work result: {e}");
-        }
-    }
-}
+use crate::errors::*;
 
 enum Message {
     Stop,
-    Prove(QueuedWork),
+    Prove(Box<dyn Runnable>),
 }
 
 struct RunnerThread {
     tx: Sender<Message>,
     thread: JoinHandle<()>,
+}
+
+pub trait Runnable: Send + Sync {
+    fn run(&self);
 }
 
 impl RunnerThread {
@@ -105,27 +48,26 @@ impl RunnerThread {
     }
 
     fn run(rx: &Receiver<Message>) {
-        println!("Spawned thread");
         loop {
             if let Ok(msg) = rx.recv() {
                 match msg {
                     Message::Stop => return,
-                    Message::Prove(w) => w.validate(),
-                }
+                    Message::Prove(r) => r.run(),
+                };
             }
         }
     }
 }
 
+type InnerManagerQueue = Arc<RwLock<HashMap<Arc<String>, RwLock<VecDeque<Box<dyn Runnable>>>>>>;
+type InnerManagerIP = Arc<RwLock<Vec<Arc<String>>>>;
+
 struct InnerManager {
-    queues: Arc<RwLock<HashMap<Arc<String>, RwLock<VecDeque<QueuedWork>>>>>,
+    queues: InnerManagerQueue,
     runners: Vec<RunnerThread>,
-    ips: Arc<RwLock<Vec<Arc<String>>>>,
+    ips: InnerManagerIP,
     currnet_index: RwLock<usize>,
 }
-
-type InnerManagerQueue = Arc<RwLock<HashMap<Arc<String>, RwLock<VecDeque<QueuedWork>>>>>;
-type InnerManagerIP = Arc<RwLock<Vec<Arc<String>>>>;
 
 impl Drop for InnerManager {
     fn drop(&mut self) {
@@ -203,6 +145,7 @@ pub struct Manager {
     queues: InnerManagerQueue,
     ips: InnerManagerIP,
     dispatch_runner: Option<JoinHandle<()>>,
+    queue_length: usize,
 }
 
 impl Drop for Manager {
@@ -214,7 +157,7 @@ impl Drop for Manager {
 }
 
 impl Manager {
-    pub fn new(workers: usize) -> Self {
+    pub fn new(workers: usize, queue_length: usize) -> Self {
         let (tx, rx) = crossbeam_channel::unbounded();
         let im = InnerManager::new(workers);
 
@@ -229,106 +172,134 @@ impl Manager {
             stop_dispatch_runner: tx,
             queues,
             ips,
+            queue_length,
         }
     }
 
-    pub fn add(&self, ip: String, work: QueuedWork) {
+    pub fn add(&self, ip: String, job: Box<dyn Runnable>) -> CaptchaResult<()> {
+        {
+            if self.queues.read().unwrap().len() == self.queue_length {
+                return Err(CaptchaError::QueueFull);
+            }
+        }
         if let Some(queue) = self.queues.read().unwrap().get(&ip) {
-            queue.write().unwrap().push_back(work);
-            return;
+            queue.write().unwrap().push_back(job);
+            return Ok(());
         }
 
         let queue = {
             let mut queue = VecDeque::with_capacity(1);
-            queue.push_back(work);
+            queue.push_back(job);
             RwLock::new(queue)
         };
         let ip = Arc::new(ip);
         self.queues.write().unwrap().insert(ip.clone(), queue);
         self.ips.write().unwrap().push(ip);
+        Ok(())
     }
 }
 
-//#[cfg(test)]
-//mod tests {
-//    use std::time::Duration;
-//
-//    use super::*;
-//
-//    impl Manager {
-//        fn add_works(&self) {
-//            const IP: &str = "foo bar";
-//
-//            let (w, rx) = QueuedWork::new("1".to_string());
-//
-//            {
-//                self.add(IP.into(), w);
-//                assert_eq!(self.queues.read().unwrap().len(), 1);
-//            }
-//
-//            let (w2, rx2) = QueuedWork::new("2".into());
-//            {
-//                self.add(IP.into(), w2);
-//                assert_eq!(self.queues.read().unwrap().len(), 1);
-//            }
-//
-//            thread::sleep(Duration::new(2, 0));
-//            assert!(rx.recv().unwrap());
-//            assert!(rx2.recv().unwrap());
-//        }
-//    }
-//
-//    #[test]
-//    fn manager_works() {
-//        let manager = Manager::new(4);
-//
-//        manager.add_works();
-//        drop(manager);
-//    }
-//
-//    #[test]
-//    fn abuse_manager() {
-//        let num_threads = 18;
-//        let manager = Arc::new(Manager::new(num_threads));
-//
-//        let mut threads = Vec::with_capacity(num_threads);
-//        for t in 0..num_threads {
-//            let m = manager.clone();
-//            let j = thread::spawn(move || {
-//                let num_jobs = 100000;
-//                let mut jobs = Vec::with_capacity(num_jobs);
-//                for i in 0..num_jobs {
-//                    let (w, rx) = QueuedWork::new(format!("thread {t} job {i}"));
-//                    jobs.push(rx);
-//                    m.add(i.to_string(), w);
-//                }
-//                let mut err = false;
-//
-//                let mut count = 0;
-//
-//                for rx in jobs.drain(..0) {
-//                    loop {
-//                        match rx.try_recv() {
-//                            Err(crossbeam_channel::TryRecvError::Empty) => continue,
-//                            Err(crossbeam_channel::TryRecvError::Disconnected) => panic!("{count}"),
-//                            Ok(t) => {
-//                                count += 1;
-//                                assert!(t);
-//                                break;
-//                            }
-//                        };
-//                    }
-//                }
-//
-//                if err {
-//                    panic!()
-//                }
-//                true
-//            });
-//            threads.push(j);
-//        }
-//        for t in threads.drain(0..) {
-//            assert!(t.join().unwrap());
-//        }
-//    }
-//}
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::*;
+
+    #[derive(Debug)]
+    pub struct MockedRunnable {
+        tx: Sender<bool>,
+        pub tag: String,
+    }
+
+    impl MockedRunnable {
+        fn new(tag: String) -> (Box<Self>, Receiver<bool>) {
+            let (tx, rx) = crossbeam_channel::bounded(2);
+            (Box::new(Self { tx, tag }), rx)
+        }
+    }
+
+    impl Runnable for MockedRunnable {
+        fn run(&self) {
+            if let Err(e) = self.tx.send(true) {
+                debug!("[ERROR][{}] send failed: {e}", self.tag)
+            }
+        }
+    }
+
+    impl Manager {
+        fn add_works(&self) {
+            const IP: &str = "foo bar";
+
+            let (w, rx) = MockedRunnable::new("1".to_string());
+
+            {
+                self.add(IP.into(), w);
+                assert_eq!(self.queues.read().unwrap().len(), 1);
+            }
+
+            let (w2, rx2) = MockedRunnable::new("2".into());
+            {
+                self.add(IP.into(), w2);
+                assert_eq!(self.queues.read().unwrap().len(), 1);
+            }
+
+            thread::sleep(Duration::new(2, 0));
+            assert!(rx.recv().unwrap());
+            assert!(rx2.recv().unwrap());
+        }
+    }
+
+    #[test]
+    fn manager_works() {
+        let manager = Manager::new(4, 10);
+
+        manager.add_works();
+        drop(manager);
+    }
+
+    #[test]
+    fn abuse_manager() {
+        let num_threads = 18;
+        let num_jobs = 100_000;
+        let manager = Arc::new(Manager::new(num_threads, num_jobs));
+
+        let mut threads = Vec::with_capacity(num_threads);
+        for t in 0..num_threads {
+            let m = manager.clone();
+            let j = thread::spawn(move || {
+                let mut jobs = Vec::with_capacity(num_jobs);
+                for i in 0..num_jobs {
+                    let (w, rx) = MockedRunnable::new(format!("thread {t} job {i}"));
+                    jobs.push(rx);
+                    m.add(i.to_string(), w);
+                }
+                let mut err = false;
+
+                let mut count = 0;
+
+                for rx in jobs.drain(..0) {
+                    loop {
+                        match rx.try_recv() {
+                            Err(crossbeam_channel::TryRecvError::Empty) => continue,
+                            Err(crossbeam_channel::TryRecvError::Disconnected) => panic!("{count}"),
+                            Ok(t) => {
+                                count += 1;
+                                assert!(t);
+                                break;
+                            }
+                        };
+                    }
+                }
+
+                if err {
+                    panic!()
+                }
+                true
+            });
+            threads.push(j);
+        }
+        for t in threads.drain(0..) {
+            assert!(t.join().unwrap());
+        }
+    }
+}

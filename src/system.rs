@@ -27,13 +27,14 @@ use crate::errors::*;
 use crate::master::messages::*;
 use crate::master::Master;
 use crate::pow::*;
-use crate::queue::{Manager, QueuedWork};
+use crate::queue::Manager;
 
 pub struct SystemBuilder<T: Save, X: Master> {
     pub master: Option<Addr<X>>,
     cache: Option<Addr<T>>,
     pow: Option<Config>,
-    runners: Option<Manager>,
+    runners: Option<usize>,
+    queue_length: Option<usize>,
 }
 
 impl<T: Master, S: Save> Default for SystemBuilder<S, T> {
@@ -43,6 +44,7 @@ impl<T: Master, S: Save> Default for SystemBuilder<S, T> {
             cache: None,
             master: None,
             runners: None,
+            queue_length: None,
         }
     }
 }
@@ -64,17 +66,22 @@ impl<T: Master, S: Save> SystemBuilder<S, T> {
     }
 
     pub fn runners(mut self, workers: usize) -> Self {
-        let m = Manager::new(workers);
-        self.runners = Some(m);
+        self.runners = Some(workers);
+        self
+    }
+
+    pub fn queue_length(mut self, queue_length: usize) -> Self {
+        self.queue_length = Some(queue_length);
         self
     }
 
     pub fn build(self) -> System<S, T> {
+        let runners = Manager::new(self.runners.unwrap(), self.queue_length.unwrap());
         System {
             master: self.master.unwrap(),
             pow: Arc::new(self.pow.unwrap()),
             cache: self.cache.unwrap(),
-            runners: self.runners.unwrap(),
+            runners,
         }
     }
 }
@@ -149,7 +156,7 @@ where
             string,
             cached_config.difficulty_factor,
         );
-        self.runners.add(ip, queued_work);
+        self.runners.add(ip, Box::new(queued_work))?;
         loop {
             match rx.try_recv() {
                 Err(TryRecvError::Empty) => continue,
@@ -223,6 +230,7 @@ mod tests {
             .cache(cache)
             .pow(pow)
             .runners(2)
+            .queue_length(2000)
             .build()
     }
 

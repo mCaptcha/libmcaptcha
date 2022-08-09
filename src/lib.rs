@@ -83,6 +83,7 @@
 //!         .cache(cache)
 //!         .pow(pow.clone())
 //!         .runners(4)
+//!         .queue_length(2000)
 //!         .build();
 //!
 //!     // configure defense. This is a per site configuration. A site can have several levels
