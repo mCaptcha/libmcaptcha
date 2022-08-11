@@ -130,7 +130,7 @@ impl InnerManager {
 
     fn spawn(im: InnerManager, rx: Receiver<()>) -> JoinHandle<()> {
         thread::spawn(move || loop {
-            if let Ok(_) = rx.try_recv() {
+            if let Ok(_) = rx.recv() {
                 drop(im);
                 break;
             } else {
