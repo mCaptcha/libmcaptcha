@@ -40,19 +40,28 @@ pub trait Runnable: Send + Sync {
 }
 
 impl RunnerThread {
-    pub fn spawn() -> Self {
+    pub fn spawn(name: usize, tx_manager: Sender<InnerManagerMessage>) -> Self {
         let (tx, rx) = crossbeam_channel::unbounded();
 
-        let thread = thread::spawn(move || Self::run(&rx));
+        let thread = thread::spawn(move || Self::run(name, &rx, &tx_manager));
         Self { tx, thread }
     }
 
-    fn run(rx: &Receiver<Message>) {
+    fn run(name: usize, rx: &Receiver<Message>, tx_manager: &Sender<InnerManagerMessage>) {
         loop {
             if let Ok(msg) = rx.recv() {
                 match msg {
                     Message::Stop => return,
-                    Message::Prove(r) => r.run(),
+                    Message::Prove(r) => {
+                        r.run();
+                        if tx_manager
+                            .send(InnerManagerMessage::Dispatch(name))
+                            .is_err()
+                        {
+                            // inner manager is dead
+                            return;
+                        }
+                    }
                 };
             }
         }
@@ -64,25 +73,31 @@ type InnerManagerIP = Arc<RwLock<Vec<Arc<String>>>>;
 
 struct InnerManager {
     queues: InnerManagerQueue,
-    runners: Vec<RunnerThread>,
+    runners: HashMap<usize, RunnerThread>,
     ips: InnerManagerIP,
     currnet_index: RwLock<usize>,
 }
 
 impl Drop for InnerManager {
     fn drop(&mut self) {
-        for r in self.runners.iter() {
+        for (_, r) in self.runners.iter() {
             r.tx.send(Message::Stop).unwrap();
         }
-        for r in self.runners.drain(0..) {
+        for (_, r) in self.runners.drain() {
             r.thread.join().unwrap()
         }
     }
 }
 
+enum InnerManagerMessage {
+    Stop,
+    Dispatch(usize),
+    DispatchAll,
+}
+
 impl InnerManager {
-    fn dispatch(&self) {
-        for r in self.runners.iter() {
+    fn dispatch_to(&self, name: usize) {
+        if let Some(r) = self.runners.get(&name) {
             let ip_vec_len = { self.ips.read().unwrap().len() };
             let mut currnet_index = { self.currnet_index.read().unwrap().clone() };
 
@@ -112,11 +127,16 @@ impl InnerManager {
             }
         }
     }
+    fn dispatch(&self) {
+        for (name, _) in self.runners.iter() {
+            self.dispatch_to(*name)
+        }
+    }
 
-    fn new(workers: usize) -> Self {
-        let mut runners = Vec::with_capacity(workers);
-        for _ in 0..workers {
-            runners.push(RunnerThread::spawn());
+    fn new(tx: Sender<InnerManagerMessage>, workers: usize) -> Self {
+        let mut runners = HashMap::with_capacity(workers);
+        for name in 0..workers {
+            runners.insert(name, RunnerThread::spawn(name, tx.clone()));
         }
         let queues = Arc::new(RwLock::new(HashMap::default()));
         let ips = Arc::new(RwLock::new(Vec::default()));
@@ -128,20 +148,24 @@ impl InnerManager {
         }
     }
 
-    fn spawn(im: InnerManager, rx: Receiver<()>) -> JoinHandle<()> {
+    fn spawn(im: InnerManager, rx: Receiver<InnerManagerMessage>) -> JoinHandle<()> {
         thread::spawn(move || loop {
-            if let Ok(_) = rx.recv() {
-                drop(im);
-                break;
-            } else {
-                im.dispatch()
-            };
+            if let Ok(m) = rx.recv() {
+                match m {
+                    InnerManagerMessage::Stop => {
+                        drop(im);
+                        break;
+                    }
+                    InnerManagerMessage::DispatchAll => im.dispatch(),
+                    InnerManagerMessage::Dispatch(name) => im.dispatch_to(name),
+                }
+            }
         })
     }
 }
 
 pub struct Manager {
-    stop_dispatch_runner: Sender<()>,
+    stop_dispatch_runner: Sender<InnerManagerMessage>,
     queues: InnerManagerQueue,
     ips: InnerManagerIP,
     dispatch_runner: Option<JoinHandle<()>>,
@@ -150,7 +174,9 @@ pub struct Manager {
 
 impl Drop for Manager {
     fn drop(&mut self) {
-        self.stop_dispatch_runner.send(()).unwrap();
+        self.stop_dispatch_runner
+            .send(InnerManagerMessage::Stop)
+            .unwrap();
         let dispatch_runner = self.dispatch_runner.take().unwrap();
         dispatch_runner.join().unwrap();
     }
@@ -159,7 +185,7 @@ impl Drop for Manager {
 impl Manager {
     pub fn new(workers: usize, queue_length: usize) -> Self {
         let (tx, rx) = crossbeam_channel::unbounded();
-        let im = InnerManager::new(workers);
+        let im = InnerManager::new(tx.clone(), workers);
 
         let queues = im.queues.clone();
         let ips = im.ips.clone();
@@ -184,6 +210,8 @@ impl Manager {
         }
         if let Some(queue) = self.queues.read().unwrap().get(&ip) {
             queue.write().unwrap().push_back(job);
+            self.stop_dispatch_runner
+                .send(InnerManagerMessage::DispatchAll);
             return Ok(());
         }
 
@@ -195,6 +223,8 @@ impl Manager {
         let ip = Arc::new(ip);
         self.queues.write().unwrap().insert(ip.clone(), queue);
         self.ips.write().unwrap().push(ip);
+        self.stop_dispatch_runner
+            .send(InnerManagerMessage::DispatchAll);
         Ok(())
     }
 }
@@ -233,13 +263,13 @@ mod tests {
             let (w, rx) = MockedRunnable::new("1".to_string());
 
             {
-                self.add(IP.into(), w);
+                self.add(IP.into(), w).unwrap();
                 assert_eq!(self.queues.read().unwrap().len(), 1);
             }
 
             let (w2, rx2) = MockedRunnable::new("2".into());
             {
-                self.add(IP.into(), w2);
+                self.add(IP.into(), w2).unwrap();
                 assert_eq!(self.queues.read().unwrap().len(), 1);
             }
 
@@ -261,7 +291,7 @@ mod tests {
     fn abuse_manager() {
         let num_threads = 18;
         let num_jobs = 100_000;
-        let manager = Arc::new(Manager::new(num_threads, num_jobs));
+        let manager = Arc::new(Manager::new(num_threads, num_jobs * num_threads));
 
         let mut threads = Vec::with_capacity(num_threads);
         for t in 0..num_threads {
@@ -271,17 +301,15 @@ mod tests {
                 for i in 0..num_jobs {
                     let (w, rx) = MockedRunnable::new(format!("thread {t} job {i}"));
                     jobs.push(rx);
-                    m.add(i.to_string(), w);
+                    m.add(i.to_string(), w).unwrap();
                 }
-                let mut err = false;
 
                 let mut count = 0;
 
                 for rx in jobs.drain(..0) {
                     loop {
-                        match rx.try_recv() {
-                            Err(crossbeam_channel::TryRecvError::Empty) => continue,
-                            Err(crossbeam_channel::TryRecvError::Disconnected) => panic!("{count}"),
+                        match rx.recv() {
+                            Err(crossbeam_channel::RecvError) => panic!("{count}"),
                             Ok(t) => {
                                 count += 1;
                                 assert!(t);
@@ -291,9 +319,6 @@ mod tests {
                     }
                 }
 
-                if err {
-                    panic!()
-                }
                 true
             });
             threads.push(j);
