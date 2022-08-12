@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["HashCache","cache datastructure implementing [Save]"]]});
+window.SIDEBAR_ITEMS = {"struct":[["HashCache","cache datastructure implementing [Save]"]]};

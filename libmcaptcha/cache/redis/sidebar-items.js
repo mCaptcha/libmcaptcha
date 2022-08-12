@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["RedisCache",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["RedisCache",""]]};

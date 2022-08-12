@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["CaptchaError","Error datatype"]],"type":[["CaptchaResult","[Result] datatype for libmcaptcha"]]});
+window.SIDEBAR_ITEMS = {"enum":[["CaptchaError","Error datatype"]],"type":[["CaptchaResult","[Result] datatype for libmcaptcha"]]};

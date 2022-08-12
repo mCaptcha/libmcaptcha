@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ConfigBuilder","Builder for `Config`."],["PoWConfig","PoW requirement datatype that is be sent to clients for generating PoW"],["QueuedWork",""],["Work","PoW datatype that clients send to server"]]});
+window.SIDEBAR_ITEMS = {"struct":[["ConfigBuilder","Builder for `Config`."],["PoWConfig","PoW requirement datatype that is be sent to clients for generating PoW"],["QueuedWork",""],["Work","PoW datatype that clients send to server"]]};
