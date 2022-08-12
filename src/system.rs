@@ -156,7 +156,7 @@ where
             string,
             cached_config.difficulty_factor,
         );
-        self.runners.add(ip, Box::new(queued_work))?;
+        self.runners.add(ip, Box::new(queued_work)).await?;
         loop {
             match rx.try_recv() {
                 Err(TryRecvError::Empty) => continue,
