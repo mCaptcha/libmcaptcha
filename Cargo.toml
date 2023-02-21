@@ -19,7 +19,7 @@ serde_json = "1"
 pretty_env_logger = {version = "0.4",  optional = true }
 log = {version = "0.4",  optional = true }
 
-derive_builder = "0.10"
+derive_builder = "0.11"
 derive_more = "0.99"
 
 rand = {version = "0.8",  optional = true }
@@ -29,7 +29,7 @@ pow_sha256 = { version = "0.3.1", git = "https://github.com/mcaptcha/pow_sha256"
 redis = { version = "0.21", features = ["tokio-comp","aio", "cluster"], optional=true }
 #redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
 
-tokio = { version = "1.14", features = ["sync"]}
+tokio = { version = "1.25", features = ["sync"]}
 num_cpus = { version = "1.13.1", optional=true }
 crossbeam-channel = { version = "0.5.6", optional=true }
 
