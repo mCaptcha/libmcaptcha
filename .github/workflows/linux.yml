@@ -57,6 +57,7 @@ jobs:
       - name: Generate coverage file
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
         uses: actions-rs/tarpaulin@v0.1
+        version: 0.25.1
         with:
           args: '-t 1200'
 
