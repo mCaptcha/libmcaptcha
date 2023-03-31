@@ -22,7 +22,7 @@ use std::rc::Rc;
 use redis::cluster::ClusterClient;
 use redis::Client;
 use redis::FromRedisValue;
-use redis::{aio::Connection, cluster::ClusterConnection};
+use redis::{aio::ConnectionManager, cluster::ClusterConnection};
 
 pub mod mcaptcha_redis;
 use crate::errors::*;
@@ -38,10 +38,12 @@ pub enum RedisConfig {
 
 impl RedisConfig {
     /// Create Redis connection
-    pub fn connect(&self) -> RedisClient {
+    pub async fn connect(&self) -> RedisClient {
         match self {
             Self::Single(url) => {
-                let client = Client::open(url.as_str()).unwrap();
+                let client = ConnectionManager::new(Client::open(url.as_str()).unwrap())
+                    .await
+                    .unwrap();
                 RedisClient::Single(client)
             }
             Self::Cluster(nodes) => {
@@ -55,7 +57,7 @@ impl RedisConfig {
 /// Redis connection - manages both single and clustered deployments
 #[derive(Clone)]
 pub enum RedisConnection {
-    Single(Rc<RefCell<Connection>>),
+    Single(Rc<RefCell<ConnectionManager>>),
     Cluster(Rc<RefCell<ClusterConnection>>),
 }
 
@@ -89,7 +91,7 @@ impl RedisConnection {
 #[derive(Clone)]
 /// Client Configuration that can be used to get new connection shuld [RedisConnection] fail
 pub enum RedisClient {
-    Single(Client),
+    Single(ConnectionManager),
     Cluster(ClusterClient),
 }
 
@@ -120,12 +122,9 @@ impl Redis {
     }
 
     async fn connect(redis: RedisConfig) -> CaptchaResult<(RedisClient, RedisConnection)> {
-        let redis = redis.connect();
+        let redis = redis.connect().await;
         let client = match &redis {
-            RedisClient::Single(c) => {
-                let con = c.get_async_connection().await?;
-                RedisConnection::Single(Rc::new(RefCell::new(con)))
-            }
+            RedisClient::Single(c) => RedisConnection::Single(Rc::new(RefCell::new(c.clone()))),
             RedisClient::Cluster(c) => {
                 let con = c.get_connection()?;
                 RedisConnection::Cluster(Rc::new(RefCell::new(con)))
