@@ -6,7 +6,8 @@ on:
   push:
     branches:
       - master
-
+      - "*"
+      - "!gh-pages"
 
 jobs:
   build_and_test:
@@ -57,9 +58,9 @@ jobs:
       - name: Generate coverage file
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
         uses: actions-rs/tarpaulin@v0.1
-        version: 0.25.1
         with:
-          args: '-t 1200'
+          version: 0.25.1
+          args: "-t 1200"
 
       - name: Upload to Codecov
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
