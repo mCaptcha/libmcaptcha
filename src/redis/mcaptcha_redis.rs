@@ -45,7 +45,7 @@ const ADD_CHALLENGE: &str = "MCAPTCHA_CACHE.ADD_CHALLENGE";
 const GET_CHALLENGE: &str = "MCAPTCHA_CACHE.GET_CHALLENGE";
 const DELETE_CHALLENGE: &str = "MCAPTCHA_CACHE.DELETE_CHALLENGE";
 
-const MODULE_NAME: &str = "mcaptcha_cahce";
+const MODULE_NAME: &str = "mcaptcha_cache";
 
 impl MCaptchaRedis {
     /// Get new [MCaptchaRedis]. Use this when executing commands that are
