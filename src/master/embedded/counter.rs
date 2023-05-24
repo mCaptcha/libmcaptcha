@@ -196,7 +196,7 @@ impl Handler<BulkDecrement> for Counter {
 /// Sets internal Captcha data
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct SetInternalData(MCaptcha);
+pub struct SetInternalData(pub MCaptcha);
 
 impl Handler<SetInternalData> for Counter {
     type Result = MessageResult<SetInternalData>;

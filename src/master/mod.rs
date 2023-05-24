@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! [Master] actor module that manages [MCaptcha] actors
+
 use serde::{Deserialize, Serialize};
 
 use crate::mcaptcha::*;
@@ -33,6 +34,8 @@ pub trait Master:
     + actix::Handler<messages::AddSite>
     + actix::Handler<messages::Rename>
     + actix::Handler<messages::RemoveCaptcha>
+    + actix::Handler<messages::SetInternalData>
+    + actix::Handler<messages::GetInternalData>
 {
 }
 
@@ -66,22 +69,24 @@ impl AddVisitorResult {
 #[cfg(feature = "full")]
 pub mod messages {
     //! Messages that a [super::Master] should respond to
+    use std::collections::HashMap;
     //    use std::sync::mpsc::Receiver;
 
     use actix::dev::*;
     use derive_builder::Builder;
+    use serde::{Deserialize, Serialize};
     use tokio::sync::oneshot::Receiver;
 
     use crate::errors::CaptchaResult;
     use crate::mcaptcha::MCaptcha;
 
     /// Message to add visitor to an [MCaptcha] actor
-    #[derive(Message, Clone)]
+    #[derive(Message, Clone, Debug, Deserialize, Serialize)]
     #[rtype(result = "Receiver<CaptchaResult<Option<super::AddVisitorResult>>>")]
     pub struct AddVisitor(pub String);
 
     /// Message to add an [Counter] actor to [Master]
-    #[derive(Message, Builder)]
+    #[derive(Message, Builder, Clone, Debug, Deserialize, Serialize)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct AddSite {
         pub id: String,
@@ -89,7 +94,7 @@ pub mod messages {
     }
 
     /// Message to rename an MCaptcha actor
-    #[derive(Message, Builder)]
+    #[derive(Message, Builder, Clone, Debug, Deserialize, Serialize)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct Rename {
         pub name: String,
@@ -97,7 +102,25 @@ pub mod messages {
     }
 
     /// Message to delete [Counter] actor
-    #[derive(Message)]
+    #[derive(Message, Clone, Debug, Deserialize, Serialize)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct RemoveCaptcha(pub String);
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct InternalData {
+        pub name: String,
+        pub mcaptcha: MCaptcha,
+    }
+
+    /// Gets internal Captcha data
+    #[derive(Message)]
+    #[rtype(result = "Receiver<CaptchaResult<HashMap<String, MCaptcha>>>")]
+    pub struct GetInternalData;
+
+    /// Sets internal Captcha data
+    #[derive(Message)]
+    #[rtype(result = "Receiver<CaptchaResult<()>>")]
+    pub struct SetInternalData {
+        pub mcaptcha: HashMap<String, MCaptcha>,
+    }
 }

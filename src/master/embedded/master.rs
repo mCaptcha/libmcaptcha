@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 //! Embedded [Master] actor module that manages [Counter] actors
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::Duration;
 
 use actix::clock::sleep;
@@ -27,7 +27,9 @@ use tokio::sync::oneshot::channel;
 
 use super::counter::Counter;
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor, RemoveCaptcha, Rename};
+use crate::master::messages::{
+    AddSite, AddVisitor, GetInternalData, RemoveCaptcha, Rename, SetInternalData,
+};
 use crate::master::Master as MasterTrait;
 
 use super::counter::{GetCurrentVisitorCount, Stop};
@@ -221,6 +223,74 @@ impl Handler<AddSite> for Master {
     }
 }
 
+impl Handler<GetInternalData> for Master {
+    type Result = MessageResult<GetInternalData>;
+
+    fn handle(&mut self, _m: GetInternalData, ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = channel();
+        let mut data = HashMap::with_capacity(self.sites.len());
+
+        let sites = self.sites.clone();
+        let fut = async move {
+            for (name, (_read_val, addr)) in sites.iter() {
+                println!("Trying to get data {name} 1");
+                match addr.send(super::counter::GetInternalData).await {
+                    Ok(val) => {
+                        println!("Trying to get data {name} 2");
+                        data.insert(name.to_owned(), val);
+                    }
+                    Err(_e) => {
+                        println!("Trying to get data {name}. Failed");
+                        continue;
+                            // best-effort basis persistence
+//                        let err: CaptchaError = e.into();
+//                        let _ = tx.send(Err(err));
+//                        break;
+                    }
+                }
+
+                println!("Trying to get data {name} 4");
+            }
+                tx.send(Ok(data));
+        }
+        .into_actor(self);
+        ctx.spawn(fut);
+
+        println!("Trying to get data 3");
+        MessageResult(rx)
+    }
+}
+
+impl Handler<SetInternalData> for Master {
+    type Result = MessageResult<SetInternalData>;
+
+    fn handle(&mut self, mut m: SetInternalData, ctx: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = channel();
+        for (name, mcaptcha) in m.mcaptcha.drain() {
+            let addr = self.get_site(&name);
+            let master = ctx.address();
+            let fut = async move {
+                match addr {
+                    None => {
+                        master.send(AddSite { id: name, mcaptcha }).await.unwrap();
+                    }
+                    Some(addr) => {
+                        let _ = addr.send(super::counter::SetInternalData(mcaptcha)).await;
+                        // best effort basis
+                        //let err: CaptchaError = e.into();
+                        //let _ = tx.send(Err(err));
+                    }
+                }
+            }
+            .into_actor(self);
+            ctx.spawn(fut);
+        }
+
+        let _ = tx.send(Ok(()));
+        MessageResult(rx)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -248,6 +318,34 @@ mod tests {
 
         let mcaptcha_addr = addr.send(GetSite(id.into())).await.unwrap();
         assert!(mcaptcha_addr.is_some());
+
+        let mut mcaptcha_data = addr
+            .send(GetInternalData)
+            .await
+            .unwrap()
+            .await
+            .unwrap()
+            .unwrap();
+        mcaptcha_data.get_mut(id).unwrap().add_visitor();
+        mcaptcha_data.get_mut(id).unwrap().add_visitor();
+        mcaptcha_data.get_mut(id).unwrap().add_visitor();
+        addr.send(SetInternalData {
+            mcaptcha: mcaptcha_data.clone(),
+        })
+        .await
+        .unwrap();
+        assert_eq!(
+            addr.send(GetInternalData)
+                .await
+                .unwrap()
+                .await
+                .unwrap()
+                .unwrap()
+                .get(id)
+                .unwrap()
+                .get_visitors(),
+            mcaptcha_data.get(id).unwrap().get_visitors()
+        );
 
         let new_id = "yoyo";
         let rename = RenameBuilder::default()

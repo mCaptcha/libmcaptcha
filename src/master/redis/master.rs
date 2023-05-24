@@ -19,7 +19,9 @@ use actix::dev::*;
 use tokio::sync::oneshot;
 
 use crate::errors::*;
-use crate::master::messages::{AddSite, AddVisitor, RemoveCaptcha, Rename};
+use crate::master::messages::{
+    AddSite, AddVisitor, GetInternalData, RemoveCaptcha, Rename, SetInternalData,
+};
 use crate::master::Master as MasterTrait;
 use crate::redis::mcaptcha_redis::MCaptchaRedis;
 use crate::redis::RedisConfig;
@@ -107,6 +109,22 @@ impl Handler<RemoveCaptcha> for Master {
         .into_actor(self);
         ctx.wait(fut);
         MessageResult(rx)
+    }
+}
+
+impl Handler<GetInternalData> for Master {
+    type Result = MessageResult<GetInternalData>;
+
+    fn handle(&mut self, m: GetInternalData, ctx: &mut Self::Context) -> Self::Result {
+        todo!()
+    }
+}
+
+impl Handler<SetInternalData> for Master {
+    type Result = MessageResult<SetInternalData>;
+
+    fn handle(&mut self, m: SetInternalData, ctx: &mut Self::Context) -> Self::Result {
+        todo!()
     }
 }
 
