@@ -168,11 +168,62 @@ impl Handler<Stop> for Counter {
     }
 }
 
+/// Gets internal Captcha data
+#[derive(Message)]
+#[rtype(result = "MCaptcha")]
+pub struct GetInternalData;
+
+impl Handler<GetInternalData> for Counter {
+    type Result = MessageResult<GetInternalData>;
+
+    fn handle(&mut self, _: GetInternalData, _ctx: &mut Self::Context) -> Self::Result {
+        MessageResult(self.0.clone())
+    }
+}
+
+/// Bulk decrement visitor. To be used only when SetInternalData is used
+#[derive(Message)]
+#[rtype(result = "()")]
+struct BulkDecrement(u32);
+
+impl Handler<BulkDecrement> for Counter {
+    type Result = ();
+    fn handle(&mut self, msg: BulkDecrement, _ctx: &mut Self::Context) -> Self::Result {
+        self.0.decrement_visitor_by(msg.0);
+    }
+}
+
+/// Sets internal Captcha data
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct SetInternalData(MCaptcha);
+
+impl Handler<SetInternalData> for Counter {
+    type Result = MessageResult<SetInternalData>;
+
+    fn handle(&mut self, d: SetInternalData, ctx: &mut Self::Context) -> Self::Result {
+        let addr = ctx.address();
+        self.0 = d.0;
+        let duration: Duration = Duration::new(self.0.get_duration(), 0);
+        let count = self.0.get_visitors();
+        let wait_for = async move {
+            sleep(duration).await;
+            //delay_for(duration).await;
+            addr.send(BulkDecrement(count)).await.unwrap();
+        }
+        .into_actor(self);
+        ctx.spawn(wait_for);
+
+        MessageResult(())
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
     use crate::defense::*;
     use crate::errors::*;
+    use crate::mcaptcha;
     use crate::mcaptcha::MCaptchaBuilder;
 
     // constants for testing
@@ -310,5 +361,31 @@ pub mod tests {
         let addr: MyActor = get_counter().start();
         addr.send(Stop).await.unwrap();
         addr.send(AddVisitor).await.unwrap();
+    }
+
+    #[actix_rt::test]
+    async fn get_set_internal_data_works() {
+        let addr: MyActor = get_counter().start();
+        let mut mcaptcha = addr.send(GetInternalData).await.unwrap();
+        mcaptcha.add_visitor();
+        addr.send(SetInternalData(mcaptcha.clone())).await.unwrap();
+        assert_eq!(
+            addr.send(GetInternalData).await.unwrap().get_visitors(),
+            mcaptcha.get_visitors()
+        );
+
+        let duration = Duration::new(mcaptcha.get_duration() + 3, 0);
+        sleep(duration).await;
+        assert_eq!(addr.send(GetCurrentVisitorCount).await.unwrap(), 0);
+    }
+
+    #[actix_rt::test]
+    async fn bulk_delete_works() {
+        let addr: MyActor = get_counter().start();
+        addr.send(AddVisitor).await.unwrap();
+        addr.send(AddVisitor).await.unwrap();
+        assert_eq!(addr.send(GetCurrentVisitorCount).await.unwrap(), 2);
+        addr.send(BulkDecrement(3)).await.unwrap();
+        assert_eq!(addr.send(GetCurrentVisitorCount).await.unwrap(), 0);
     }
 }
