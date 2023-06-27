@@ -126,7 +126,7 @@ where
     }
 
     /// utility function to verify [Work]
-    pub async fn verify_pow(&self, work: Work, ip: String) -> CaptchaResult<String> {
+    pub async fn verify_pow(&self, work: Work, ip: String) -> CaptchaResult<(String, u32)> {
         use crossbeam_channel::TryRecvError;
 
         let string = work.string.clone();
@@ -149,6 +149,8 @@ where
         }
 
         let pow = work.into();
+
+        let res_difficulty_factor = cached_config.difficulty_factor;
 
         let (queued_work, rx) = QueuedWork::new(
             self.pow.clone(),
@@ -186,7 +188,7 @@ where
         let msg: CacheResult = cached_config.into();
         let res = msg.token.clone();
         self.cache.send(msg).await?.await??;
-        Ok(res)
+        Ok((res, res_difficulty_factor))
     }
 
     /// utility function to validate verification tokens
@@ -272,10 +274,12 @@ mod tests {
         // verifiy proof
         let res = actors.verify_pow(payload.clone(), "1".into()).await;
         assert!(res.is_ok());
+        let (res, res_difficulty_factor) = res.unwrap();
+        assert_eq!(res_difficulty_factor, work_req.difficulty_factor);
 
         // verify validation token
         let mut verifi_msg = VerifyCaptchaResult {
-            token: res.unwrap(),
+            token: res,
             key: MCAPTCHA_NAME.into(),
         };
         assert!(actors

@@ -1,6 +1,6 @@
 /*
  * mCaptcha - A proof of work based DoS protection system
- * Copyright © 2022 Aravinth Manivannan <realravinth@batsense.net>
+ * Copyright © 2023 Aravinth Manivannan <realravinth@batsense.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as

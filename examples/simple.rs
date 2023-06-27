@@ -122,8 +122,9 @@ async fn main() -> std::io::Result<()> {
 
     // mcaptcha protected service sends the following paylaod to mCaptcha
     // server:
+    let (res, _res_difficulty_factor) = res.unwrap();
     let verify_msg = VerifyCaptchaResult {
-        token: res.unwrap(),
+        token: res,
         key: mcaptcha_name.into(),
     };
 

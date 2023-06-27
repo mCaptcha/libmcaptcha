@@ -160,6 +160,7 @@
 //!     // checksout and Err() if something fishy is happening
 //!     let res = system.verify_pow(payload.clone(), "192.168.0.103".into()).await;
 //!     assert!(res.is_ok());
+//!     let (res, _res_difficulty_factor) = res.unwrap();
 //!
 //!    // The client should submit the token to the mCaptcha protected service
 //!    // The service should validate the token received from the client
@@ -169,7 +170,7 @@
 //!    // mcaptcha protected service sends the following paylaod to mCaptcha
 //!    // server:
 //!    let verify_msg = VerifyCaptchaResult {
-//!        token: res.unwrap(),
+//!        token: res,
 //!        key: mcaptcha_name.into(),
 //!    };
 //!

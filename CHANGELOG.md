@@ -1,4 +1,4 @@
-## 0.2.3(unreleased)
+## 0.2.3
 
 ### Fixed:
 
@@ -6,6 +6,8 @@
    in busy waiting, which caused high CPU usage even when idling.
    Switching to `crossbeam::channel::Receiver::recv` to fixed this.
 
+2. `System::verify_pow` returns `CaptchaResult<(String, u32)>`, where
+   the second `u32` is the difficulty factor of the challenge factor.
 
 ## 0.2.2
 

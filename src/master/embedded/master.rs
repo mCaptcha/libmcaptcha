@@ -242,16 +242,16 @@ impl Handler<GetInternalData> for Master {
                     Err(_e) => {
                         println!("Trying to get data {name}. Failed");
                         continue;
-                            // best-effort basis persistence
-//                        let err: CaptchaError = e.into();
-//                        let _ = tx.send(Err(err));
-//                        break;
+                        // best-effort basis persistence
+                        //                        let err: CaptchaError = e.into();
+                        //                        let _ = tx.send(Err(err));
+                        //                        break;
                     }
                 }
 
                 println!("Trying to get data {name} 4");
             }
-                tx.send(Ok(data));
+            tx.send(Ok(data));
         }
         .into_actor(self);
         ctx.spawn(fut);
