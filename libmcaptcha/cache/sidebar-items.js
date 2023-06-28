@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["hashcache","In-memory cache implementation that uses [HashMap]"],["messages","Messages that can be sent to cache data structures implementing [Save][super::Save]"],["redis","Cache implementation that uses Redis"]],"struct":[["AddChallenge",""]],"trait":[["Save","Describes actor handler trait impls that are required by a cache implementation"]]};
+window.SIDEBAR_ITEMS = {"mod":["hashcache","messages","redis"],"struct":["AddChallenge"],"trait":["Save"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["System","struct describing various bits of data required for an mCaptcha system"],["SystemBuilder",""]]};
+window.SIDEBAR_ITEMS = {"struct":["System","SystemBuilder"]};

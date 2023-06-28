@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RedisCache",""]]};
+window.SIDEBAR_ITEMS = {"struct":["RedisCache"]};

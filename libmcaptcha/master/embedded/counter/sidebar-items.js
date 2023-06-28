@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["AddVisitor","Message to increment the visitor count returns difficulty factor and lifetime"],["Counter","This struct represents the mCaptcha state and is used to configure leaky-bucket lifetime and manage defense"],["GetCurrentVisitorCount","Message to get the visitor count"],["Stop","Message to stop [Counter]"]]};
+window.SIDEBAR_ITEMS = {"struct":["AddVisitor","Counter","GetCurrentVisitorCount","GetInternalData","SetInternalData","Stop"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["MCaptchaRedis","Redis instance with mCaptcha Redis module loaded"],["MCaptchaRedisConnection","Connection to Redis instance with mCaptcha Redis module loaded"]]};
+window.SIDEBAR_ITEMS = {"struct":["MCaptchaRedis","MCaptchaRedisConnection"]};
