@@ -222,6 +222,7 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -384,6 +385,7 @@
 //!     // checksout and Err() if something fishy is happening
 //!     let res = system.verify_pow(payload.clone(), &quot;192.168.0.103&quot;.into()).await;
 //!     assert!(res.is_ok());
+//!     let (res, _res_difficulty_factor) = res.unwrap();
 //!
 //!    // The client should submit the token to the mCaptcha protected service
 //!    // The service should validate the token received from the client
@@ -393,7 +395,7 @@
 //!    // mcaptcha protected service sends the following paylaod to mCaptcha
 //!    // server:
 //!    let verify_msg = VerifyCaptchaResult {
-//!        token: res.unwrap(),
+//!        token: res,
 //!        key: mcaptcha_name.into(),
 //!    };
 //!

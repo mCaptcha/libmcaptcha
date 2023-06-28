@@ -326,6 +326,10 @@
 <a href="#326" id="326">326</a>
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -454,7 +458,7 @@
     }
 
     <span class="doccomment">/// utility function to verify [Work]
-    </span><span class="kw">pub async fn </span>verify_pow(<span class="kw-2">&amp;</span><span class="self">self</span>, work: Work, ip: String) -&gt; CaptchaResult&lt;String&gt; {
+    </span><span class="kw">pub async fn </span>verify_pow(<span class="kw-2">&amp;</span><span class="self">self</span>, work: Work, ip: String) -&gt; CaptchaResult&lt;(String, u32)&gt; {
         <span class="kw">use </span>crossbeam_channel::TryRecvError;
 
         <span class="kw">let </span>string = work.string.clone();
@@ -477,6 +481,8 @@
         }
 
         <span class="kw">let </span>pow = work.into();
+
+        <span class="kw">let </span>res_difficulty_factor = cached_config.difficulty_factor;
 
         <span class="kw">let </span>(queued_work, rx) = QueuedWork::new(
             <span class="self">self</span>.pow.clone(),
@@ -514,7 +520,7 @@
         </span><span class="kw">let </span>msg: CacheResult = cached_config.into();
         <span class="kw">let </span>res = msg.token.clone();
         <span class="self">self</span>.cache.send(msg).<span class="kw">await</span><span class="question-mark">?</span>.<span class="kw">await</span><span class="question-mark">??</span>;
-        <span class="prelude-val">Ok</span>(res)
+        <span class="prelude-val">Ok</span>((res, res_difficulty_factor))
     }
 
     <span class="doccomment">/// utility function to validate verification tokens
@@ -600,10 +606,12 @@
         <span class="comment">// verifiy proof
         </span><span class="kw">let </span>res = actors.verify_pow(payload.clone(), <span class="string">&quot;1&quot;</span>.into()).<span class="kw">await</span>;
         <span class="macro">assert!</span>(res.is_ok());
+        <span class="kw">let </span>(res, res_difficulty_factor) = res.unwrap();
+        <span class="macro">assert_eq!</span>(res_difficulty_factor, work_req.difficulty_factor);
 
         <span class="comment">// verify validation token
         </span><span class="kw">let </span><span class="kw-2">mut </span>verifi_msg = VerifyCaptchaResult {
-            token: res.unwrap(),
+            token: res,
             key: MCAPTCHA_NAME.into(),
         };
         <span class="macro">assert!</span>(actors

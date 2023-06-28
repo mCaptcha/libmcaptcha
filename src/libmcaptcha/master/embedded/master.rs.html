@@ -616,16 +616,16 @@
                     <span class="prelude-val">Err</span>(_e) =&gt; {
                         <span class="macro">println!</span>(<span class="string">&quot;Trying to get data {name}. Failed&quot;</span>);
                         <span class="kw">continue</span>;
-                            <span class="comment">// best-effort basis persistence
-//                        let err: CaptchaError = e.into();
-//                        let _ = tx.send(Err(err));
-//                        break;
+                        <span class="comment">// best-effort basis persistence
+                        //                        let err: CaptchaError = e.into();
+                        //                        let _ = tx.send(Err(err));
+                        //                        break;
                     </span>}
                 }
 
                 <span class="macro">println!</span>(<span class="string">&quot;Trying to get data {name} 4&quot;</span>);
             }
-                tx.send(<span class="prelude-val">Ok</span>(data));
+            tx.send(<span class="prelude-val">Ok</span>(data));
         }
         .into_actor(<span class="self">self</span>);
         ctx.spawn(fut);
