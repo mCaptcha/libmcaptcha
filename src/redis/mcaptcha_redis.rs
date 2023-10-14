@@ -69,16 +69,14 @@ impl MCaptchaRedis {
 
 impl MCaptchaRedisConnection {
     async fn is_module_loaded(&self) -> CaptchaResult<()> {
-        let modules: Vec<Vec<String>> = self
-            .0
-            .exec(redis::cmd("MODULE").arg(&["LIST"]))
-            .await
-            .unwrap();
-
-        for list in modules.iter() {
-            match list.iter().find(|module| module.as_str() == MODULE_NAME) {
-                Some(_) => (),
-                None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
+        if let Value::Bulk(s) = self.0.exec(redis::cmd("MODULE").arg("LIST")).await.unwrap() {
+            if let Some(Value::Bulk(s)) = s.first() {
+                match s.iter().find(|i| format!("{:?}", i).contains(MODULE_NAME)) {
+                    Some(_) => (),
+                    None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
+                }
+            } else {
+                return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded);
             }
         }
 
@@ -108,7 +106,6 @@ impl MCaptchaRedisConnection {
                 };
             };
         }
-
         Ok(())
     }
 

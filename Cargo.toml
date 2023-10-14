@@ -16,18 +16,17 @@ actix = { version =  "0.13", optional = true}
 serde = "1.0"
 serde_json = "1"
 
-pretty_env_logger = {version = "0.4",  optional = true }
+pretty_env_logger = {version = "0.5",  optional = true }
 log = {version = "0.4",  optional = true }
 
-derive_builder = "0.11"
+derive_builder = "0.12"
 derive_more = "0.99"
 
 rand = {version = "0.8",  optional = true }
 
 
-pow_sha256 = { version = "0.3.1", git = "https://github.com/mcaptcha/pow_sha256", optional=true }
-redis = { version = "0.21", features = ["tokio-comp","aio","r2d2", "connection-manager", "cluster"], optional=true }
-#redis = { version = "0.17.0", features = ["tokio-comp","aio", "cluster"], optional=true }
+mcaptcha_pow_sha256 = { version = "0.4.0", optional=true }
+redis = { version = "0.23", features = ["tokio-comp","aio","r2d2", "connection-manager", "cluster"], optional=true }
 
 tokio = { version = "1.25", features = ["sync"]}
 num_cpus = { version = "1.13.1", optional=true }
@@ -44,7 +43,7 @@ default = [
 	"rand",
 	"log",
 	"pretty_env_logger",
-	"pow_sha256",
+	"mcaptcha_pow_sha256",
 	"redis",
     "num_cpus",
     "crossbeam-channel"
