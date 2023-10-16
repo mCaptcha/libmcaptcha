@@ -1,3 +1,9 @@
+## 0.2.4
+
+### Fixed
+
+1. Fix typo already fixed in redis module name (#12)
+
 ## 0.2.3
 
 ### Fixed:

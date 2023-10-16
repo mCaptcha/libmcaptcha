@@ -54,6 +54,7 @@ instructions.
 
 ## Documentation
 
+- [docs.rs](https://docs.rs/libmcaptcha)
 - [master-branch](https://mcaptcha.github.io/mCaptcha/libmcaptcha/index.html)
 - [All published versions](https://mcaptcha.org/docs/api/mcaptcha-system)
 
