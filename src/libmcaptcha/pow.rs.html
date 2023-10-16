@@ -144,9 +144,9 @@
 
 <span class="kw">use </span>crossbeam_channel::{<span class="self">self</span>, Receiver, Sender};
 <span class="kw">use </span>log::debug;
-<span class="kw">use </span>pow_sha256::Config;
-<span class="kw">pub use </span>pow_sha256::ConfigBuilder;
-<span class="kw">use </span>pow_sha256::PoW;
+<span class="kw">use </span>mcaptcha_pow_sha256::Config;
+<span class="kw">pub use </span>mcaptcha_pow_sha256::ConfigBuilder;
+<span class="kw">use </span>mcaptcha_pow_sha256::PoW;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::queue::Runnable;
@@ -182,7 +182,7 @@
 
 <span class="kw">impl </span>From&lt;Work&gt; <span class="kw">for </span>PoW&lt;String&gt; {
     <span class="kw">fn </span>from(w: Work) -&gt; <span class="self">Self </span>{
-        <span class="kw">use </span>pow_sha256::PoWBuilder;
+        <span class="kw">use </span>mcaptcha_pow_sha256::PoWBuilder;
         PoWBuilder::default()
             .result(w.result)
             .nonce(w.nonce)

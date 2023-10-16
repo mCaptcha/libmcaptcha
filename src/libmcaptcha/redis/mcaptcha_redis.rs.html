@@ -351,9 +351,6 @@
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * mCaptcha - A proof of work based DoS protection system
  * Copyright © 2021 Aravinth Manivannan &lt;realravinth@batsense.net&gt;
@@ -425,16 +422,14 @@
 
 <span class="kw">impl </span>MCaptchaRedisConnection {
     <span class="kw">async fn </span>is_module_loaded(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; CaptchaResult&lt;()&gt; {
-        <span class="kw">let </span>modules: Vec&lt;Vec&lt;String&gt;&gt; = <span class="self">self
-            </span>.<span class="number">0
-            </span>.exec(redis::cmd(<span class="string">&quot;MODULE&quot;</span>).arg(<span class="kw-2">&amp;</span>[<span class="string">&quot;LIST&quot;</span>]))
-            .<span class="kw">await
-            </span>.unwrap();
-
-        <span class="kw">for </span>list <span class="kw">in </span>modules.iter() {
-            <span class="kw">match </span>list.iter().find(|module| module.as_str() == MODULE_NAME) {
-                <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
+        <span class="kw">if let </span>Value::Bulk(s) = <span class="self">self</span>.<span class="number">0</span>.exec(redis::cmd(<span class="string">&quot;MODULE&quot;</span>).arg(<span class="string">&quot;LIST&quot;</span>)).<span class="kw">await</span>.unwrap() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(Value::Bulk(s)) = s.first() {
+                <span class="kw">match </span>s.iter().find(|i| <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, i).contains(MODULE_NAME)) {
+                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (),
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
+                }
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CaptchaError::MCaptchaRedisModuleIsNotLoaded);
             }
         }
 
@@ -464,7 +459,6 @@
                 };
             };
         }
-
         <span class="prelude-val">Ok</span>(())
     }
 
