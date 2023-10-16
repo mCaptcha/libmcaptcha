@@ -19,7 +19,7 @@
 use std::sync::Arc;
 
 use actix::dev::*;
-use pow_sha256::Config;
+use mcaptcha_pow_sha256::Config;
 
 use crate::cache::messages::*;
 use crate::cache::Save;
@@ -203,7 +203,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use pow_sha256::ConfigBuilder;
+    use mcaptcha_pow_sha256::ConfigBuilder;
 
     use super::System;
     use super::*;

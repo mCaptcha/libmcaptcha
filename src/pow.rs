@@ -20,9 +20,9 @@ use std::sync::Arc;
 
 use crossbeam_channel::{self, Receiver, Sender};
 use log::debug;
-use pow_sha256::Config;
-pub use pow_sha256::ConfigBuilder;
-use pow_sha256::PoW;
+use mcaptcha_pow_sha256::Config;
+pub use mcaptcha_pow_sha256::ConfigBuilder;
+use mcaptcha_pow_sha256::PoW;
 use serde::{Deserialize, Serialize};
 
 use crate::queue::Runnable;
@@ -58,7 +58,7 @@ pub struct Work {
 
 impl From<Work> for PoW<String> {
     fn from(w: Work) -> Self {
-        use pow_sha256::PoWBuilder;
+        use mcaptcha_pow_sha256::PoWBuilder;
         PoWBuilder::default()
             .result(w.result)
             .nonce(w.nonce)
