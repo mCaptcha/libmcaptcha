@@ -6,6 +6,7 @@ description = "core of mCaptcha captcha system"
 keywords = ["DDoS", "mcaptcha", "captcha", "pow"]
 homepage = "https://mcaptcha.org"
 repository = "https://github.com/realaravinth/libmcaptcha"
+documentation = "https://docs.rs/libmcaptcha"
 license = "AGPL-3.0"
 edition = "2021"
 readme = "README.md"
