@@ -89,7 +89,7 @@ impl<T: Master, S: Save> SystemBuilder<S, T> {
 /// struct describing various bits of data required for an mCaptcha system
 pub struct System<T: Save, X: Master> {
     pub master: Addr<X>,
-    cache: Addr<T>,
+    pub cache: Addr<T>,
     pow: Arc<Config>,
     runners: Manager,
 }
