@@ -55,7 +55,7 @@ pub mod messages {
     use crate::errors::*;
 
     /// Message to cache PoW difficulty factor and string
-    #[derive(Message, Serialize, Deserialize, Builder, Clone)]
+    #[derive(Message, Builder, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct CachePoW {
         /// challenge string
@@ -70,7 +70,7 @@ pub mod messages {
 
     /// Message to retrive the the difficulty factor for the specified
     /// string from the cache
-    #[derive(Message)]
+    #[derive(Message, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "Receiver<CaptchaResult<Option<CachedPoWConfig>>>")]
     pub struct RetrivePoW(pub VerifyCaptchaResult);
 
@@ -84,13 +84,13 @@ pub mod messages {
 
     /// Message to delete cached PoW difficulty factor and string
     /// when they expire
-    #[derive(Message)]
+    #[derive(Message, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct DeletePoW(pub String);
 
     /// Message to cache captcha result and the captcha key for which
     /// it was generated
-    #[derive(Message, Serialize, Deserialize, Builder)]
+    #[derive(Message, Builder, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "Receiver<CaptchaResult<()>>")]
     pub struct CacheResult {
         pub token: String,
@@ -114,7 +114,7 @@ pub mod messages {
 
     /// Message to verify captcha result against
     /// the stored captcha key
-    #[derive(Message, Clone, Deserialize, Serialize)]
+    #[derive(Message, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "Receiver<CaptchaResult<bool>>")]
     pub struct VerifyCaptchaResult {
         pub token: String,
@@ -122,7 +122,7 @@ pub mod messages {
     }
 
     /// Message to delete cached capthca result when it expires
-    #[derive(Message)]
+    #[derive(Message, Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
     #[rtype(result = "CaptchaResult<()>")]
     pub struct DeleteCaptchaResult {
         pub token: String,
