@@ -172,11 +172,9 @@ impl Handler<CleanUp> for Master {
         let task = async move {
             for (id, (new, addr)) in sites.iter() {
                 let visitor_count = addr.send(GetCurrentVisitorCount).await.unwrap();
-                println!("{}", visitor_count);
                 if visitor_count == 0 && new.is_some() {
                     addr.send(Stop).await.unwrap();
                     master.send(RemoveCaptcha(id.to_owned())).await.unwrap();
-                    println!("cleaned up");
                 }
             }
 
@@ -233,10 +231,8 @@ impl Handler<GetInternalData> for Master {
         let sites = self.sites.clone();
         let fut = async move {
             for (name, (_read_val, addr)) in sites.iter() {
-                println!("Trying to get data {name} 1");
                 match addr.send(super::counter::GetInternalData).await {
                     Ok(val) => {
-                        println!("Trying to get data {name} 2");
                         data.insert(name.to_owned(), val);
                     }
                     Err(_e) => {
@@ -249,14 +245,12 @@ impl Handler<GetInternalData> for Master {
                     }
                 }
 
-                println!("Trying to get data {name} 4");
             }
             tx.send(Ok(data));
         }
         .into_actor(self);
         ctx.spawn(fut);
 
-        println!("Trying to get data 3");
         MessageResult(rx)
     }
 }
