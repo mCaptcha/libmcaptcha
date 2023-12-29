@@ -244,7 +244,6 @@ impl Handler<GetInternalData> for Master {
                         //                        break;
                     }
                 }
-
             }
             tx.send(Ok(data));
         }

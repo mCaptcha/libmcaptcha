@@ -186,6 +186,11 @@ impl Defense {
         self.levels[self.current_visitor_threshold].difficulty_factor
     }
 
+    /// Get levels
+    pub fn get_levels(&self) -> Vec<Level> {
+        self.levels.clone()
+    }
+
     /// tighten up defense. Increases defense level by a factor of one.
     /// When defense is at max level, calling this method will have no effect
     pub fn tighten_up(&mut self) {
