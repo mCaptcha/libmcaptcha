@@ -70,13 +70,9 @@ impl MCaptchaRedis {
 impl MCaptchaRedisConnection {
     async fn is_module_loaded(&self) -> CaptchaResult<()> {
         if let Value::Bulk(s) = self.0.exec(redis::cmd("MODULE").arg("LIST")).await.unwrap() {
-            if let Some(Value::Bulk(s)) = s.first() {
-                match s.iter().find(|i| format!("{:?}", i).contains(MODULE_NAME)) {
-                    Some(_) => (),
-                    None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
-                }
-            } else {
-                return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded);
+            match s.iter().find(|i| format!("{:?}", i).contains(MODULE_NAME)) {
+                Some(_) => (),
+                None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
             }
         }
 
