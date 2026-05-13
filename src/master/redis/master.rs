@@ -135,16 +135,22 @@ mod tests {
     use crate::master::messages::RenameBuilder;
     use crate::master::redis::master::Master;
     use crate::redis::RedisConfig;
+    use std::{env, sync::OnceLock};
 
-    const REDIS_URL: &str = "redis://127.0.1.1/";
+    fn redis_url() -> &'static str {
+        static REDIS_URL: OnceLock<String> = OnceLock::new();
+        REDIS_URL.get_or_init(|| {
+            env::var("LIBMCAPTCHA_TEST_REDIS_URL").unwrap_or_else(|_| "redis://127.0.1.1/".into())
+        })
+    }
 
     #[actix_rt::test]
     async fn redis_master_works() {
         const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_TEST";
         const RENAME_CAPTCHA_NAME: &str = "RENAME_REDIS_MASTER_CAPTCHA_TEST";
 
-        let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
-        let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let master = Master::new(RedisConfig::Single(redis_url().into())).await;
+        let sec_master = Master::new(RedisConfig::Single(redis_url().into())).await;
         let r = sec_master.unwrap().redis.get_client();
 
         assert!(master.is_ok());
@@ -195,8 +201,8 @@ mod tests {
     async fn race_redis_master() {
         const CAPTCHA_NAME: &str = "REDIS_MASTER_CAPTCHA_RACE";
 
-        let master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
-        let sec_master = Master::new(RedisConfig::Single(REDIS_URL.into())).await;
+        let master = Master::new(RedisConfig::Single(redis_url().into())).await;
+        let sec_master = Master::new(RedisConfig::Single(redis_url().into())).await;
         let r = sec_master.unwrap().redis.get_client();
 
         assert!(master.is_ok());

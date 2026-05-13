@@ -69,8 +69,8 @@ impl MCaptchaRedis {
 
 impl MCaptchaRedisConnection {
     async fn is_module_loaded(&self) -> CaptchaResult<()> {
-        if let Value::Bulk(s) = self.0.exec(redis::cmd("MODULE").arg("LIST")).await.unwrap() {
-            if let Some(Value::Bulk(s)) = s.first() {
+        if let Value::Array(s) = self.0.exec(redis::cmd("MODULE").arg("LIST")).await.unwrap() {
+            if let Some(Value::Array(s)) = s.first() {
                 match s.iter().find(|i| format!("{:?}", i).contains(MODULE_NAME)) {
                     Some(_) => (),
                     None => return Err(CaptchaError::MCaptchaRedisModuleIsNotLoaded),
@@ -93,7 +93,7 @@ impl MCaptchaRedisConnection {
         ];
 
         for cmd in commands.iter() {
-            if let Value::Bulk(mut val) = self
+            if let Value::Array(mut val) = self
                 .0
                 .exec(redis::cmd("COMMAND").arg(&["INFO", cmd]))
                 .await
@@ -127,7 +127,7 @@ impl MCaptchaRedisConnection {
         let captcha: CreateMCaptcha = msg.mcaptcha.into();
         let payload = serde_json::to_string(&captcha).unwrap();
         self.0
-            .exec(redis::cmd(ADD_CAPTCHA).arg(&[name, payload]))
+            .exec::<()>(redis::cmd(ADD_CAPTCHA).arg(&[name, payload]))
             .await?;
         Ok(())
     }
@@ -154,14 +154,14 @@ impl MCaptchaRedisConnection {
 
     /// Delete an mCaptcha object from Redis
     pub async fn delete_captcha(&self, captcha: &str) -> CaptchaResult<()> {
-        self.0.exec(redis::cmd(DEL).arg(&[captcha])).await?;
+        self.0.exec::<()>(redis::cmd(DEL).arg(&[captcha])).await?;
         Ok(())
     }
 
     /// Rename mCaptcha object in Redis
     pub async fn rename_captcha(&self, name: &str, rename_to: &str) -> CaptchaResult<()> {
         self.0
-            .exec(redis::cmd(RENAME_CAPTCHA).arg(&[name, rename_to]))
+            .exec::<()>(redis::cmd(RENAME_CAPTCHA).arg(&[name, rename_to]))
             .await?;
         Ok(())
     }
@@ -174,7 +174,7 @@ impl MCaptchaRedisConnection {
     ) -> CaptchaResult<()> {
         let payload = serde_json::to_string(challlenge).unwrap();
         self.0
-            .exec(redis::cmd(ADD_CHALLENGE).arg(&[captcha, &payload]))
+            .exec::<()>(redis::cmd(ADD_CHALLENGE).arg(&[captcha, &payload]))
             .await?;
         Ok(())
     }
@@ -194,7 +194,7 @@ impl MCaptchaRedisConnection {
     /// Delete PoW Challenge object from Redis
     pub async fn delete_challenge(&self, msg: &VerifyCaptchaResult) -> CaptchaResult<()> {
         self.0
-            .exec(redis::cmd(DELETE_CHALLENGE).arg(&[&msg.key, &msg.token]))
+            .exec::<()>(redis::cmd(DELETE_CHALLENGE).arg(&[&msg.key, &msg.token]))
             .await?;
         Ok(())
     }
@@ -212,7 +212,12 @@ impl MCaptchaRedisConnection {
         let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
         let e: RedisResult<()> = self
             .0
-            .exec(redis::cmd("SET").arg(&[&key, &msg.key, "EX", msg.duration.to_string().as_str()]))
+            .exec::<()>(redis::cmd("SET").arg(&[
+                &key,
+                &msg.key,
+                "EX",
+                msg.duration.to_string().as_str(),
+            ]))
             .await;
         if let Err(e) = e {
             panic!("{}", e);
@@ -238,7 +243,7 @@ impl MCaptchaRedisConnection {
         //use redis::RedisResult;
         // mcaptcha:token:captcha::token
         let key = format!("mcaptcha:token:{}:{}", &msg.key, &msg.token);
-        self.0.exec(redis::cmd("DEL").arg(&[&key])).await?;
+        self.0.exec::<()>(redis::cmd("DEL").arg(&[&key])).await?;
         Ok(())
     }
 }
@@ -248,15 +253,22 @@ pub mod tests {
     use super::*;
     use crate::master::embedded::counter::tests::get_mcaptcha;
     use crate::redis::*;
+    use std::{env, sync::OnceLock};
 
     const CAPTCHA_NAME: &str = "REDIS_CAPTCHA_TEST";
     const RENAME_CAPTCHA_NAME: &str = "RENAME_REDIS_CAPTCHA_TEST";
-    const REDIS_URL: &str = "redis://127.0.1.1/";
     const CHALLENGE: &str = "randomchallengestring";
+
+    fn redis_url() -> &'static str {
+        static REDIS_URL: OnceLock<String> = OnceLock::new();
+        REDIS_URL.get_or_init(|| {
+            env::var("LIBMCAPTCHA_TEST_REDIS_URL").unwrap_or_else(|_| "redis://127.0.1.1/".into())
+        })
+    }
 
     #[actix_rt::test]
     async fn redis_master_works() {
-        let redis = Redis::new(RedisConfig::Single(REDIS_URL.into()))
+        let redis = Redis::new(RedisConfig::Single(redis_url().into()))
             .await
             .unwrap();
 

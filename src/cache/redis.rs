@@ -149,6 +149,7 @@ impl Handler<DeletePoW> for RedisCache {
 mod tests {
     use super::*;
 
+    use std::env;
     use std::time::Duration;
 
     use actix::clock::sleep;
@@ -165,7 +166,9 @@ mod tests {
     //       delay_for(duration).await;
     //   }
 
-    const REDIS_URL: &str = "redis://127.0.1.1/";
+    fn redis_url() -> String {
+        env::var("LIBMCAPTCHA_TEST_REDIS_URL").unwrap_or_else(|_| "redis://127.0.1.1/".into())
+    }
 
     #[actix_rt::test]
     async fn rediscache_pow_cache_works() {
@@ -174,7 +177,7 @@ mod tests {
         const KEY: &str = "mcaptchakey";
         const CHALLENGE: &str = "redischallenge1";
 
-        let addr = RedisCache::new(RedisConfig::Single(REDIS_URL.into()))
+        let addr = RedisCache::new(RedisConfig::Single(redis_url().into()))
             .await
             .unwrap()
             .start();
@@ -227,7 +230,7 @@ mod tests {
         const DURATION: u64 = 5;
         const KEY: &str = "a";
         const RES: &str = "b";
-        let addr = RedisCache::new(RedisConfig::Single(REDIS_URL.into()))
+        let addr = RedisCache::new(RedisConfig::Single(redis_url().into()))
             .await
             .unwrap()
             .start();

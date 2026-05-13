@@ -47,7 +47,7 @@ impl RedisConfig {
                 RedisClient::Single(client)
             }
             Self::Cluster(nodes) => {
-                let cluster_client = ClusterClient::open(nodes.to_owned()).unwrap();
+                let cluster_client = ClusterClient::new(nodes.to_owned()).unwrap();
                 RedisClient::Cluster(cluster_client)
             }
         }
@@ -80,7 +80,7 @@ impl RedisConnection {
     }
 
     pub async fn ping(&self) -> bool {
-        if let Ok(redis::Value::Status(v)) = self.exec(&mut redis::cmd("PING")).await {
+        if let Ok(redis::Value::SimpleString(v)) = self.exec(&mut redis::cmd("PING")).await {
             v == "PONG"
         } else {
             false
@@ -137,10 +137,18 @@ impl Redis {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{env, sync::OnceLock};
+
+    fn redis_url() -> &'static str {
+        static REDIS_URL: OnceLock<String> = OnceLock::new();
+        REDIS_URL.get_or_init(|| {
+            env::var("LIBMCAPTCHA_TEST_REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1".into())
+        })
+    }
 
     #[actix_rt::test]
     async fn ping_works() {
-        let r = Redis::new(RedisConfig::Single("redis://127.0.0.1".into()))
+        let r = Redis::new(RedisConfig::Single(redis_url().into()))
             .await
             .unwrap();
         assert!(r.get_client().ping().await);

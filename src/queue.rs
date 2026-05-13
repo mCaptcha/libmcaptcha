@@ -306,16 +306,13 @@ mod tests {
         let mut count = 0;
 
         for rx in jobs.drain(..0) {
-            loop {
-                match rx.recv() {
-                    Err(crossbeam_channel::RecvError) => panic!("{count}"),
-                    Ok(t) => {
-                        count += 1;
-                        assert!(t);
-                        break;
-                    }
-                };
-            }
+            match rx.recv() {
+                Err(crossbeam_channel::RecvError) => panic!("{count}"),
+                Ok(t) => {
+                    count += 1;
+                    assert!(t);
+                }
+            };
         }
     }
 }

@@ -21,13 +21,13 @@
 pub fn get_random(len: usize) -> String {
     use std::iter;
 
-    use rand::{distributions::Alphanumeric, rngs::ThreadRng, thread_rng, Rng};
+    use rand::distr::Alphanumeric;
+    use rand::{rng, Rng};
 
-    let mut rng: ThreadRng = thread_rng();
+    let mut rng = rng();
 
     iter::repeat(())
-        .map(|()| rng.sample(Alphanumeric))
-        .map(char::from)
+        .map(|()| rng.sample(Alphanumeric) as char)
         .take(len)
         .collect::<String>()
 }
