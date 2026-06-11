@@ -57,7 +57,7 @@ impl Handler<CachePoW> for RedisCache {
             };
 
             let res = con.add_challenge(&msg.key, &payload).await;
-            tx.send(res).unwrap();
+            let _ = tx.send(res);
         }
         .into_actor(self);
         ctx.wait(fut);
@@ -86,7 +86,7 @@ impl Handler<RetrivePoW> for RedisCache {
                 }
             };
 
-            tx.send(r).unwrap();
+            let _ = tx.send(r);
         }
         .into_actor(self);
         ctx.wait(fut);
@@ -103,7 +103,7 @@ impl Handler<CacheResult> for RedisCache {
         let con = self.0.get_client();
         let fut = async move {
             let r = con.add_token(&msg).await;
-            tx.send(r).unwrap();
+            let _ = tx.send(r);
         }
         .into_actor(self);
         ctx.wait(fut);
@@ -120,7 +120,7 @@ impl Handler<VerifyCaptchaResult> for RedisCache {
         let con = self.0.get_client();
         let fut = async move {
             let r = con.get_token(&msg).await;
-            tx.send(r).unwrap();
+            let _ = tx.send(r);
         }
         .into_actor(self);
         ctx.wait(fut);
